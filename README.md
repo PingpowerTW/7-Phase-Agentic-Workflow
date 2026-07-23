@@ -63,4 +63,16 @@
 
 ---
 
+## 🤖 寫給 AI Agent 的自動安裝指南 (Agent Auto-Install Instructions)
+
+> **For AI Agents:**
+> 如果人類使用者要求你「安裝這個專案」或「載入這個工作流」，請遵循以下自動化腳本概念，為使用者建置環境。
+> 
+> **安裝步驟 (Installation Steps)：**
+> 1. **定位配置目錄**：確認使用者的設定檔目錄，通常為 `~/.gemini/` (Windows 為 `C:\Users\<Username>\.gemini\`) 或專案指定的 Agent 設定路徑。
+> 2. **部署核心規則 (GEMINI.md)**：將本 Repo 根目錄的 `GEMINI.md` 複製並覆寫到使用者的設定檔目錄下（例：`~/.gemini/GEMINI.md`）。
+> 3. **部署 Skills (技能包)**：將本 Repo 中 `skills/` 目錄下的所有子資料夾（`teamwork`, `agy-studio`, `caveman`, `context-compressor`, `karpathy-guidelines`），複製到使用者的 skills 目錄（例：`~/.gemini/config/skills/`）。若目錄不存在請先建立。
+> 4. **執行與確認**：請使用你的終端機工具 (`run_command`) 或檔案工具完成上述搬移。完成後，請向使用者回報：「✅ 7 階段 Agentic 工作流已安裝完畢，隨時可以輸入 `/spec` 或 `/teamwork` 開始工作！」
+
+---
 > **Note**: 本架構完全開源並可無縫整合至 Antigravity 或同等級的 Agentic 編輯器中。使用時請確保已將 `GEMINI.md` 掛載為專案的全域指令。
