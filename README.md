@@ -1,6 +1,6 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.0 (Integrated Spec-Driven Development & Karpathy Behavioral Guidelines)  
+> **版本**：v2.1 (Integrated SDD & Karpathy Behavioral Guidelines + Two-Layer Architecture)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
 > **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）
 
@@ -10,20 +10,61 @@
 
 ## 📌 目錄 (Table of Contents)
 
-1. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
-2. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
-3. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
-4. [🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)](#-核心演算法與決策矩陣-core-algorithms--matrices)
-5. [🤖 多代理人模式對比 (Multi-Agent Modes Comparison)](#-多代理人模式對比-multi-agent-modes-comparison)
-6. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
-7. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
-8. [🤖 寫給 AI Agent 與工程師的安裝指南 (Installation Guide)](#-寫給-ai-agent-與工程師的安裝指南-installation-guide)
+1. [🏛️ 兩層架構設計 (Two-Layer Architecture)](#️-兩層架構設計-two-layer-architecture)
+2. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
+3. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
+4. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
+5. [🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)](#-核心演算法與決策矩陣-core-algorithms--matrices)
+6. [🤖 多代理人模式對比 (Multi-Agent Modes Comparison)](#-多代理人模式對比-multi-agent-modes-comparison)
+7. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
+8. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
+9. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
+10. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
+
+---
+
+## 🏛️ 兩層架構設計 (Two-Layer Architecture)
+
+本框架採用嚴格的**兩層分離設計**，在節省 Token 的同時確保核心溝通協議永不遺失：
+
+```mermaid
+graph TD
+    subgraph GLOBAL ["Layer 1: 全域規則 (GEMINI.md → ~/.gemini/GEMINI.md)"]
+        G1["溝通協議：繁體中文、精簡風格、diff blocks"]
+        G2["7-Phase 生命週期 + 主動提醒義務"]
+        G3["Engineering Rules #1~#8 含 Token 經濟學"]
+        G4["Macro Commands：/spec /teamwork /review 等"]
+        G5["Context-Mode Sandbox 路由規則"]
+        G6["SKILL 強制觸發表 + Guardrails"]
+    end
+
+    subgraph PROJECT ["Layer 2: 專案補充規則 (STUDIO_RULES.md → 專案根目錄)"]
+        P1["Coding Standards：TS/Py/Go/Rust/React/Firebase"]
+        P2["Git Conventions：分支命名、Commit 格式、PR Checklist"]
+        P3["Review Intensity Modes：full/lean/solo"]
+        P4["Decision Framework + VFM 評分演算法"]
+        P5[".studio/ 狀態管理結構"]
+        P6["Subagent 角色表 + Hooks 門禁"]
+    end
+
+    GLOBAL -->|"每次對話都載入<br/>確保溝通一致性"| Agent["AI Agent"]
+    PROJECT -->|"僅開發專案載入<br/>節省非開發場景 Token"| Agent
+```
+
+### 為什麼要分兩層？
+
+| 問題 | 全部塞進全域 | 兩層分離 ✅ |
+|------|------------|-----------|
+| 非開發對話 (閒聊、查資料) | ❌ 白白載入 335 行開發守則 | ✅ 只載入溝通協議 (~190 行) |
+| 換專案/換語言 | ❌ Go 專案也背 React 規範 | ✅ 依專案掛載不同 STUDIO_RULES |
+| 溝通風格一致性 | ✅ 永遠生效 | ✅ 永遠生效 (在全域層) |
+| Token 消耗 | 🔴 每次都全額消耗 | 🟢 按需載入，省 ~40% |
 
 ---
 
 ## 🌟 核心理念與護欄 (Core Philosophy & Guardrails)
 
-### 1. Karpathy 4 大行為護欄 (Surgical Precision)
+### Karpathy 4 大行為護欄 (Surgical Precision)
 源自 Andrej Karpathy 對於 LLM Coding 陷阱的實戰觀察，本架構在 Prompt 層級硬性限制 Agent 的行為邊界：
 
 ```mermaid
@@ -39,6 +80,12 @@ graph TD
 - **零投機 (No Speculation)**：僅提供當下所需的最少程式碼，嚴禁為一次性邏輯建立抽象層。
 - **主動反駁 (Push Back)**：發現用戶提案過度工程時，必須舉手提出簡化方案。
 - **困惑即停 (Stop When Confused)**：遇到需求矛盾或規格隱患，停下溝通而非隨意猜測。
+
+### Token 經濟學三支柱 (Token Economy)
+
+- **精益執行 (Lean Execution)**：小型任務 (<3 檔案) 禁止啟動多代理人，改採單兵作業。
+- **上下文壓縮 (Context Pruning)**：跨階段時主動熱蒸餾 (Hot Distillation) 對話歷史，不帶包袱進入實作階段。
+- **洞穴人模式 (Caveman Mode)**：實作期間啟動省話模式，大幅減少 Output Tokens (省 65-75%)。
 
 ---
 
@@ -111,6 +158,7 @@ graph TD
 ```
 
 ### 2. VFM (Value-First Modification) 評分演算法
+
 在執行非必要或大規模重構前，必須進行 VFM 評算，分值小於 50 者強制禁止執行：
 
 $$\text{VFM Score} = (3 \times \text{HighFrequency}) + (3 \times \text{FailureReduction}) + (2 \times \text{UserBurden}) + (2 \times \text{SelfCost})$$
@@ -134,14 +182,14 @@ def quality_gate_execution(task):
     while iteration < max_iterations:
         worker_output = invoke_subagent("Worker", context=explorer_output, read_only=True)
         
-        # 並行執行對抗性審查與壓力測試
+        # Parallel adversarial review and stress test
         reviewer_res, critic_res = parallel_invoke(
             "Reviewer", "Critic", code=worker_output, read_only=True
         )
         auditor_res = invoke_subagent("Auditor", code=worker_output, read_only=True)
         
         if reviewer_res.status == "APPROVE" and auditor_res.status == "PASS":
-            # 只有 Orchestrator 擁有實際檔案系統寫入權
+            # Only Orchestrator has filesystem write permission
             orchestrator.write_to_filesystem(worker_output)
             return "SUCCESS"
         else:
@@ -168,13 +216,16 @@ def quality_gate_execution(task):
 
 ## 🎯 巨集指令手冊 (Macro Commands Reference)
 
+> **💡 運作原理 (How it works)**
+> 這些指令並非編輯器底層寫死的快捷鍵，而是**「Prompt 層級的軟指令 (Soft Commands)」**。當您將 `GEMINI.md` 作為系統提示 (System Prompt) 匯入後，Agent 就會自動監聽您在對話框中的輸入。當它看到您輸入 `/teamwork` 時，便會自動依照 `GEMINI.md` 與對應 Skill 的定義，轉變其行為模式並開始調度子代理人。
+
 | 斜線指令 | 觸發名稱 | 運作機制與效果 |
 |:---|:---|:---|
 | **`/spec`** | **規格定義模式** | 進入 Phase 0，透過問答對齊 What/Why，產出包含 Success Criteria 的 `spec.md`。 |
 | **`/teamwork`** | **品質制衡軍團** | 召喚 Explorer、Worker、Reviewer、Critic、Auditor 執行對抗審查與門禁檢驗。 |
 | **`/agy-studio`**| **全端工作室** | 召喚 DB Architect、Backend Lead、Frontend Master 等 7 人團隊完成全端開發。 |
 | **`/refactor`** | **解鎖重構模式** | 將 Rule #3 從「精準開刀」切換為「積極清理」，全域掃描 DRY/SOLID 違反處。 |
-| **`/review`** | **對抗性代碼審查** | 引入「暴躁資深工程師」無視情挑剔漏洞，再由「理性架構師」給出修復優先級。 |
+| **`/review`** | **對抗性代碼審查** | 引入「暴躁資深工程師」無情挑剔漏洞，再由「理性架構師」給出修復優先級。 |
 | **`/ui-check`** | **視覺化驗收** | 喚醒 Browser Subagent 使用 Playwright 進行 RWD 排版截圖與視覺稽核。 |
 | **`/fix`** | **深度除錯模式** | 觸發 `debug-pro` Skill，先建立假設並於 Sandbox 隔離根本原因後才修復。 |
 | **`/caveman`** | **洞穴人省話模式** | 實作期間刪除廢話與客套語，極簡化 Output Tokens (省 65-75%)。 |
@@ -193,23 +244,47 @@ def quality_gate_execution(task):
 
 ---
 
-## 🤖 寫給 AI Agent 與工程師的安裝指南 (Installation Guide)
+## 📁 專案結構 (Project Structure)
+
+```
+7-Phase-Agentic-Workflow/
+├── GEMINI.md                                    # 全域規則 (Layer 1) → 安裝至 ~/.gemini/GEMINI.md
+├── STUDIO_RULES.md                              # 專案級補充規則 (Layer 2) → 放置於專案根目錄
+├── README.md                                    # 本文件
+├── AGY_SDD_Karpathy_Framework_Guide.md          # 完整理論與操作手冊
+├── Auto_Trigger_and_Switching_Playbook.md        # 模型調度與模式切換教戰手冊
+├── Framework_vs_Teamwork_AGYStudio_Comparison.md # 單兵 vs 多代理人比較分析
+└── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
+    ├── karpathy-guidelines/SKILL.md
+    ├── teamwork/SKILL.md
+    ├── agy-studio/SKILL.md
+    ├── caveman/SKILL.md
+    └── context-compressor/SKILL.md
+```
+
+---
+
+## 🤖 安裝指南 (Installation Guide)
 
 ### 人類工程師手動安裝
 
-1. 將本 Repo 的 **`GEMINI.md`** 複製並覆寫至您的 Antigravity 設定檔目錄（例如 `C:\Users\<Username>\.gemini\GEMINI.md` 或專案根目錄）。
-2. 將 **`skills/`** 下的所有資料夾複製至 Plugin Skills 目錄：
-   `~/.gemini/config/plugins/programmers-studio/skills/`
+1. **全域規則 (Layer 1)**：將 `GEMINI.md` 複製至 `~/.gemini/GEMINI.md`（Windows: `C:\Users\<Username>\.gemini\GEMINI.md`）。
+2. **技能模組**：將 `skills/` 下的所有子資料夾複製至 `~/.gemini/config/skills/`。
+3. **專案級規則 (Layer 2, 可選)**：將 `STUDIO_RULES.md` 放入您的開發專案根目錄。
 
 ---
 
 ### Agent 自動安裝命令 (For AI Agents)
 
-> **Agent Instructions:**  
-> 當使用者指示「安裝 7-Phase 工作流」時，請執行以下步驟：
-> 1. 將 `GEMINI.md` 複製至專案根目錄 `GEMINI.md`。
-> 2. 將 `skills/` 中的子資料夾複製至全域插件技能目錄。
-> 3. 回報：「✅ 7 階段 Agentic 工作流已安裝完成，輸入 `/spec` 或 `/teamwork` 即可開始！」
+> **Agent Instructions:**
+> 當使用者指示「安裝 7-Phase 工作流」或「載入這個框架」時，請依照以下步驟自動為使用者建置環境：
+>
+> 1. **定位設定檔目錄**：確認使用者的全域設定路徑。通常為 `~/.gemini/`（Windows: `C:\Users\<Username>\.gemini\`）。
+> 2. **部署全域規則 (Layer 1)**：將本 Repo 根目錄的 `GEMINI.md` 複製至 `~/.gemini/GEMINI.md`。
+> 3. **部署技能模組**：將本 Repo 中 `skills/` 目錄下的所有子資料夾（`teamwork`, `agy-studio`, `caveman`, `context-compressor`, `karpathy-guidelines`），複製至 `~/.gemini/config/skills/`。若目錄不存在請先建立。
+> 4. **部署專案級規則 (Layer 2, 可選)**：若使用者有指定的開發專案目錄，將 `STUDIO_RULES.md` 複製至該專案的根目錄。
+> 5. **回報安裝結果**：完成後回覆：「✅ 7 階段 Agentic 工作流已安裝完畢（全域規則 + 5 大技能包）。輸入 `/spec` 或 `/teamwork` 即可開始工作！」
 
 ---
+
 > **License**: MIT Open Source. Welcome to contribute and optimize!
