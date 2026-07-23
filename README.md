@@ -28,11 +28,11 @@
 
 ```mermaid
 graph TD
-    A[收到變更需求] --> B{檢查確定性與範圍}
-    B -- 歧義/模糊 --> K4[4. 困惑即停 Stop When Confused<br/>主動詢問用戶，絕不安默假設]
-    B -- 有更簡方案 --> K1[1. 主動反駁 Push Back<br/>200 行能寫成 50 行者強制重寫]
-    B -- 單一目的實作 --> K2[2. 零投機 No Speculation<br/>不寫一次性抽象、不預加未要求配置]
-    B -- 執行修改 --> K3[3. 精準開刀 Surgical Precision<br/>只改受影響區域，鄰近無關死碼僅報告不刪除]
+    A["收到變更需求"] --> B{"檢查確定性與範圍"}
+    B -- "歧義/模糊" --> K4["4. 困惑即停 Stop When Confused<br/>主動詢問用戶，絕不盲目假設"]
+    B -- "有更簡方案" --> K1["1. 主動反駁 Push Back<br/>200 行能寫成 50 行者強制重寫"]
+    B -- "單一目的實作" --> K2["2. 零投機 No Speculation<br/>不寫一次性抽象、不預加未要求配置"]
+    B -- "執行修改" --> K3["3. 精準開刀 Surgical Precision<br/>只改受影響區域，鄰近無關死碼僅報告不刪除"]
 ```
 
 - **精準開刀 (Surgical Precision)**：預設雙模式機制。平時只動受影響程式碼；僅在觸發 `/refactor` 時解鎖積極清理模式。
@@ -48,12 +48,12 @@ graph TD
 
 ```mermaid
 flowchart LR
-    P0[Phase 0: Spec<br/>規格定義] --> P1[Phase 1: Context<br/>驗證可行性]
-    P1 --> P2[Phase 2: Debt<br/>靜態掃描]
-    P2 --> P3[Phase 3: Design<br/>方案規劃]
-    P3 -->|上下文熱蒸餾| P4[Phase 4: Implementation<br/>代碼實作]
-    P4 --> P5[Phase 5: Test & Review<br/>對抗審查]
-    P5 --> P6[Phase 6: Evolve<br/>回顧驗證]
+    P0["Phase 0: Spec<br/>規格定義"] --> P1["Phase 1: Context<br/>驗證可行性"]
+    P1 --> P2["Phase 2: Debt<br/>靜態掃描"]
+    P2 --> P3["Phase 3: Design<br/>方案規劃"]
+    P3 -->|"上下文熱蒸餾"| P4["Phase 4: Implementation<br/>代碼實作"]
+    P4 --> P5["Phase 5: Test & Review<br/>對抗審查"]
+    P5 --> P6["Phase 6: Evolve<br/>回顧驗證"]
 ```
 
 | Phase | 階段名稱 | 關鍵動作 (Action) | 產出與交付物 (Output) | 推薦模型 |
@@ -74,21 +74,21 @@ flowchart LR
 
 ```mermaid
 graph TD
-    subgraph Layer1 [Layer 1: 基礎行為與大腦規範 Engine]
-        Base[GEMINI.md + Context-Mode Sandbox<br/>• Karpathy 護欄<br/>• Token 經濟學<br/>• 7-Phase 生命週期]
+    subgraph Layer1 ["Layer 1: 基礎行為與大腦規範 Engine"]
+        Base["GEMINI.md + Context-Mode Sandbox<br/>• Karpathy 護欄<br/>• Token 經濟學<br/>• 7-Phase 生命週期"]
     end
 
-    subgraph Layer2 [Layer 2: 通用品質制衡軍團 /teamwork]
-        TW[5 人品質制衡軍團<br/>• Sentinel (指揮) + Orchestrator (調度)<br/>• Read-Only: Explorer / Worker / Reviewer / Critic / Auditor]
+    subgraph Layer2 ["Layer 2: 通用品質制衡軍團 /teamwork"]
+        TW["5 人品質制衡軍團<br/>• Sentinel 指揮 + Orchestrator 調度<br/>• Read-Only: Explorer / Worker / Reviewer / Critic / Auditor"]
     end
 
-    subgraph Layer3 [Layer 3: 全端領域工作室 /agy-studio]
-        AGY[7 人全端領域工作室<br/>• DB Architect + Backend Lead + Frontend Master<br/>• 獨立 Reviewer + Critic + Auditor]
+    subgraph Layer3 ["Layer 3: 全端領域工作室 /agy-studio"]
+        AGY["7 人全端領域工作室<br/>• DB Architect + Backend Lead + Frontend Master<br/>• 獨立 Reviewer + Critic + Auditor"]
     end
 
-    Base -->|修改 ≤2 檔案: 單兵作業| Task1[極速交付 Task]
-    Base -->|修改 ≥3 檔案: 自動喚醒| TW
-    Base -->|全端開發 DB+API+UI: 自動喚醒| AGY
+    Base -->|"修改 ≤2 檔案: 單兵作業"| Task1["極速交付 Task"]
+    Base -->|"修改 ≥3 檔案: 自動喚醒"| TW
+    Base -->|"全端開發 DB+API+UI: 自動喚醒"| AGY
 ```
 
 ---
@@ -106,7 +106,7 @@ graph TD
 │
 └── 任務規模與領域評估？
     ├── 1 ~ 2 個檔案小改動 / 修正 Bug ────> 🟢 單兵模式 (SDD + Karpathy 護欄, 最省 Token)
-    ├── ≥3 個檔案 / 核心模組重構 ──────────> 🟡 喚醒 /teamwork (5 人審查軍团, 品質門禁)
+    ├── ≥3 個檔案 / 核心模組重構 ──────────> 🟡 喚醒 /teamwork (5 人審查軍團, 品質門禁)
     └── 全端需求 (資料庫 + API + 前端 UI) ─> 🔴 喚醒 /agy-studio (7 人全端工作室)
 ```
 
@@ -160,7 +160,7 @@ def quality_gate_execution(task):
 |---|---|---|---|
 | **核心定位** | 行為紀律與精準開刀規範 | 5 人品質審查與對抗制衡 | 7 人全端領域專家協作團隊 |
 | **代理人數量** | 1 (主代理人單兵作業) | 1 主代理人 + 5 Read-Only 子代理人 | 1 主代理人 + 7 Read-Only 子代理人 |
-| **檔案寫入權** | 主代理人直接寫入 | **僅主代理人可寫入** | **仅主代理人可寫入** |
+| **檔案寫入權** | 主代理人直接寫入 | **僅主代理人可寫入** | **僅主代理人可寫入** |
 | **適用場景** | 1~2 個檔案小修改、Bug 修復 | ≥3 個檔案修改、重要架構重構 | 從零建構 DB + API + 前端 UI 全端系統 |
 | **Token 能耗** | 🟢 **極低** (最省成本) | 🟡 **中等** (2 輪 Quality Gate) | 🔴 **較高** (全端多角色串行+並行) |
 
