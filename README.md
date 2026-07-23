@@ -40,7 +40,9 @@
 
 ## 🤖 多代理人調度與指令 (Multi-Agent Commands)
 
-本架構內建多種 Slash 指令以切換不同的執行深度：
+本架構定義了多種 Slash 指令以切換不同的執行深度。
+> **💡 運作原理 (How it works)**
+> 這些指令並非編輯器底層寫死的快捷鍵，而是**「Prompt 層級的軟指令 (Soft Commands)」**。當您將 `GEMINI.md` 作為系統提示 (System Prompt) 匯入後，Agent 就會自動監聽您在對話框中的輸入。當它看到您輸入 `/teamwork` 時，便會自動依照 `GEMINI.md` 與對應 Skill 的定義，轉變其行為模式並開始調度子代理人。
 
 - `/spec`：進入 Phase 0，與用戶共同擬定精準規格。
 - `/teamwork`：觸發 **5 人品質制衡軍團** (適用於 ≥3 檔案的中大型變更)。
