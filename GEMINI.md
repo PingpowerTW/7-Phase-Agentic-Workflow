@@ -80,7 +80,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 * **Coding/Review**: `karpathy-guidelines`
 * **Firebase Rules**: `firebase-rules`
 * **Bug/Audit/Perf**: `bug-tracker`, `ux-audit`, `performance-profiling`, `dependency-auditor`, `security-best-practices`
-* **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`
+* **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`, `frontend-taste-v2`
 * **Defensive/React**: `defensive-coding-checker`, `error-handling`, `data-validator`, `react-performance-patterns`
 * **Workflow/Handoff**: `release-checklist`, `work-resume-sop`, `session-handoff`, `async-agent-patterns`
 
