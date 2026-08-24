@@ -82,7 +82,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 * **Bug/Audit/Perf**: `bug-tracker`, `ux-audit`, `performance-profiling`, `dependency-auditor`, `security-best-practices`
 * **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`, `frontend-taste-v2`
 * **Defensive/React**: `defensive-coding-checker`, `error-handling`, `data-validator`, `react-performance-patterns`
-* **Workflow/Handoff**: `release-checklist`, `work-resume-sop`, `session-handoff`, `async-agent-patterns`
+* **Workflow/Handoff**: `release-checklist`, `work-resume-sop`, `session-handoff`, `async-agent-patterns`, `context-pruner`
 
 ## 8. Macro Commands (高階工作流)
 - `/spec`: Phase 0 spec mode. Generates `spec.md`.
@@ -93,6 +93,13 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 - `/fix`: Deep debug mode (isolate root cause via logs).
 - `/audit`: Tech debt & scaling audit.
 - `ctx`: Context system CLI (`stats`, `doctor`, `upgrade`, `purge`).
+- `/prune` / `/distill`: 上下文主動清理與 6 要素熱蒸餾，自動同步持久化快照。
 
 ## 9. Work Secretary (工作秘書模式)
 > See `skills/work-secretary/SKILL.md`. Auto-triggers when operating remote host (Bob/Pi) or drafting docs.
+
+## 10. 內部資源與專案知識庫 (Internal Knowledge Base)
+- **Dora GitHub Trending 儀表板**: `http://100.92.131.83:8081/`
+  - 夥伴收集 GitHub 開源專案、AI Agent、Skills 與前沿技術的監控中心。
+  - API: `/api/daily`, `/api/weekly`, `/api/monthly`, `/api/daily/stats`。
+  - 當使用者提到「看夥伴收集的專案」、「搜尋 GitHub 熱門專案」、「Dora 儀表板」時，主動查詢此端點。

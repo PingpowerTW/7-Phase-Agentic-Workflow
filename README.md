@@ -229,18 +229,24 @@ def quality_gate_execution(task):
 | **`/ui-check`** | **視覺化驗收** | 喚醒 Browser Subagent 使用 Playwright 進行 RWD 排版截圖與視覺稽核。 |
 | **`/fix`** | **深度除錯模式** | 觸發 `debug-pro` Skill，先建立假設並於 Sandbox 隔離根本原因後才修復。 |
 | **`/caveman`** | **洞穴人省話模式** | 實作期間刪除廢話與客套語，極簡化 Output Tokens (省 65-75%)。 |
+| **`/prune` / `/distill`** | **上下文主動清理與熱蒸餾** | 刪除過期 Log 與廢棄方案，提煉 6 大核心要素（目標/限制/決策/進度/未決問題/下一步），並自動同步至 `auto-snapshot` 本地記憶。 |
 
 ---
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 5 大關鍵 Skill（存放於 `skills/`）：
+本架構內建 9 大關鍵 Skill（存放於 `skills/`）：
 
 1. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
 2. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
 3. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
-4. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
-5. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
+4. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
+5. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only 快照日誌。
+6. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
+7. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
+8. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件。
+9. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
+10. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
 
 ---
 
@@ -259,7 +265,12 @@ def quality_gate_execution(task):
     ├── teamwork/SKILL.md
     ├── agy-studio/SKILL.md
     ├── caveman/SKILL.md
-    └── context-compressor/SKILL.md
+    ├── context-compressor/SKILL.md
+    ├── context-pruner/SKILL.md
+    ├── auto-snapshot/SKILL.md
+    ├── promptcraft/SKILL.md
+    ├── diagrams-skill/SKILL.md
+    └── frontend-taste-v2/SKILL.md
 ```
 
 ---
