@@ -1,6 +1,6 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.3 (Design Intelligence & Cognitive Guardrails Edition)  
+> **版本**：v2.4 (Full Visual Design & Motion Intelligence Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
 > **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）
 
@@ -235,7 +235,7 @@ def quality_gate_execution(task):
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 12 大關鍵 Skill（存放於 `skills/`）：
+本架構內建 15 大關鍵 Skill（存放於 `skills/`）：
 
 1. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
 2. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
@@ -247,8 +247,11 @@ def quality_gate_execution(task):
 8. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
 9. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
 10. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
-11. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
-12. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
+11. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
+12. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
+13. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
+14. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
+15. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
 
 ---
 
@@ -274,7 +277,10 @@ def quality_gate_execution(task):
     ├── diagrams-skill/SKILL.md
     ├── frontend-taste-v2/SKILL.md
     ├── ui-designer/SKILL.md
-    └── ux-audit/SKILL.md
+    ├── ux-audit/SKILL.md
+    ├── gsap-motion/SKILL.md
+    ├── cinematic-ui/SKILL.md
+    └── landing-page-architect/SKILL.md
 ```
 
 ---
