@@ -907,12 +907,27 @@ If the brief is one of the above, **say so explicitly**, point to the right tool
 
 ---
 
+## 13.5 HALLMARK AESTHETIC CRITIQUE MATRIX (5-DIMENSION SELF-SCORE)
+
+Before finalizing and delivering any frontend design output, run the **Hallmark 5-Dimension Critique Loop** (Score 1-10 on each axis). The output must score ≥ 8/10 on ALL five dimensions before passing:
+
+| Axis | Evaluation Standard (Hallmark / Anti-Slop) | Pass Target |
+|---|---|---|
+| **1. Typography & Character** | Distinct font pairings with intention (Display vs. Body). Negative tracking on headings (`-0.02em` to `-0.05em`), expanded tracking on micro-caps (`+0.06em`+). Zero default Inter/Roboto unless explicit. | ≥ 8/10 |
+| **2. Layout Variance & Spacing** | Non-uniform spatial rhythm. Asymmetric grid / Bento / break-the-grid composition matching `DESIGN_VARIANCE`. No mechanical 3-equal-card repetition. | ≥ 8/10 |
+| **3. Visual Weight & Hierarchy** | Instant eye-path clarity. Exactly ONE primary focal point per screen. Accent color used ≤ 2 times per viewport. | ≥ 8/10 |
+| **4. Contrast & Accessibility** | WCAG 2.1 AA (≥ 4.5:1) compliant. Buttons, form inputs, and hover states have crisp, unambiguous feedback. `prefers-reduced-motion` respected. | ≥ 9/10 |
+| **5. Uniqueness & Anti-AI Tells** | Zero AI purple-to-blue gradients, zero emoji header decorations, zero fake div screenshots, zero generic glassmorphism spam. | ≥ 8/10 |
+
+---
+
 ## 14. FINAL PRE-FLIGHT CHECK
 
 Run this matrix before outputting code. This is the last filter.
 
 **THIS IS NOT OPTIONAL. Run every box. If any box fails, the output is not done.**
 
+- [ ] **Hallmark 5-Dimension Score**: All 5 dimensions score ≥ 8/10?
 - [ ] **Brief inference** declared (Section 0.B one-liner)?
 - [ ] **Dial values** explicit and reasoned from the brief, not silently using baseline?
 - [ ] **Design system** chosen from Section 2 if applicable, or aesthetic labeled honestly?

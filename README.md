@@ -1,6 +1,6 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.1 (Integrated SDD & Karpathy Behavioral Guidelines + Two-Layer Architecture)  
+> **版本**：v2.3 (Design Intelligence & Cognitive Guardrails Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
 > **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）
 
@@ -235,7 +235,7 @@ def quality_gate_execution(task):
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 9 大關鍵 Skill（存放於 `skills/`）：
+本架構內建 12 大關鍵 Skill（存放於 `skills/`）：
 
 1. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
 2. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
@@ -244,9 +244,11 @@ def quality_gate_execution(task):
 5. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only 快照日誌。
 6. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
 7. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
-8. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件。
-9. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
-10. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
+8. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
+9. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
+10. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
+11. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
+12. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
 
 ---
 
@@ -270,7 +272,9 @@ def quality_gate_execution(task):
     ├── auto-snapshot/SKILL.md
     ├── promptcraft/SKILL.md
     ├── diagrams-skill/SKILL.md
-    └── frontend-taste-v2/SKILL.md
+    ├── frontend-taste-v2/SKILL.md
+    ├── ui-designer/SKILL.md
+    └── ux-audit/SKILL.md
 ```
 
 ---
