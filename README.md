@@ -108,10 +108,27 @@ flowchart LR
 | **Phase 0** | **Spec (規格定義)** | 用自然語言定義 What & Why，劃定範疇，產出可驗證 Success Criteria。 | `spec.md` | Claude Opus / Pro |
 | **Phase 1** | **Context & Validation** | 透過 Context Sandbox 靜態掃描 codebase，確認規格可行性。 | Requirement Checklist | Claude Opus / Pro |
 | **Phase 2** | **Debt Audit** | 盤點影響範圍內的 Code Smells (🔴🟡🟢)，決定標記或修復策略。 | Debt Summary | Claude Opus / Pro |
-| **Phase 3** | **Design Proposal** | 提出技術架構與修改檔名清單。結束前執行 **Context Pruning**。 | `implementation_plan.md` | Claude Opus / Pro |
+| **Phase 3** | **Design Proposal** | 提出技術架構、Open Design 9-Section 設計系統。結束前執行 Context Pruning。 | `implementation_plan.md` + `DESIGN.md` | Claude Opus / Pro |
 | **Phase 4** | **Implementation** | 進行程式碼實作，遵守 Karpathy 四大護欄。建議啟用 `/caveman` 省話模式。 | Source Code + Diff Blocks | **Gemini 3.6 Flash** |
-| **Phase 5** | **Test & Review** | 執行自動化測試、對抗性審查 (Adversarial Review) 及 Code Walkthrough。 | Test Results + Walkthrough | Claude / 3.1 Pro |
-| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 的 Success Criteria 逐項驗收，經驗歸檔。 | Updated `spec.md` + ADR | Claude Opus / Pro |
+| **Phase 5** | **Test & Review** | 執行自動化測試、PencilPlaybook 量化審查 (`/review`) 及視覺驗收 (`/ui-check`)。 | Test Results + Walkthrough | Claude / 3.1 Pro |
+| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 的 Success Criteria 逐項驗收，auto-snapshot 經驗歸檔。 | Updated `spec.md` + ADR | Claude Opus / Pro |
+
+### 🚀 如何發動 7-Phase 工作流 (Quick Launch Guide)
+
+在日常開發中，您可以透過以下 4 種方式直接啟動工作流：
+
+1. **💡 只有想法 / 需求尚待釐清** ➡️ 輸入 **`/spec [您的想法]`**
+   - Agent 將以 Phase 0 規格問答模式引導您完成 `spec.md`。
+2. **🛡️ 一般小改動 (<3 檔案)** ➡️ **直接在對話框下達需求**
+   - 系統預設以單兵模式自動執行 Phase 1~6（靜態分析 ➔ 方案 ➔ 精準開刀 ➔ 測試）。
+3. **🤝 大型重構 / 關鍵模組 (≥3 檔案)** ➡️ 輸入 **`/teamwork`**
+   - 啟動 5 人品質制衡軍團（Explorer ➔ Worker ➔ Reviewer + Critic ➔ Auditor）。
+4. **🚀 全端開發 (DB + API + 前端 UI)** ➡️ 輸入 **`/agy-studio`**
+   - 啟動 7 人全端工作室（DB Architect ➔ Backend Lead ➔ Frontend Master 等）。
+
+> **💡 發動後實戰心法：**
+> - 規劃完畢 (Phase 3 結束) ➡️ 點擊確認或輸入 `/caveman`，切換至 **Flash 模型** 執行快速實作。
+> - 實作完成 (Phase 4 結束) ➡️ 輸入 **`/review`** 切換至 **Pro/Claude 模型** 執行對抗審查，或輸入 **`/ui-check`** 進行視覺驗收。
 
 ---
 
