@@ -78,11 +78,11 @@ rules:
   - id: R002_ORCHESTRATOR_WRITE
     action: ALLOW
     tool: ["write_to_file", "replace_file_content"]
-    condition: "principal.role == 'Orchestrator' and not payload.path.endswith('.env')"
+    condition: "principal.role == 'Orchestrator' and not any(payload.get('TargetFile', '').replace('\\\\', '/').lower().endswith(secret) for secret in ['.env', '.env.local', 'id_rsa', 'credentials.json'])"
   - id: R003_DESTRUCTIVE_BLOCK
     action: BLOCK
     tool: "run_command"
-    condition: "any(cmd in payload.command for cmd in ['rm -rf', 'drop table', 'format', 'git push --force'])"
+    condition: "any(cmd in ' '.join(payload.get('CommandLine', '').lower().split()) for cmd in ['rm -rf', 'rm -r -f', 'drop table', 'drop database', 'format ', 'git push -f', 'git push --force'])"
   - id: R_DEFAULT_FALLBACK
     action: BLOCK
     tool: "*"
@@ -104,26 +104,32 @@ rules:
 }
 ```
 
-### 2. 評估 API 呼叫 (`POST http://localhost:8080/evaluate`)
-在執行任何特權 Tool Call 前，向 DROS 網關提交評估：
-```json
-{
-  "principal": {
-    "did": "did:key:z6MkuExplorer...",
-    "role": "Explorer"
-  },
-  "action": "write_to_file",
-  "payload": {
-    "path": "src/main.ts"
+### 2. 中間件身分注入協議 (MCP Proxy / Middleware)
+當 Agent 發起 Tool 呼叫時，MCP 代理層自動依據當前 Session / Subagent 角色注入 `principal` 身分憑證：
+```typescript
+// MCP Tool Interceptor Middleware
+async function handleToolCall(toolName: string, args: Record<string, any>, sessionRole: string) {
+  const principal = {
+    did: getAgentDID(sessionRole), // e.g., did:key:z6MkuExplorer...
+    role: sessionRole
+  };
+  
+  // 向 DROS 網關提交常數時間點陣查表
+  const evalRes = await fetch("http://localhost:8080/evaluate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ principal, action: toolName, payload: args })
+  });
+  
+  const { decision, reason } = await evalRes.json();
+  if (decision === "BLOCK") {
+    throw new Error(`[DROS_FUSED] 執行期物理熔斷: ${reason}`);
   }
 }
 ```
-**DROS 判定回應**：
-```json
-{
-  "decision": "BLOCK",
-  "reason": "Principal did:key:z6MkuExplorer has ReadOnly clearance. Action write_to_file denied.",
-  "latency_us": 0.42,
-  "merkle_root": "a8f3b2c..."
-}
-```
+
+### 3. 自適應雙軌降級機制 (Graceful Fallback)
+若本機 Docker 或 `:8080` 網關未啟動：
+- 系統自動捕獲 `ECONNREFUSED` / 網關超時，無縫降級為 **Soft Guard（提示詞護欄 + 本地 Hooks 門禁）**。
+- 不阻斷正常開發流程，並於對話中標記 `[⚠️ DROS Gateway Offline — Fallback to Soft Guard]` 提示開發者。
+
