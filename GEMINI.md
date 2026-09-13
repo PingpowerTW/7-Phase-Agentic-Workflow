@@ -83,6 +83,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 * **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`, `frontend-taste-v2`
 * **Defensive/React**: `defensive-coding-checker`, `error-handling`, `data-validator`, `react-performance-patterns`
 * **Workflow/Handoff**: `release-checklist`, `work-resume-sop`, `session-handoff`, `async-agent-patterns`, `context-pruner`
+* **Runtime Guard & Security**: `dros-gateway` (確定性執行期網關、<1μs AST 熔斷、W3C did:key 隔離)
 
 ## 8. Macro Commands (高階工作流)
 - `/spec`: Phase 0 spec mode. Generates `spec.md`.
@@ -92,8 +93,10 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 - `/ui-check`: Invoke Browser agent for visual diff/screenshots.
 - `/fix`: Deep debug mode (isolate root cause via logs).
 - `/audit`: Tech debt & scaling audit.
+- `/dros`: 啟動或檢查 DROS VajraClaw 執行期安全網關狀態與策略。
 - `ctx`: Context system CLI (`stats`, `doctor`, `upgrade`, `purge`).
 - `/prune` / `/distill`: 上下文主動清理與 6 要素熱蒸餾，自動同步持久化快照。
+
 
 ## 9. Work Secretary (工作秘書模式)
 > See `skills/work-secretary/SKILL.md`. Auto-triggers when operating remote host (Bob/Pi) or drafting docs.

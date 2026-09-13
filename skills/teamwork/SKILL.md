@@ -14,19 +14,22 @@ description: 多代理人品質保證協作模式。複雜開發任務時自動�
 
 ---
 
-## 角色分工
+## 角色分工與 W3C DID 權限綁定
 
 主代理人（你自身）= **Sentinel + Orchestrator**，負責理解需求、拆解里程碑、調度子代理人、監控進度、最終寫入檔案。
 
-| # | Agent | Type | 職責 | 禁止事項 |
-|---|-------|------|------|---------|
-| 1 | **Explorer** | `research` | 調研 codebase、分析依賴、設計架構、列出風險 | 禁止寫檔案 |
-| 2 | **Worker** | `research` | 根據架構方案撰寫完整代碼+測試，以文字輸出 | 禁止寫檔案（由主代理人審核後寫入）、禁止 TODO/placeholder |
-| 3 | **Reviewer** | `research` | 獨立審查代碼品質、架構合理性 | 禁止修改代碼 |
-| 4 | **Critic** | `research` | 對抗性測試：找邊界條件、安全漏洞、效能瓶頸 | 禁止修改代碼 |
-| 5 | **Auditor** | `research` | 靜態分析：抓假測試、mock 佔位、lazy shortcuts | 禁止修改代碼 |
+在 DROS VajraClaw 網關守護下，每個子代理人自動綁定 W3C `did:key` 密碼學身分與常數時間 $\mathcal{O}(1)$ 權限位元圖：
 
-> **所有子代理人都是 read-only**。只有主代理人有寫入權限。Worker 產出的代碼必須通過 Reviewer + Auditor 閘門後，由主代理人寫入。
+| # | Agent | Type | W3C DID 識別 | 職責 | 物理硬性限制 (DROS Enforced) |
+|---|-------|------|-------------|------|-----------------------------|
+| 0 | **Orchestrator** | `self` | `did:key:z6MkuOrchestrator...` | 總指揮、拆解任務、唯一檔案寫入與交付 | 嚴禁刪除根目錄與覆寫安全策略 |
+| 1 | **Explorer** | `research` | `did:key:z6MkuExplorer...` | 調研 codebase、分析依賴、設計架構、列出風險 | **物理唯讀 (HTTP 403 阻斷寫入)** |
+| 2 | **Worker** | `research` | `did:key:z6MkuWorker...` | 根據架構方案撰寫完整代碼+測試，以文字輸出 | **禁止直接落地 (由主代理人寫入)**、禁止佔位符 |
+| 3 | **Reviewer** | `research` | `did:key:z6MkuReviewer...` | 獨立審查代碼品質、架構合理性 | **物理唯讀，禁止修改代碼** |
+| 4 | **Critic** | `research` | `did:key:z6MkuCritic...` | 對抗性測試：找邊界條件、安全漏洞、效能瓶頸 | **物理唯讀，禁止修改代碼** |
+| 5 | **Auditor** | `research` | `did:key:z6MkuAuditor...` | 靜態分析：抓假測試、mock 佔位、lazy shortcuts | **物理唯讀，禁止修改代碼** |
+
+> **零信任硬邊界**：所有子代理人都是 `ReadOnly` 身分。若子代理人嘗試透過 Shell 或 Tool 寫入檔案，DROS 網關將在 $<1\mu\text{s}$ 內微秒級硬熔斷。Worker 產出的代碼必須通過 Reviewer + Auditor 閘門後，由 Orchestrator 統一寫入。
 
 ---
 

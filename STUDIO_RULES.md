@@ -163,3 +163,24 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`
 1. **機密靜態掃描器 (`validate-secrets.js`)**：在寫入代碼或推送前掃描 API Key 與明文密碼，避免安全洩漏。
 2. **資料庫遷移校驗 (`validate-db-migrations.js`)**：驗證 SQL Migration 檔案名稱格式，禁止 `DROP DATABASE/TABLE` 等破壞性 DDL。
 3. **API 契約校驗 (`validate-api-schema.js`)**：檢查 API YAML Spec 結構與 TypeScript 型別介面的語法及括號完整性。
+
+---
+
+## 8. ⚡ Runtime Gateway Guard (DROS VajraClaw 執行期治理)
+
+本框架支援掛載 DROS VajraClaw 確定性執行期安全網關（本地 Docker 端口 `:8080` 或 C-ABI 帶內攔截）：
+
+```mermaid
+graph LR
+    Agent["AI Agent (Antigravity/Claude/Cursor)"] -->|"Tool Call / Syscall"| DROS["DROS VajraClaw Gateway (:8080)"]
+    DROS -->|"O(1) AST 點陣查表 (<1μs)"| Decision{"判定合法性"}
+    Decision -- "通過" --> OS["本機檔案系統 / Shell"]
+    Decision -- "違規" --> Sever["HTTP 403 硬性熔斷 + Merkle 存證"]
+```
+
+### 守護規範要點：
+1. **Zero-Trust Default Fail-Closed**：未在 `Vajra.md` / `dros_policy.yaml` 宣告為 ALLOW 的操作預設一律攔截。
+2. **W3C `did:key` 身分認證**：子代理人派發唯讀 DID，物理隔離寫入與命令執行權限。
+3. **不可逆破壞指令阻斷**：`rm -rf`、`DROP TABLE`、覆寫 `.env` 等毀滅性指令在系統呼叫前直接物理切斷。
+4. **SHA-256 Merkle 審計鏈**：所有執行判定皆產出具備密碼學不可否認性的 Hash 鏈結日誌，杜絕日誌竄改。
+

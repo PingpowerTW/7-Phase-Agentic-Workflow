@@ -1,0 +1,68 @@
+# DROS VajraClaw 7-Phase Agentic Workflow Policy Configuration
+vajra_version: "1.0"
+security_level: STRICT
+
+# Default behavior: Fail-Closed (Block everything not explicitly allowed)
+default_action: BLOCK
+
+principals:
+  - id: did:key:z6MkuOrchestratorPrimary
+    role: Orchestrator
+    capabilities: ["READ", "WRITE", "EXECUTE_SAFE_COMMANDS"]
+
+  - id: did:key:z6MkuExplorerAgent
+    role: Explorer
+    capabilities: ["READ"]
+
+  - id: did:key:z6MkuWorkerAgent
+    role: Worker
+    capabilities: ["READ", "SANDBOX_COMPUTE"]
+
+  - id: did:key:z6MkuReviewerAgent
+    role: Reviewer
+    capabilities: ["READ"]
+
+  - id: did:key:z6MkuCriticAgent
+    role: Critic
+    capabilities: ["READ"]
+
+  - id: did:key:z6MkuAuditorAgent
+    role: Auditor
+    capabilities: ["READ"]
+
+rules:
+  # 1. All agents are allowed to read code and inspect directories
+  - id: R001_GLOBAL_READ_ALLOW
+    action: ALLOW
+    tool: ["view_file", "list_dir", "grep_search", "find_by_name", "read_url_content", "search_web"]
+
+  # 2. Only Orchestrator can perform filesystem modifications
+  - id: R002_ORCHESTRATOR_FILE_WRITE
+    action: ALLOW
+    tool: ["write_to_file", "replace_file_content"]
+    condition: "principal.role == 'Orchestrator' and not payload.get('TargetFile', '').endswith(('.env', 'id_rsa', 'credentials.json'))"
+
+  # 3. Read-Only subagents are strictly blocked from writing
+  - id: R003_BLOCK_READONLY_WRITE
+    action: BLOCK
+    tool: ["write_to_file", "replace_file_content"]
+    condition: "principal.role in ['Explorer', 'Worker', 'Reviewer', 'Critic', 'Auditor']"
+    reason: "Subagents in 7-Phase architecture are strictly Read-Only."
+
+  # 4. Critical destructive command blocking
+  - id: R004_BLOCK_DESTRUCTIVE_COMMANDS
+    action: BLOCK
+    tool: "run_command"
+    condition: "any(cmd in payload.get('CommandLine', '').lower() for cmd in ['rm -rf', 'rmdir /s', 'drop table', 'drop database', 'format ', 'git push -f', 'git push --force'])"
+    reason: "Destructive command violates 7-Phase safety guardrails."
+
+  # 5. Safe commands allowed for Orchestrator
+  - id: R005_ORCHESTRATOR_SAFE_COMMANDS
+    action: ALLOW
+    tool: "run_command"
+    condition: "principal.role == 'Orchestrator'"
+
+audit:
+  chain: sha256_merkle_tree
+  tamper_resistance: STRICT
+  log_path: ".agent/merkle_audit.log"

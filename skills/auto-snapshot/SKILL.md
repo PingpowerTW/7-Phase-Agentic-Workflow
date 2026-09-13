@@ -64,3 +64,25 @@ auto-snapshot recover --skill firebase-rules --query "auth token"
 - `snapshot_capture`：寫入快照
 - `snapshot_recover`：查詢與恢復歷史上下文
 - `snapshot_compress`：手動觸發情節壓縮
+
+---
+
+## 📜 SHA-256 Merkle 雜湊鏈與防篡改審計 (DROS 級日誌標準)
+
+為確保 AI 記憶與審計紀錄符合不可否認性（歐盟 AI 法案第 12 條標準），快照每筆 JSONL 記錄均支援 Hash-Chaining：
+
+```json
+{
+  "timestamp": "2026-09-13T15:30:00Z",
+  "type": "milestone",
+  "summary": "整合 DROS 執行期安全網關",
+  "files": ["STUDIO_RULES.md", "skills/dros-gateway/SKILL.md"],
+  "prev_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "hash": "8f3b2c140a876a...",
+  "merkle_root": "c7a912e..."
+}
+```
+
+- **驗證命令**：`auto-snapshot verify` 遍歷校驗整條雜湊鏈，防止日誌被意外竄改或覆寫。
+- **冷熱分層**：當超過 200 筆記錄時，執行壓縮並產出熱蒸餾摘要封裝於新的 Merkle Root 節點中。
+

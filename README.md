@@ -1,16 +1,16 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.4 (Full Visual Design & Motion Intelligence Edition)  
+> **版本**：v2.5 (Deterministic Runtime Governance & Dual-Track Defense Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
-> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）
+> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範與 **Andrej Karpathy AI Coding 實務準則**，並導入嚴格的 **Token 經濟學** 與 **多代理人動態調度機制**，旨在打造一個高質量、低能耗、零幻想的自動化軟體開發循環。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則** 與 **DROS VajraClaw 確定性執行期安全網關**，打造具備「Prompt 軟引導」與「微秒級硬熔斷」雙軌防禦的軟體開發循環。
 
 ---
 
 ## 📌 目錄 (Table of Contents)
 
-1. [🏛️ 兩層架構設計 (Two-Layer Architecture)](#️-兩層架構設計-two-layer-architecture)
+1. [🏛️ 三層架構與雙軌防禦 (Three-Layer Architecture)](#️-三層架構與雙軌防禦-three-layer-architecture)
 2. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
 3. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
 4. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
@@ -23,17 +23,23 @@
 
 ---
 
-## 🏛️ 兩層架構設計 (Two-Layer Architecture)
+## 🏛️ 三層架構與雙軌防禦 (Three-Layer Architecture)
 
-本框架採用嚴格的**兩層分離設計**，在節省 Token 的同時確保核心溝通協議永不遺失：
+本框架採用**「Prompt 認知層 + 專案規範層 + 執行期實體網關層」**的三層分離設計：
 
 ```mermaid
 graph TD
+    subgraph GATEWAY ["Layer 0: 物理執行期網關 (DROS VajraClaw Gateway :8080)"]
+        D1["<1μs AST 點陣硬熔斷 (攔截 rm -rf, DROP TABLE)"]
+        D2["W3C did:key 密碼學身分認證 (RFC-010)"]
+        D3["SHA-256 Merkle 審計鏈 (符合歐盟 AI 法案第 12 條)"]
+    end
+
     subgraph GLOBAL ["Layer 1: 全域規則 (GEMINI.md → ~/.gemini/GEMINI.md)"]
         G1["溝通協議：繁體中文、精簡風格、diff blocks"]
         G2["7-Phase 生命週期 + 主動提醒義務"]
         G3["Engineering Rules #1~#8 含 Token 經濟學"]
-        G4["Macro Commands：/spec /teamwork /review 等"]
+        G4["Macro Commands：/spec /teamwork /review /dros 等"]
         G5["Context-Mode Sandbox 路由規則"]
         G6["SKILL 強制觸發表 + Guardrails"]
     end
@@ -44,12 +50,15 @@ graph TD
         P3["Review Intensity Modes：full/lean/solo"]
         P4["Decision Framework + VFM 評分演算法"]
         P5[".studio/ 狀態管理結構"]
-        P6["Subagent 角色表 + Hooks 門禁"]
+        P6["Subagent 角色表 + Hooks 門禁 + Vajra.md 策略同步"]
     end
 
-    GLOBAL -->|"每次對話都載入<br/>確保溝通一致性"| Agent["AI Agent"]
-    PROJECT -->|"僅開發專案載入<br/>節省非開發場景 Token"| Agent
+    GLOBAL --> Agent["AI Agent"]
+    PROJECT --> Agent
+    Agent -->|"Tool Call / Syscall"| GATEWAY
+    GATEWAY -->|"驗證放行"| OS["作業系統 / 檔案系統"]
 ```
+
 
 ### 為什麼要分兩層？
 
@@ -252,23 +261,24 @@ def quality_gate_execution(task):
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 15 大關鍵 Skill（存放於 `skills/`）：
+本架構內建 16 大關鍵 Skill（存放於 `skills/`）：
 
-1. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
-2. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
-3. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
-4. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
-5. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only 快照日誌。
-6. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
-7. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
-8. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
-9. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
-10. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
-11. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
-12. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
-13. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
-14. **`teamwork`**：5 人多代理人品質保證與 Quality Gate 檢驗循環。
-15. **`agy-studio`**：7 人全端開發團隊協作 SOP 與 Milestone 追蹤。
+1. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
+2. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
+3. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
+4. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
+5. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
+6. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌。
+7. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
+8. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
+9. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
+10. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
+11. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
+12. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
+13. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
+14. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
+15. **`teamwork`**：5 人多代理人品質保證、W3C DID 權限隔離與 Quality Gate 檢驗循環。
+16. **`agy-studio`**：7 人全端開發團隊協作 SOP、DID 角色綁定與 Milestone 追蹤。
 
 ---
 
@@ -283,6 +293,7 @@ def quality_gate_execution(task):
 ├── Auto_Trigger_and_Switching_Playbook.md        # 模型調度與模式切換教戰手冊
 ├── Framework_vs_Teamwork_AGYStudio_Comparison.md # 單兵 vs 多代理人比較分析
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
+    ├── dros-gateway/SKILL.md                    # DROS 執行期安全與 Docker 網關
     ├── karpathy-guidelines/SKILL.md
     ├── teamwork/SKILL.md
     ├── agy-studio/SKILL.md
@@ -299,6 +310,7 @@ def quality_gate_execution(task):
     ├── cinematic-ui/SKILL.md
     └── landing-page-architect/SKILL.md
 ```
+
 
 ---
 
