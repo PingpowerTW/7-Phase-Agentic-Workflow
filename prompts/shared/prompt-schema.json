@@ -25,7 +25,7 @@
     },
     "stack": {
       "type": "string",
-      "enum": ["python", "react-typescript", "nodejs-typescript", "fullstack", "universal"],
+      "enum": ["python", "react-typescript", "nodejs-typescript", "fullstack", "laravel", "universal"],
       "description": "Target technology stack"
     },
     "patterns": {

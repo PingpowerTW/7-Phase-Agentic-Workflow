@@ -1,10 +1,10 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.7 (Agentic Prompts, Cognitive Playbook & LLM-as-a-Judge Edition)  
+> **版本**：v2.8 (Enterprise Fullstack, Laravel & Cognitive Governance Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
 > **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、Agentic Prompting（標準化認知提示）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**Behavioral Trust Clustering (BTC) 熱力學防幻覺治理層** 與 **Prompt Engineering Playbook 標準化跨技術棧資產庫**，打造兼具「物理微秒級硬熔斷」、「數學級防幻覺」與「標準化認知架構」的全流程軟體開發體系。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**Behavioral Trust Clustering (BTC) 熱力學防幻覺治理層** 與 **Prompt Engineering Playbook 跨技術棧（Python/React/Node.js/Laravel/Fullstack）資產庫**，打造兼具「物理微秒級硬熔斷」、「數學級防幻覺」與「企業級多語言認知架構」的全流程軟體開發體系。
 
 
 ---
@@ -298,6 +298,8 @@ def quality_gate_execution(task):
 │   ├── shared/prompt-schema.json                # Frontmatter JSON Schema 規範
 │   ├── python/                                  # Python 3.12+ (Feature, Debug, Refactor, Pytest)
 │   ├── react-ts/                                # React 19 / TS (Component, Hook, UI-Debug)
+│   ├── nodejs-ts/                               # Node.js / TS (Service, Middleware)
+│   ├── laravel/                                 # Laravel 11+ / PHP 8.2+ (Feature, Migration, Pest, Action)
 │   └── fullstack/                               # API Route & DB Migration 模板
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
     ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準

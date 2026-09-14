@@ -60,6 +60,14 @@
 - Proper key props on lists (no index-as-key unless static)
 - Use React.memo / computed wisely — profile before optimizing
 
+### PHP / Laravel 11+
+- `declare(strict_types=1);` mandatory at the top of every PHP file
+- Modern PHP 8.2+: Use readonly properties, constructor promotion, backed enums, match expressions
+- **Thin Controller, Fat Action**: Never put raw DB queries or heavy logic in Controllers; use Invokable Actions
+- **Eloquent Safety**: Never mass-assign without `$fillable`; always eager load (`with()`) to prevent N+1
+- **Validation**: Use FormRequest classes for all mutation endpoints; never validate inline in Controllers
+- **Testing**: Use Pest PHP / PHPUnit with `RefreshDatabase` and `Http::fake()`
+
 ### Firebase
 - Security rules MUST be tested before deploy
 - Never trust client-side data — validate in rules AND functions
