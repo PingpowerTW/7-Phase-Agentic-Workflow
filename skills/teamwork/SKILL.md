@@ -202,10 +202,20 @@ Step 5: Quality Gate 判斷
 5. 空殼函式：宣告了但 body 為空或只有 return null
 6. 測試覆蓋：核心邏輯是否有對應測試
 7. **BTC 行為探針與熵值檢驗**：核心演算法需通過 `trust-governor` 行為探針，若候選解行為發散（$\sigma_{\text{calib}} > 0.4$ 或 $T < 0.65$）則直接 REJECT
-
+8. **LLM-as-a-Judge 多維量化評分**：
+   - Faithfulness（真實無幻覺）：$\ge 4.5/5.0$
+   - Constraint Adherence（零佔位符）：$\ge 4.8/5.0$
+   - Structural Integrity（型別與錯誤處理）：$\ge 4.0/5.0$
+   - 綜合得分 $< 4.2$ 則判定 REJECT
 
 輸出格式：
 ## 審計結果：PASS / REJECT
+
+### LLM-as-a-Judge 評分
+- 真實度 (Faithfulness): X/5.0
+- 約束遵循 (Constraint): X/5.0
+- 結構完整性 (Structure): X/5.0
+- 綜合得分: X/5.0
 
 ### 違規清單（若 REJECT）
 | # | 類型 | 檔案:行號 | 違規內容 | 嚴重度 |

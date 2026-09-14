@@ -1,25 +1,26 @@
 ---
 name: promptcraft
 description: >
-  高階 LLM 提示詞工程、結構化編排與 Token 壓縮框架。
+  高階 LLM 提示詞工程、結構化編排、Meta-Prompting 與 Agentic 認知範式框架。
   遵循「提示詞即代碼 (Prompt as Code)」理念，提供 5 階段提示詞工程流水線：
-  需求解構 (Deconstruct) → 特徵提取 (Extract) → 結構化生成 (Generate XML/Markdown) → Token 語意壓縮 (Compress) → 閉環驗證 (Verify)。
-  觸發詞：/promptcraft, promptcraft, 優化提示詞, 寫提示詞, 系統提示詞, 壓縮提示詞, prompt engineering, 提示詞優化。
+  需求解構 (Deconstruct) → 特徵提取 (Extract) → 結構化生成 (Generate XML/Markdown) → Token 語意壓縮 (Compress) → LLM-as-a-Judge 閉環驗證 (Verify)。
+  並內建 Plan-and-Execute、Reflexion 自我反思與 Meta-Prompting 自動優化能力。
+  觸發詞：/promptcraft, promptcraft, 優化提示詞, 寫提示詞, 系統提示詞, 壓縮提示詞, prompt engineering, 提示詞優化, meta-prompting.
 ---
 
-# PromptCraft — 高階 LLM 提示詞工程與編排技能
+# PromptCraft — 高階 LLM 提示詞工程與 Agentic 認知架構
 
-> **核心理念**：提示詞即代碼 (Prompt as Code)。
-> 專為 Google Gemini API 與先進大型語言模型（LLM）設計，透過結構化編排、XML 標籤隔離、語意 Token 壓縮與邊界條件強化，產出高穩定、低延遲、省成本的生產級系統提示詞（System Instructions）。
+> **核心理念**：提示詞即代碼 (Prompt as Code) ＋ 認知架構即提示 (Cognitive Architecture as Prompt)。
+> 專為先進大型語言模型（LLM）設計，透過結構化編排、YAML Frontmatter、XML 標籤隔離、語意 Token 壓縮與 LLM-as-a-Judge 驗證矩陣，產出生產級系統提示詞與自主 Agent 提示藍圖。
 
 ---
 
 ## 🎯 何時使用 (When to Use)
 
-- 使用者輸入 `/promptcraft` 或提及「優化提示詞」、「寫提示詞」、「系統提示詞」、「Prompt 工程」。
-- 使用者給出一段粗糙、冗長或模糊的提示詞需求，希望轉化為專業級、結構化的 LLM Prompt。
-- 需要大幅降低 Prompt 的 Token 消耗（Token Compression），同時確保模型遵循約束。
-- 需要為特定 Agent / Tool 建立具備嚴格輸入輸出契約（Contract）與安全邊界的 System Prompt。
+- 使用者輸入 `/promptcraft` 或提及「優化提示詞」、「寫提示詞」、「系統提示詞」、「Prompt 工程」、「Meta-Prompting」。
+- 需要為 Agent 構建具備 Plan-and-Execute、Reflexion 反思迴圈或多角色協作提示詞。
+- 需要大幅降低 Prompt 的 Token 消耗（Token Compression 30%~50%），同時確保模型嚴格遵循約束。
+- 建立符合 `prompts/shared/prompt-schema.json` 規範的跨技術棧 `.prompt.md` 檔案。
 
 ---
 
@@ -31,109 +32,77 @@ graph TD
     B --> C[Phase 2: 特徵提取 Extract]
     C --> D[Phase 3: 結構化生成 Generate]
     D --> E[Phase 4: Token 語意壓縮 Compress]
-    E --> F[Phase 5: 閉環驗證 Verify]
-    F --> G[生產級系統提示詞 Production System Prompt]
+    E --> F[Phase 5: LLM-as-a-Judge 閉環驗證]
+    F --> G[生產級系統提示詞 / .prompt.md]
 ```
 
 ---
 
-### Phase 1：需求解構 (Requirement Deconstruction)
+## 🧠 核心 Agentic 提示模式 (Agentic Patterns)
 
-將使用者的原始請求拆解為標準三元組，並顯性化所有隱性需求：
+### 1. Plan-and-Execute 解耦模式 (Separation of Planning and Action)
+- **Planner Prompt**：將目標分解為 3–8 個獨立、可驗證的具體行動步驟（以動詞開頭，定義預期產出）。
+- **Executor Prompt**：專注執行單一步驟，並回傳結構化 `STATUS: [COMPLETE | PARTIAL | FAILED]`。
 
-1. **Goal（核心目標）**：模型最終要解決什麼問題？產出什麼價值？
-2. **Constraints（邊界限制）**：技術棧、語言、格式、長度、禁止事項。
-3. **Context（上下文與依賴）**：輸入來源、運行環境、依賴資料庫/API。
+### 2. Reflexion 自我反思修正迴圈 (Self-Critique Loop)
+```
+┌──────────────────────────────────────────────────────────┐
+│                   REFLEXION LOOP                         │
+│  1. ACTOR: 產出初步解答/代碼                              │
+│  2. EVALUATOR: 依據邊界與測試執行結果評判 (Fail/Pass)        │
+│  3. REFLECTOR: 分析失敗根因並總結教訓 (Episodic Memory)    │
+│  4. RETRY: 帶入教訓重新生成，直至通過或達到上限 (Max 2)      │
+└──────────────────────────────────────────────────────────┘
+```
 
----
-
-### Phase 2：特徵提取 (Feature Extraction & Strategy)
-
-從解構結果中提煉四大維度：
-
-1. **Role Profile（專家角色定位）**：精準 Persona、專業深度、語氣風格（例如：資深資安架構師、精準 Python 分析師）。
-2. **Input-Output Contract（契約定義）**：輸入格式（JSON/Markdown）、輸出 Schema、必填欄位。
-3. **Strict Constraints（硬性負面約束 / Negative Constraints）**：
-   - ❌ 嚴禁幻覺（No Hallucination）
-   - ❌ 嚴禁未要求的多餘客套話 / 結論（No Boilerplate / Pleasantries）
-   - ❌ 嚴禁佔位符（No TODOs / Placeholders）
-4. **Demonstrations（少樣本範例 Few-Shot / One-Shot）**：
-   - 提供 1~2 組代表性高、涵蓋邊界條件的 `<example>` 輸入與輸出對。
-
----
-
-### Phase 3：結構化生成 (Structured Generation)
-
-遵循 Gemini 與先進 LLM 官方最佳實踐，使用清楚的 XML 標籤與 Markdown 階層包覆提示詞，防止模型在長上下文時注意力渙散：
-
-#### 結構化模板規範 (Template Standard)：
-
-```xml
-<role>
-精確定義模型扮演的專家角色與核心職責。
-</role>
-
-<context>
-說明任務背景、運行環境與依賴規格。
-</context>
-
-<rules>
-## 硬性規則 (Strict Rules)
-1. 規則一...
-2. 規則二...
-## 禁止事項 (Forbidden)
-- 嚴禁...
-</rules>
-
-<input_format>
-說明輸入資料的結構或 JSON Schema。
-</input_format>
-
-<output_format>
-明確定義輸出格式（如純 JSON、指定 Markdown 欄位、diff 區塊）。
-</output_format>
-
-<examples>
-<example>
-<input>範例輸入</input>
-<output>範例預期輸出</output>
-</example>
-</examples>
+### 3. Meta-Prompting 自動優化技術 (Prompt-Optimizer Agent)
+利用 Meta-Prompt 引導模型自我迭代優化提示詞：
+```text
+你是一位世界級的 Prompt 架構師。
+給定【原始提示詞】與【失敗案例】，請：
+1. 診斷模型產生幻覺或偏離約束的具體原因。
+2. 增加針對性的 Negative Constraints 與少樣本範例 (Few-Shot)。
+3. 輸出改進後的高資訊密度提示詞，並保持 Token 體積最小化。
 ```
 
 ---
 
-### Phase 4：Token 語意壓縮 (Token Compression)
+## 📐 標準 `.prompt.md` 模板結構
 
-對生成後的提示詞執行雙重壓縮演算法：
+```markdown
+---
+mode: 'agent'
+description: '<簡明描述用途>'
+version: '1.0.0'
+tags: [<tags>]
+stack: <python | react-typescript | fullstack | universal>
+patterns: [role-playing, plan-and-execute, btc-calibrated]
+eval_criteria: [faithfulness, zero-placeholder, type-safety]
+---
 
-1. **無損壓縮 (Lossless)**：
-   - 清除多餘連續空行、尾隨空格。
-   - 壓縮標點符號與冗餘 Markdown 格式。
-2. **有損語意壓縮 (Lossy Semantic)**：
-   - 移除無效低資訊密度詞彙（如「請務必」、「基本上」、「非常」、「記得要」等）。
-   - 將冗長複合句轉為高資訊密度的祈使句/清單。
-   - 預期節省 **30% ~ 50%** 輸入 Token 體積。
+# Role
+精確定義角色定位與專家 Persona。
+
+# Task
+明確定義任務範疇與交付目標。
+
+# Invariants & Rules
+- 硬性規則 (Strict Rules)
+- 禁止事項 (Negative Constraints / Forbidden)
+
+# Output Format
+定義清晰的標題、檔案路徑與程式碼區塊格式。
+```
 
 ---
 
-### Phase 5：閉環驗證與評估 (Verification & Scoring)
+## ⚖️ LLM-as-a-Judge 多維評估量表 (Evaluation Rubric)
 
-依據 **PromptCraft 評估矩陣** 自檢並評分：
+在驗收 Prompt 產出或 Agent 代碼時，採用 5 級分制（Likert Scale）進行客觀評判：
 
-| 評估維度 | 檢驗標準 | 權重 |
-|---|---|---|
-| **明確性 (Clarity)** | 角色定義與目標是否毫無歧義？ | 25% |
-| **邊界完整性 (Boundaries)** | 是否有清晰的 Negative Constraints 與例外處理？ | 25% |
-| **格式嚴謹度 (Schema Adherence)** | XML/JSON 契約是否能保證模型 100% 格式對齊？ | 25% |
-| **Token 能效比 (Token Efficiency)** | 是否已去除所有贅詞，達到最高資訊密度？ | 25% |
-
----
-
-## 📋 輸出交付格式
-
-當為使用者打造/優化提示詞時，請依序輸出：
-
-1. **📊 優化分析報告**：說明原始問題、提取的特徵與壓縮比例。
-2. **🚀 生產級系統提示詞 (Production System Prompt)**：完整的 Markdown/XML 程式碼區塊（可直接複製使用）。
-3. **🧪 測試案例與呼叫範例**：提供一組測試 Prompt 與預期行為驗證。
+| 維度 | 評估標準 | 權重 | 合格門檻 |
+|---|---|:---:|:---:|
+| **真實度 (Faithfulness)** | 內容完全基於事實/需求，零未授權假設與幻覺 | 30% | $\ge 4.5$ |
+| **約束遵循 (Constraint Adherence)** | 嚴格遵守 Negative Constraints，零佔位符 (`TODO`/`...`) | 30% | $\ge 4.8$ |
+| **結構完整性 (Groundedness & Types)** | 型別安全、錯誤處理完備、測試覆蓋核心邏輯 | 25% | $\ge 4.0$ |
+| **Token 能效比 (Token Efficiency)** | 無冗長贅詞，資訊密度高，簡潔精確 | 15% | $\ge 4.0$ |

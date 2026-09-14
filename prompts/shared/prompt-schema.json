@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgenticPromptSchema",
+  "description": "Standardized schema for .prompt.md frontmatter in 7-Phase-Agentic-Workflow",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["agent", "ask", "review", "audit"],
+      "description": "Interaction mode for the LLM/Agent"
+    },
+    "description": {
+      "type": "string",
+      "description": "Clear human-readable description of what this prompt accomplishes"
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic versioning string (e.g. 1.0.0)"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Search and classification tags"
+    },
+    "stack": {
+      "type": "string",
+      "enum": ["python", "react-typescript", "nodejs-typescript", "fullstack", "universal"],
+      "description": "Target technology stack"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "role-playing",
+          "plan-and-execute",
+          "few-shot",
+          "chain-of-thought",
+          "reflection",
+          "react",
+          "meta-prompting",
+          "btc-calibrated"
+        ]
+      },
+      "description": "Agentic prompt engineering patterns employed"
+    },
+    "eval_criteria": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "LLM-as-a-Judge validation criteria"
+    }
+  },
+  "required": ["mode", "description", "version", "stack", "patterns"]
+}
