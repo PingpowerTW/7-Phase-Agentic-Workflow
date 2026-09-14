@@ -22,10 +22,10 @@ prompts/
 ├── nodejs-ts/                      # Node.js + TypeScript 服務端模板
 │   ├── create-service.prompt.md    # 依賴注入式商業邏輯服務
 │   └── create-middleware.prompt.md # 具備安全性與錯誤傳遞的中間件
-├── laravel/                        # Laravel 11+ / PHP 8.2+ 企業級後端模板
-│   ├── create-feature.prompt.md    # Action + FormRequest + Resource + Pest 完整切片
+├── laravel/                        # Laravel 13+ / PHP 8.4+ 企業級後端模板
+│   ├── create-feature.prompt.md    # Action + FormRequest + Resource + Pest 3+ 完整切片
 │   ├── create-migration.prompt.md  # 冪等性索引優化與安全 Rollback
-│   ├── write-pest-tests.prompt.md  # Pest PHP Feature 測試與 Mock
+│   ├── write-pest-tests.prompt.md  # Pest PHP 3+ Feature 測試與 Mock
 │   └── refactor-action.prompt.md   # 臃腫 Controller 重構為 Invokable Action
 └── fullstack/                      # 全端 (Next.js / FastAPI / Database) 模板
     ├── create-api-route.prompt.md  # 帶 Schema 驗證的 API 端點

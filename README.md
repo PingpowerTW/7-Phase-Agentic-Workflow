@@ -299,7 +299,7 @@ def quality_gate_execution(task):
 │   ├── python/                                  # Python 3.12+ (Feature, Debug, Refactor, Pytest)
 │   ├── react-ts/                                # React 19 / TS (Component, Hook, UI-Debug)
 │   ├── nodejs-ts/                               # Node.js / TS (Service, Middleware)
-│   ├── laravel/                                 # Laravel 11+ / PHP 8.2+ (Feature, Migration, Pest, Action)
+│   ├── laravel/                                 # Laravel 13+ / PHP 8.4+ (Feature, Migration, Pest, Action)
 │   └── fullstack/                               # API Route & DB Migration 模板
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
     ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準
