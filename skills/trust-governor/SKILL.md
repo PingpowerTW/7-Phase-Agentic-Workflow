@@ -1,97 +1,101 @@
 ---
 name: trust-governor
 description: >
-  基於 Behavioral Trust Clustering (BTC) 的熱力學防幻覺與信度校準治理技能。
-  透過非對稱效用誘導、候選解行為探針聚類與閉式熱力學信任公式 T = PPV * exp(-σ_calib * T_comp)，
-  精確量化代碼真確性並在 T < θ 時主動棄權 (ABSTAIN)，降低 52% 的 LLM 幻覺率。
-  觸發詞：/trust, trust-governor, 防幻覺, 信度校準, btc, thermodynamic trust, 困惑即停.
+  基於 BTC 熱力學信度校準與 SHARS (ICML 2026) 逐段拒絕採樣的雙軌防幻覺治理技能。
+  宏觀透過閉式熱力學公式 T = PPV * exp(-σ_calib * T_comp) 評估候選解並在 T < 0.65 時主動棄權；
+  微觀透過原子事實拆解 (Atomic Claims) 與動態重寫 (Dynamic Rewriting)，在步驟級即時阻斷幻覺滾雪球 (Hallucination Snowballing)。
+  觸發詞：/trust, trust-governor, 防幻覺, 信度校準, btc, shars, rejection-sampling, 困惑即停.
 ---
 
-# 🧠 Trust Governor — 熱力學行為信任與防幻覺治理層
+# 🧠 Trust Governor — 熱力學行為信任與 SHARS 逐段防雪崩治理層
 
-> **核心理念**：從主觀猜測升級為**「熱力學行為信任計量」**。LLM 容易自信盲猜，本模組透過「非對稱效用信度 ＋ 行為探針聚類 ＋ 香農熵熱力學公式」，在推論期主動篩除發散與幻覺代碼，大幅提升生產環境的淨精度（Net Precision > 92%）。
+> **核心理念**：從主觀猜測升級為**「宏觀熱力學信度 ＋ 微觀逐段防雪崩拒絕採樣」**。
+> 結合 **Behavioral Trust Clustering (BTC)** 與 Oxford/OATML **SHARS (ICML 2026)** 原理，在推論期主動篩除發散解，並對半真半假之片段執行**「原子事實動態重寫」**，徹底杜絕幻覺滾雪球（Hallucination Snowballing）。
 
 ---
 
 ## 🎯 When to Use
 
-- 實作高難度或邊界複雜的核心演算法（如複雜資料結構、加解密、金融計算、複雜正則）
+- 實作高難度或邊界複雜的核心演算法（加解密、金融計算、複雜資料庫交易、複雜正則）
+- 長文本與多步驟架構規劃（防止前期微小錯誤在後續步驟滾雪球）
 - 落地 Karpathy 護欄 #4「困惑即停 (Stop When Confused)」的數學量化依據
-- 在 `/review`、`Auditor` 或 `Critic` 審查階段對關鍵函式進行行為等價探針測試
-- 需要主動棄權（Abstain）機制，避免模型「一本正經胡說八道」
+- 在 `/review`、`Auditor` 或 `Critic` 審查階段對關鍵程式碼進行行為等價探針測試
 
 ---
 
-## 🔬 核心公式與熱力學相圖 (Thermodynamic Formula)
-
-$$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
-
-* **$\text{PPV}$ (Positive Predictive Value)**：候選群體的平均回報信度。
-* **$\sigma_{\text{calib}}$**：行為聚類的**正規化香農熵（Shannon Entropy $\in [0, 1]$）**。
-  - 當所有候選解的探針執行結果一致時：$\sigma_{\text{calib}} = 0 \implies T = \text{PPV}$
-  - 當候選解輸出混亂發散時：$\sigma_{\text{calib}} \to 1 \implies T \to 0$（信任度雪崩）
-* **$T_{\text{comp}}$**：計算溫度（自適應補償參數）。
-* **$\theta$ (Decision Threshold)**：
-  - **$\theta = 0.65$** (推薦預設)：保守高精度模式，HumanEval 幻覺率降低 52%，淨精度達 92.2%。
-  - **$\theta = 0.50$**：平衡模式，兼顧覆蓋率與精確度。
-
----
-
-## 🛠️ 三層運作流程 (The 3-Layer Pipeline)
+## 🔬 雙軌防禦體系 (Dual-Granularity Defense)
 
 ```mermaid
-flowchart LR
-    A["候選解採樣 (K=3~5)"] --> B["Layer 1: 非對稱效用誘導<br/>CONFIDENCE: 0.0~1.0"]
-    A --> C["Layer 2: 行為探針聚類<br/>Probe Tests 執行結果映射"]
-    B --> D["Layer 3: 熱力學信任評分<br/>T = PPV × exp(-σ × T_comp)"]
-    C --> D
-    D --> E{"T ≥ θ ?"}
-    E -- "Yes" --> F["✅ ADMIT (採納模態解)"]
-    E -- "No" --> G["🛑 ABSTAIN (主動棄權/請求人類介入)"]
+graph TD
+    subgraph Macro["1. 宏觀層: BTC 熱力學信任門禁 (模組/函式級別)"]
+        M1["採樣 K 個候選解 (K=3~5)"] --> M2["非對稱效用誘導 (PPV)"]
+        M1 --> M3["行為探針聚類 (香農熵 σ)"]
+        M2 & M3 --> M4["T = PPV × exp(-σ × T_comp)"]
+        M4 --> M5{"T ≥ 0.65 ?"}
+        M5 -- "Yes" --> M6["✅ ADMIT (採納模態解)"]
+        M5 -- "No" --> M7["🛑 ABSTAIN (主動棄權/向用戶提問)"]
+    end
+
+    subgraph Micro["2. 微觀層: SHARS 逐段防雪崩採樣 (步驟/語句級別)"]
+        S1["逐段 (Segment-wise) 即時生成"] --> S2["拆解為原子事實 (Atomic Claims)"]
+        S2 --> S3{"語意熵檢驗 (Uncertainty ≤ 0.35)"}
+        S3 -- "全數屬實" --> S4["✅ ACCEPT (放行該段)"]
+        S3 -- "全數幻覺" --> S5["🛑 REJECT (Following 避坑重新採樣)"]
+        S3 -- "部分屬實" --> S6["✍️ REWRITE (僅保留驗證事實動態重寫)"]
+    end
 ```
 
 ---
 
-## 📋 系統提示詞範本 (Asymmetric Utility Prompt)
+## 🛠️ SHARS 原子事實動態重寫協議 (Dynamic Rewriting)
 
-在要求模型生成關鍵或高風險代碼時，附加以下約束以誘導真實信度：
+當 Critic 或 Auditor 發現一段代碼或規劃中存在「部分真實、部分幻覺」時，系統會自動產出重寫約束：
 
 ```text
-你是一個具備校準自我意識的專家級 AI。
-針對當前的關鍵實作：
-1. 給出最精簡且正確的程式碼。
-2. 評估自我把握度，並在最後一行輸出：
-   CONFIDENCE: <0.0 到 1.0 之間的數值>
-3. 效用規則：答對 +1 分，答錯倒扣 -3 分，主動承認不確定 0 分。
-   若把握度不足 75%，請直接輸出：I_DO_NOT_KNOW 並給予 CONFIDENCE: 0.0。
+Original statement had factual inaccuracies.
+VERIFIED TRUTHS (Must Keep):
+- 驗證屬實的 API 呼叫 / 型別定義 A
+- 驗證屬實的商業邏輯 B
+
+REJECTED CLAIMS (Must Omit):
+- 幻覺出的不存在函式庫 C
+- 錯誤的參數假設 D
+
+Task: Rewrite the segment incorporating ONLY verified truths.
 ```
 
 ---
 
 ## 💻 內建 Python 腳本調用 (`skills/trust-governor/scripts/governor.py`)
 
-本模組提供零外部依賴的純 Python 標準庫實作，可直接在 Agent 內部或 CI/CD 門禁中調用：
+本模組提供零外部依賴的純 Python 標準庫實作，可直接在 Agent 內部調用：
 
+### 1. 宏觀 BTC 候選解評估
 ```python
 from governor import evaluate_candidates, Decision
 
-# 1. 準備 K 個候選代碼與各自的自信度
-candidates = [
-    "def solve(n): return n * 2",
-    "def solve(n): return n + n",
-    "def solve(n): return 2 * n"
-]
+candidates = ["def f(n): return n * 2", "def f(n): return n + n", "def f(n): return 2 * n"]
 confidences = [0.95, 0.90, 0.92]
+probe_runner = lambda code: (20, 40)
 
-# 2. 定義行為探針執行器 (以輸入 10, 20 的執行結果為 key)
-probe_runner = lambda code: (20, 40) # 實際場景透過 subprocess 沙盒執行
+res = evaluate_candidates(candidates, confidences, probe_runner, threshold=0.65)
+if res.action == Decision.ADMIT:
+    print(f"✅ 通過熱力學門禁: Trust={res.trust}, 採用: {res.modal_answer}")
+```
 
-# 3. 進行熱力學行為聚類評估
-result = evaluate_candidates(candidates, confidences, probe_runner, threshold=0.65)
+### 2. 微觀 SHARS 逐段驗證與重寫
+```python
+from governor import evaluate_segment, SegmentAction
 
-if result.action == Decision.ADMIT:
-    print(f"✅ 通過熱力學門禁！信任度: {result.trust} (熵值: {result.sigma_calib})")
-    print(f"採用模態解答: {result.modal_answer}")
-else:
-    print(f"🛑 觸發主動棄權 (ABSTAIN)！信任度不足: {result.trust} < 0.65")
+segment = "Lin is an AI researcher who won the 1990 Nobel Prize in Chemistry."
+claims = ["Lin is an AI researcher", "Lin won 1990 Nobel Prize in Chemistry"]
+
+def verifier(claim):
+    if "Nobel" in claim:
+        return False, 0.95  # 幻覺
+    return True, 0.05       # 屬實
+
+res = evaluate_segment(segment, claims, verifier, uncertainty_threshold=0.35)
+if res.action == SegmentAction.REWRITE:
+    print("✍️ 觸發動態重寫！提示詞：\n", res.rewrite_prompt)
 ```

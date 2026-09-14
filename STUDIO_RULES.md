@@ -214,6 +214,10 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 3. **主動棄權門禁 (Abstention Gate)**：
    - **$T \ge 0.65$** ➡️ **ADMIT**（採納模態聚類解答）。
    - **$T < 0.65$**（或熵值 $\sigma_{\text{calib}} > 0.4$）➡️ **ABSTAIN**（主動棄權並觸發 Karpathy Rule #4 困惑即停，向使用者提問）。
+4. **SHARS 微觀逐段防雪崩協議 (Segment-wise Anti-Snowballing)**：
+   - 在多步生成時逐段拆解為原子事實（Atomic Claims）。
+   - 若為混合真偽片段，觸發 `REWRITE` 協議動態修剪幻覺並僅保留已驗證事實，禁止整檔暴力重構。
+   - 採樣失敗時啟動 Following 策略，將錯誤路徑保留為負向約束，引導模型避坑。
 
 ---
 

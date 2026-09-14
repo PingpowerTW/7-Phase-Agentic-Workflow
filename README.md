@@ -1,10 +1,10 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.8 (Enterprise Fullstack, Laravel & Cognitive Governance Edition)  
+> **版本**：v2.9 (SHARS Segment-wise Anti-Snowballing & Cognitive Governance Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
-> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、Agentic Prompting（標準化認知提示）
+> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**Behavioral Trust Clustering (BTC) 熱力學防幻覺治理層** 與 **Prompt Engineering Playbook 跨技術棧（Python/React/Node.js/Laravel/Fullstack）資產庫**，打造兼具「物理微秒級硬熔斷」、「數學級防幻覺」與「企業級多語言認知架構」的全流程軟體開發體系。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「物理微秒級硬熔斷」、「原子級防幻覺重寫」與「企業級全棧認知架構」的全流程軟體開發體系。
 
 
 ---
@@ -264,7 +264,7 @@ def quality_gate_execution(task):
 
 本架構內建 17 大關鍵 Skill（存放於 `skills/`）：
 
-1. **`trust-governor`**：Behavioral Trust Clustering (BTC) 熱力學防幻覺治理、信度誘導與主動棄權門禁（降低 52% 幻覺率）。
+1. **`trust-governor`**：雙軌防幻覺治理引擎（BTC 熱力學信度校準 ＋ Oxford SHARS ICML 2026 逐段原子事實動態重寫，阻斷幻覺滾雪球）。
 2. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
 3. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫、BTC 困惑即停）。
 4. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。

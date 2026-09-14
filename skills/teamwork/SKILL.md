@@ -202,7 +202,8 @@ Step 5: Quality Gate 判斷
 5. 空殼函式：宣告了但 body 為空或只有 return null
 6. 測試覆蓋：核心邏輯是否有對應測試
 7. **BTC 行為探針與熵值檢驗**：核心演算法需通過 `trust-governor` 行為探針，若候選解行為發散（$\sigma_{\text{calib}} > 0.4$ 或 $T < 0.65$）則直接 REJECT
-8. **LLM-as-a-Judge 多維量化評分**：
+8. **SHARS 原子事實逐段檢驗與動態重寫**：針對長代碼或多步規劃，標記已驗證事實與幻覺段落。若為混合片段，輸出 `REWRITE` 指示僅重寫 Delta 區塊，禁止整檔暴力重建。
+9. **LLM-as-a-Judge 多維量化評分**：
    - Faithfulness（真實無幻覺）：$\ge 4.5/5.0$
    - Constraint Adherence（零佔位符）：$\ge 4.8/5.0$
    - Structural Integrity（型別與錯誤處理）：$\ge 4.0/5.0$
