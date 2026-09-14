@@ -1,10 +1,11 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.5 (Deterministic Runtime Governance & Dual-Track Defense Edition)  
+> **版本**：v2.6 (Thermodynamic Trust & Cognitive Governance Edition)  
 > **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
-> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）
+> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則** 與 **DROS VajraClaw 確定性執行期安全網關**，打造具備「Prompt 軟引導」與「微秒級硬熔斷」雙軌防禦的軟體開發循環。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關** 與 **Behavioral Trust Clustering (BTC) 熱力學防幻覺治理層**，打造兼具「Prompt 軟引導」、「微秒級硬熔斷」與「數學級防幻覺」的三位一體全流程軟體開發體系。
+
 
 ---
 
@@ -261,24 +262,25 @@ def quality_gate_execution(task):
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 16 大關鍵 Skill（存放於 `skills/`）：
+本架構內建 17 大關鍵 Skill（存放於 `skills/`）：
 
-1. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
-2. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫）。
-3. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
-4. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
-5. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
-6. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌。
-7. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
-8. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
-9. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
-10. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
-11. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
-12. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
-13. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
-14. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
-15. **`teamwork`**：5 人多代理人品質保證、W3C DID 權限隔離與 Quality Gate 檢驗循環。
-16. **`agy-studio`**：7 人全端開發團隊協作 SOP、DID 角色綁定與 Milestone 追蹤。
+1. **`trust-governor`**：Behavioral Trust Clustering (BTC) 熱力學防幻覺治理、信度誘導與主動棄權門禁（降低 52% 幻覺率）。
+2. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
+3. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫、BTC 困惑即停）。
+4. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
+5. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
+6. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
+7. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌。
+8. **`promptcraft`**：高階 LLM 提示詞工程、結構化編排與 XML 語意隔離框架。
+9. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
+10. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
+11. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
+12. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
+13. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
+14. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
+15. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
+16. **`teamwork`**：5 人多代理人品質保證、W3C DID 權限隔離與 BTC 行為探針審計循環。
+17. **`agy-studio`**：7 人全端開發團隊協作 SOP、DID 角色綁定與 Milestone 追蹤。
 
 ---
 
@@ -293,6 +295,8 @@ def quality_gate_execution(task):
 ├── Auto_Trigger_and_Switching_Playbook.md        # 模型調度與模式切換教戰手冊
 ├── Framework_vs_Teamwork_AGYStudio_Comparison.md # 單兵 vs 多代理人比較分析
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
+    ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準
+    │   └── scripts/governor.py                  # 純標準庫熱力學評分與行為聚類腳本
     ├── dros-gateway/SKILL.md                    # DROS 執行期安全與 Docker 網關
     ├── karpathy-guidelines/SKILL.md
     ├── teamwork/SKILL.md
@@ -310,6 +314,7 @@ def quality_gate_execution(task):
     ├── cinematic-ui/SKILL.md
     └── landing-page-architect/SKILL.md
 ```
+
 
 
 ---

@@ -54,7 +54,7 @@ When your changes create dead code, clean it up. When existing dead code is unre
 
 **Exception**: When explicitly in `/refactor` mode or user says "clean this up", switch to active cleanup mode.
 
-## 4. 困惑即停 (Stop When Confused)
+## 4. 困惑即停 (Stop When Confused — Quantified via BTC)
 
 **Don't assume. Don't hide confusion. Surface tradeoffs.**
 
@@ -62,3 +62,5 @@ When your changes create dead code, clean it up. When existing dead code is unre
 - If something is unclear, **stop**, name what's confusing, and ask
 - If you spot contradictions in requirements, **point them out** — don't silently reconcile
 - State your assumptions explicitly before implementing
+- **BTC 量化門禁 (Thermodynamic Gate)**：在面臨核心演算法或複雜邊界邏輯時，依據 Behavioral Trust Clustering (BTC) 評估信度。若熱力學信任評分 $T < 0.65$（或行為探針熵值 $\sigma_{\text{calib}} > 0.4$），**強制觸發主動棄權 (ABSTAIN)**，停下並向使用者提出澄清問題，絕不盲目硬寫幻覺代碼。
+

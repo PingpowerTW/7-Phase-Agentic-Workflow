@@ -201,6 +201,8 @@ Step 5: Quality Gate 判斷
 4. 複製貼上：大段重複代碼未抽象
 5. 空殼函式：宣告了但 body 為空或只有 return null
 6. 測試覆蓋：核心邏輯是否有對應測試
+7. **BTC 行為探針與熵值檢驗**：核心演算法需通過 `trust-governor` 行為探針，若候選解行為發散（$\sigma_{\text{calib}} > 0.4$ 或 $T < 0.65$）則直接 REJECT
+
 
 輸出格式：
 ## 審計結果：PASS / REJECT
