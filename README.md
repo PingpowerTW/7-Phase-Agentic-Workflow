@@ -31,35 +31,17 @@
 本框架採用**「物理執行期網關 + 熱力學防幻覺 + 跨平台 DSL 編譯 + 7-Phase 協作」**的四層縱深防禦體系：
 
 ```mermaid
-graph TD
-    subgraph LAYER0 ["Layer 0: 物理執行期網關 (DROS VajraClaw Gateway :8080)"]
-        D1["<1μs AST 點陣硬熔斷 (攔截 rm -rf, DROP TABLE)"]
-        D2["W3C did:key 密碼學身分認證 (RFC-010)"]
-        D3["SHA-256 Merkle 審計鏈 (符合歐盟 AI 法案第 12 條)"]
-    end
+flowchart TD
+    L2["Layer 2: 跨 IDE 編譯單一真實來源 (PromptScript DSL v1.5.0)<br/>• .promptscript/ (7phase, phases, agents, governance, shortcuts, skills)<br/>• promptscript.yaml + scripts/sync_promptscript.py"]
+    L3["Layer 3: 7-Phase 全生命週期規範 (Workflow Engine)<br/>• GEMINI.md (Karpathy 護欄、Token 經濟學)<br/>• STUDIO_RULES.md (TS/Py/PHP 8.4/Laravel 13 規範、屬性遮蔽防護)<br/>• 7-Phase 生命週期 (Spec - Context - Debt - Design - Impl - Test - Evolve)"]
+    L1["Layer 1: 熱力學防幻覺與動態重寫 (BTC + Oxford SHARS)<br/>• BTC 閉式解：T = PPV * exp(-σ * T_comp)<br/>• 信用門禁：T &gt;= 0.65 放行 / 否則主動棄權向用戶提問<br/>• SHARS ICML 2026：逐段原子事實拆解 + 動態重寫 + Following 負約束"]
+    L0["Layer 0: 物理執行期網關 (DROS VajraClaw Gateway :8080)<br/>• &lt;1μs AST 點陣硬熔斷 (攔截 rm -rf, DROP TABLE)<br/>• W3C did:key 密碼學身分認證 (RFC-010)<br/>• SHA-256 Merkle 審計鏈 (符合歐盟 AI 法案第 12 條)"]
+    OS["本機作業系統 / 檔案系統 / 終端機"]
 
-    subgraph LAYER1 ["Layer 1: 熱力學防幻覺與動態重寫 (BTC + Oxford SHARS)"]
-        B1["BTC 閉式解：T = PPV · exp(-σ · T_comp)"]
-        B2["信用門禁：T ≥ 0.65 放行 / 否則主動棄權向用戶提問"]
-        B3["SHARS ICML 2026：逐段原子事實拆解 + 動態重寫 + Following 負約束"]
-    end
-
-    subgraph LAYER2 ["Layer 2: 跨 IDE 編譯真實來源 (PromptScript DSL v1.5.0)"]
-        S1[".promptscript/：7phase, phases, agents, governance, shortcuts, skills"]
-        S2["promptscript.yaml：一鍵編譯至 Antigravity, Claude, Cursor, Copilot..."]
-        S3["scripts/sync_promptscript.py：零依賴雙向校驗與同步器"]
-    end
-
-    subgraph LAYER3 ["Layer 3: 7-Phase 全生命週期規範 (Workflow Engine)"]
-        G1["GEMINI.md：溝通協議、Karpathy 護欄、Token 經濟學"]
-        G2["STUDIO_RULES.md：TS/Py/PHP 8.4/Laravel 13 規範、屬性遮蔽防護"]
-        G3["7-Phase 協作生命週期：Spec ➔ Context ➔ Debt ➔ Design ➔ Impl ➔ Test ➔ Evolve"]
-    end
-
-    LAYER2 -->|"編譯生成設定"| LAYER3
-    LAYER3 -->|"調度 Tool Call"| LAYER1
-    LAYER1 -->|"通過信度檢驗"| LAYER0
-    LAYER0 -->|"AST 硬熔斷校驗放行"| OS["作業系統 / 檔案系統 / 終端機"]
+    L2 -->|"1. 編譯同步 IDE 規則"| L3
+    L3 -->|"2. 調度 Tool Call"| L1
+    L1 -->|"3. 通過熱力學信度檢驗"| L0
+    L0 -->|"4. AST 點陣硬熔斷放行"| OS
 ```
 
 
@@ -83,27 +65,26 @@ graph TD
 ```mermaid
 flowchart TD
     subgraph DSL [".promptscript/ (Single Source of Truth)"]
-        A["7phase.prs<br/>(Identity, Meta & Restrictions)"]
-        B["phases.prs<br/>(Phase 0~6 Gating Workflows)"]
-        C["agents.prs<br/>(5-Agent League & DID Permissions)"]
-        D["governance.prs<br/>(DROS AST, BTC Trust & Oxford SHARS)"]
-        E["shortcuts.prs<br/>(Macro Commands: /spec, /teamwork...)"]
+        A["7phase.prs (Identity &amp; Restrictions)"]
+        B["phases.prs (Phase 0~6 Gating Workflows)"]
+        C["agents.prs (5-Agent League &amp; DID Permissions)"]
+        D["governance.prs (DROS, BTC Trust &amp; SHARS)"]
+        E["shortcuts.prs (Macro Commands: /spec, /teamwork...)"]
+        F["skills.prs (17 Specialized Skills Mapping)"]
     end
 
-    subgraph ENGINE ["PromptScript Compiler & Synchronizer"]
-        SYNC["scripts/sync_promptscript.py (Zero-Dep Python Validator)<br/>or `prs compile` (Node.js CLI)"]
-    end
+    SYNC["PromptScript 編譯與同步引擎<br/>(scripts/sync_promptscript.py / prs compile)"]
 
     subgraph TARGETS ["49+ Native IDE Target Formats"]
-        T1["Google Antigravity<br/>(.agent/rules/project.md)"]
-        T2["Claude Code<br/>(CLAUDE.md + .claude/rules/)"]
-        T3["Cursor 1.6+<br/>(.cursor/rules/ + commands)"]
-        T4["GitHub Copilot<br/>(.github/copilot-instructions.md + prompts)"]
+        T1["Google Antigravity (.agent/rules/project.md)"]
+        T2["Claude Code (CLAUDE.md + .claude/rules/)"]
+        T3["Cursor 1.6+ (.cursor/rules/ + commands)"]
+        T4["GitHub Copilot (.github/copilot-instructions.md + prompts)"]
         T5["Gemini CLI / Windsurf / Factory / OpenCode..."]
     end
 
-    DSL --> ENGINE
-    ENGINE --> TARGETS
+    A & B & C & D & E & F --> SYNC
+    SYNC --> T1 & T2 & T3 & T4 & T5
 ```
 
 ### 支援之輸出目標與版本矩陣 (Target Parity Matrix)
@@ -194,22 +175,15 @@ flowchart LR
 ### 三層代理人動態調度架構 (Layered Agent Architecture)
 
 ```mermaid
-graph TD
-    subgraph Layer1 ["Layer 1: 基礎行為與大腦規範 Engine"]
-        Base["GEMINI.md + Context-Mode Sandbox<br/>• Karpathy 護欄<br/>• Token 經濟學<br/>• 7-Phase 生命週期"]
-    end
+flowchart TD
+    Base["Layer 1: 基礎行為與大腦規範 Engine<br/>GEMINI.md + Context-Mode Sandbox<br/>• Karpathy 護欄 • Token 經濟學 • 7-Phase 生命週期"]
+    Task1["單兵極速交付 Task<br/>(1~2 個檔案小修改、Bug 修復，最省 Token)"]
+    TW["Layer 2: 通用品質制衡軍團 (/teamwork)<br/>5 人審查軍團: Sentinel 指揮 + Orchestrator 調度<br/>Read-Only: Explorer / Worker / Reviewer / Critic / Auditor"]
+    AGY["Layer 3: 全端領域工作室 (/agy-studio)<br/>7 人全端領域工作室: DB Architect + Backend Lead + Frontend Master<br/>獨立制衡: Reviewer + Critic + Auditor"]
 
-    subgraph Layer2 ["Layer 2: 通用品質制衡軍團 /teamwork"]
-        TW["5 人品質制衡軍團<br/>• Sentinel 指揮 + Orchestrator 調度<br/>• Read-Only: Explorer / Worker / Reviewer / Critic / Auditor"]
-    end
-
-    subgraph Layer3 ["Layer 3: 全端領域工作室 /agy-studio"]
-        AGY["7 人全端領域工作室<br/>• DB Architect + Backend Lead + Frontend Master<br/>• 獨立 Reviewer + Critic + Auditor"]
-    end
-
-    Base -->|"修改 ≤2 檔案: 單兵作業"| Task1["極速交付 Task"]
-    Base -->|"修改 ≥3 檔案: 自動喚醒"| TW
-    Base -->|"全端開發 DB+API+UI: 自動喚醒"| AGY
+    Base -->|"修改 1~2 檔案: 單兵作業"| Task1
+    Base -->|"修改 3 個以上檔案: 自動喚醒"| TW
+    Base -->|"全端開發 (DB+API+UI): 自動喚醒"| AGY
 ```
 
 ---
@@ -367,7 +341,7 @@ def quality_gate_execution(task):
 本專案已通過 **5 人品質制衡軍團 (5-Agent Quality League)** 的全域 360 度無死角極限審查，榮獲 **GRADE A+ EXCELLENT** 健康與安全評定：
 
 ```mermaid
-graph LR
+flowchart LR
     EXP["🧭 Explorer 偵察<br/>38/38 資產完整"] --> SEC["🛡️ Sentinel 安全<br/>0 密鑰洩漏 / AST 熔斷"]
     SEC --> REV["📐 Reviewer 架構<br/>0 硬編碼路徑 / 跨平台"]
     REV --> CRI["👹 Critic 紅隊<br/>空字串早退 / 防注入"]

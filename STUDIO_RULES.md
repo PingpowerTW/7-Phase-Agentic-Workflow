@@ -181,9 +181,9 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`
 本框架支援掛載 DROS VajraClaw 確定性執行期安全網關（本地 Docker 端口 `:8080` 或 C-ABI 帶內攔截）：
 
 ```mermaid
-graph LR
+flowchart LR
     Agent["AI Agent (Antigravity/Claude/Cursor)"] -->|"Tool Call / Syscall"| DROS["DROS VajraClaw Gateway (:8080)"]
-    DROS -->|"O(1) AST 點陣查表 (<1μs)"| Decision{"判定合法性"}
+    DROS -->|"O(1) AST 點陣查表 (&lt;1μs)"| Decision{"判定合法性"}
     Decision -- "通過" --> OS["本機檔案系統 / Shell"]
     Decision -- "違規" --> Sever["HTTP 403 硬性熔斷 + Merkle 存證"]
 ```
