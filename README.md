@@ -2,9 +2,9 @@
 
 > **版本**：v2.10 (Universal Multi-IDE Compiler & PromptScript Edition)  
 > **適用環境**：Antigravity, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Factory, OpenCode 等 49+ 款 AI 開發工具  
-> **核心理念**：Write Once, Compile Anywhere（一次宣告、全端編譯）、Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）
+> **核心理念**：Write Once, Compile Anywhere（一次宣告、全端編譯）、Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）、SelfCompact First-Principles（第一性原理自適應壓縮）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **PromptScript DSL (Agent Config as Code)** 跨平台編譯架構、**Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「單一真相來源跨 IDE 同步」、「物理微秒級硬熔斷」、「原子級防幻覺重寫」與「企業級全棧認知架構」的全流程軟體開發體系。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **PromptScript DSL (Agent Config as Code)** 跨平台編譯架構、**Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)**、**SelfCompact 第一性原理自適應上下文壓縮 (arXiv:2606.23525)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「單一真相來源跨 IDE 同步」、「物理微秒級硬熔斷」、「原子級防幻覺重寫」、「智慧防斷層自壓縮」與「企業級全棧認知架構」的全流程軟體開發體系。
 
 
 ---
@@ -275,6 +275,35 @@ def quality_gate_execution(task):
 
 ---
 
+### 4. SelfCompact 第一性原理自適應壓縮演算法 (First-Principles Compaction Algorithm)
+
+深度整合 [SelfCompact (arXiv:2606.23525)](https://arxiv.org/abs/2606.23525) 自適應壓縮機制，擺脫傳統固定輪數或粗暴 Token 滾動截斷所引發的「推導中途中斷」與「美化失敗死循環」痛點：
+
+```text
+[階段性 Tool 呼叫 / 調研推理完成]
+          │
+          ▼
+【廉價閘門 (Cheap Gates)】
+  • 輪數門檻：iteration >= 3 輪
+  • 容量門檻：Context >= 40,000 tokens (或視窗 70%)
+  • 冷卻週期：距上次自檢 >= 2 輪
+          │ 通過
+          ▼
+【第一性原理自檢探針 (C1-C2-C3-N1 Rubric)】
+  • (C1) Closed-unit   : 當前步驟是否已閉環？(非中途思考 "Let me check...")
+  • (C2) Summarizable  : 核心成果能否無損濃縮為 3~5 條具引證事實？
+  • (C3) Progress      : 上次壓縮至今是否有實質新事實/代碼進展？
+  • (N1) NOT Stuck     : 最近連續呼叫是否「未」陷入重複錯誤或死循環？
+          │
+          ├─ C1=Y & C2=Y & C3=Y & N1=N ──▶ ⚡ 執行去幻覺摘要，重置為 [System, Task, Summary, Continue]
+          └─ 任一條件不符 (或 N1=Y 卡死) ──▶ 🛑 阻斷壓縮！維持現狀，強制繼續推導或換道排錯
+```
+
+*   **判定公式**：$\text{COMPRESS} \iff C1 \land C2 \land C3 \land \neg N1$
+*   **KV Cache 前綴保護**：探針評估時僅在對話尾端追加單輪 User Prompt，系統提示詞與歷史前綴 100% 保持位元相同，確保伺服器端 KV Cache 完全命中，推理成本降低 30%~70%。
+
+---
+
 ## 🤖 多代理人模式對比 (Multi-Agent Modes Comparison)
 
 | 比較維度 | 🛡️ 單兵模式 (Base Framework) | 🤝 `/teamwork` 模式 | 🚀 `/agy-studio` 模式 |
@@ -314,9 +343,9 @@ def quality_gate_execution(task):
 2. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
 3. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫、BTC 困惑即停）。
 4. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
-5. **`context-compressor`**：雙向 Token 節省工具，負責跨階段對話歷史熱蒸餾。
+5. **`context-compressor`**：雙向 Token 節省工具，深度整合 **SelfCompact (arXiv:2606.23525)** 廉價閘門與 C1-C2-C3-N1 第一性原理規約，守護跨階段對話歷史熱蒸餾。
 6. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
-7. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌。
+7. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌，增設 SelfCompact C1 閉環與 N1 卡死阻斷雙重記憶防線。
 8. **`promptcraft`**：高階 LLM 提示詞工程、Meta-Prompting、Plan-and-Execute 範式、Reflexion 反思迴圈與 LLM-as-a-Judge 多維量化評估量表。
 9. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
 10. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
