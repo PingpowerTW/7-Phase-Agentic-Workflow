@@ -1,10 +1,10 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.9 (SHARS Segment-wise Anti-Snowballing & Cognitive Governance Edition)  
-> **適用環境**：Antigravity, Cursor, Claude Code, Windsurf 或同等級 Agentic IDE  
-> **核心理念**：Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Token Economy（Token 節能）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）
+> **版本**：v2.10 (Universal Multi-IDE Compiler & PromptScript Edition)  
+> **適用環境**：Antigravity, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Factory, OpenCode 等 49+ 款 AI 開發工具  
+> **核心理念**：Write Once, Compile Anywhere（一次宣告、全端編譯）、Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「物理微秒級硬熔斷」、「原子級防幻覺重寫」與「企業級全棧認知架構」的全流程軟體開發體系。
+本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **PromptScript DSL (Agent Config as Code)** 跨平台編譯架構、**Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「單一真相來源跨 IDE 同步」、「物理微秒級硬熔斷」、「原子級防幻覺重寫」與「企業級全棧認知架構」的全流程軟體開發體系。
 
 
 ---
@@ -12,15 +12,16 @@
 ## 📌 目錄 (Table of Contents)
 
 1. [🏛️ 三層架構與雙軌防禦 (Three-Layer Architecture)](#️-三層架構與雙軌防禦-three-layer-architecture)
-2. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
-3. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
-4. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
-5. [🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)](#-核心演算法與決策矩陣-core-algorithms--matrices)
-6. [🤖 多代理人模式對比 (Multi-Agent Modes Comparison)](#-多代理人模式對比-multi-agent-modes-comparison)
-7. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
-8. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
-9. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
-10. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
+2. [⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)](#-promptscript-跨-ide-編譯架構-promptscript-universal-compiler)
+3. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
+4. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
+5. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
+6. [🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)](#-核心演算法與決策矩陣-core-algorithms--matrices)
+7. [🤖 多代理人模式對比 (Multi-Agent Modes Comparison)](#-多代理人模式對比-multi-agent-modes-comparison)
+8. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
+9. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
+10. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
+11. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
 
 ---
 
@@ -69,6 +70,51 @@ graph TD
 | 換專案/換語言 | ❌ Go 專案也背 React 規範 | ✅ 依專案掛載不同 STUDIO_RULES |
 | 溝通風格一致性 | ✅ 永遠生效 | ✅ 永遠生效 (在全域層) |
 | Token 消耗 | 🔴 每次都全額消耗 | 🟢 按需載入，省 ~40% |
+
+---
+
+## ⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
+
+在 v2.10 中，本框架原生引入 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth)**。
+
+以往各 AI 編輯器配置格式高度破碎（Claude Code 讀 `CLAUDE.md`、Cursor 讀 `.cursor/rules/`、Copilot 讀 `.github/copilot-instructions.md`、Antigravity 讀 `.agent/rules/`）。現在只需維護 `.promptscript/`，即可自動編譯輸出原生支援：
+
+```mermaid
+flowchart TD
+    subgraph DSL [".promptscript/ (Single Source of Truth)"]
+        A["7phase.prs<br/>(Identity, Meta & Restrictions)"]
+        B["phases.prs<br/>(Phase 0~6 Gating Workflows)"]
+        C["agents.prs<br/>(5-Agent League & DID Permissions)"]
+        D["governance.prs<br/>(DROS AST, BTC Trust & Oxford SHARS)"]
+        E["shortcuts.prs<br/>(Macro Commands: /spec, /teamwork...)"]
+    end
+
+    subgraph ENGINE ["PromptScript Compiler & Synchronizer"]
+        SYNC["scripts/sync_promptscript.py (Zero-Dep Python Validator)<br/>or `prs compile` (Node.js CLI)"]
+    end
+
+    subgraph TARGETS ["49+ Native IDE Target Formats"]
+        T1["Google Antigravity<br/>(.agent/rules/project.md)"]
+        T2["Claude Code<br/>(CLAUDE.md + .claude/rules/)"]
+        T3["Cursor 1.6+<br/>(.cursor/rules/ + commands)"]
+        T4["GitHub Copilot<br/>(.github/copilot-instructions.md + prompts)"]
+        T5["Gemini CLI / Windsurf / Factory / OpenCode..."]
+    end
+
+    DSL --> ENGINE
+    ENGINE --> TARGETS
+```
+
+### 支援之輸出目標與版本矩陣 (Target Parity Matrix)
+
+| IDE / 工具名稱 | 設定檔輸出路徑 | 支援豐富度 | 支援特性 |
+|---|---|---|---|
+| **Google Antigravity** | `.agent/rules/project.md` | `frontmatter` | YAML Frontmatter 啟動觸發、內聯 Skills、DROS 攔截 |
+| **Claude Code** | `CLAUDE.md` + `.claude/` | `full` | 多檔案模組化、Subagents 宣告、Hooks 與指令 |
+| **Cursor** | `.cursor/rules/` + `.cursor/commands/` | `full` | 檔案 Glob 綁定、Prompt 快捷指令映射 |
+| **GitHub Copilot** | `.github/copilot-instructions.md` + `.github/prompts/` | `full` | 專案級系統指令、可重用 `.prompt.md` 樣板 |
+| **Gemini CLI** | `GEMINI.md` | `simple` | 緊湊型全域系統提示詞、SDD 工作流 |
+| **Windsurf / Factory** | `.windsurfrules` / `AGENTS.md` | `full` | 跨平台代理人能力與門禁規則同步 |
 
 ---
 
@@ -288,6 +334,13 @@ def quality_gate_execution(task):
 
 ```
 7-Phase-Agentic-Workflow/
+├── .promptscript/                               # ⚡ PromptScript DSL 單一真實來源 (v1.5.0)
+│   ├── 7phase.prs                               # 總進入點、Identity、Restrictions 與 Standards
+│   ├── phases.prs                               # Phase 0~6 協作狀態機與驗收門禁
+│   ├── agents.prs                               # 5 人品質制衡軍團與全端專家子代理人宣告
+│   ├── governance.prs                           # DROS AST 熔斷、BTC 熱力學閥值與 SHARS 抽樣
+│   └── shortcuts.prs                            # 統一巨集指令 (/spec, /teamwork, /review...)
+├── promptscript.yaml                            # 跨 49+ IDE 編譯目標設定 (Antigravity/Claude/Cursor/Copilot...)
 ├── GEMINI.md                                    # 全域規則 (Layer 1) → 安裝至 ~/.gemini/GEMINI.md
 ├── STUDIO_RULES.md                              # 專案級補充規則 (Layer 2) → 放置於專案根目錄
 ├── README.md                                    # 本文件
@@ -301,6 +354,9 @@ def quality_gate_execution(task):
 │   ├── nodejs-ts/                               # Node.js / TS (Service, Middleware)
 │   ├── laravel/                                 # Laravel 13+ / PHP 8.4+ (Feature, Migration, Pest, Action)
 │   └── fullstack/                               # API Route & DB Migration 模板
+├── scripts/                                     # 🛠️ 自動化驗證與同步工具
+│   ├── sync_promptscript.py                     # PromptScript 語意驗證與跨 IDE 同步校驗器
+│   └── validate_prompts.py                      # Prompt Schema 嚴格校驗腳本
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
     ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準
     │   └── scripts/governor.py                  # 純標準庫熱力學評分與行為聚類腳本

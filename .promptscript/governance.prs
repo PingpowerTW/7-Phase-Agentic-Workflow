@@ -1,0 +1,43 @@
+# 7-Phase Agentic Workflow Governance & Safety Specifications
+# Layer 0 (DROS) + Layer 1 (BTC) + Layer 2 (Oxford SHARS)
+
+@guards {
+  # === LAYER 0: DROS VajraClaw Deterministic Runtime Safety ===
+  dros-vajraclaw: {
+    latency: "<1μs"
+    mode: "deterministic-ast-fuse"
+    enforcement: "hard-circuit-breaker"
+    identity: "W3C did:key cryptographic pass (RFC-010)"
+    audit: "SHA-256 Merkle tree chain"
+    blockedPatterns: [
+      "rm -rf /",
+      "eval(base64_decode(...))",
+      "curl | bash",
+      "chmod 777",
+      "git push --force origin main"
+    ]
+  }
+
+  # === LAYER 1: BTC Thermodynamic Trust Governor ===
+  btc-trust-governor: {
+    mode: "thermodynamic-credit"
+    formula: "T = PPV * exp(-sigma * T_comp)"
+    thresholdTheta: 0.65
+    parameters: {
+      ppvBase: 0.95
+      decaySigma: 0.15
+      maxComplexityTemp: 2.0
+    }
+    actionOnBreach: "downgrade-to-sandboxed-read-only"
+  }
+
+  # === LAYER 2: Oxford/OATML SHARS Hallucination Rejection Sampling ===
+  oxford-shars: {
+    mode: "segment-wise-rejection-sampling"
+    claimDecomposition: "atomic-propositional-split"
+    verification: "cross-entropy-uncertainty-filter"
+    dynamicDeltaRewriting: true
+    followingConstraintGeneration: true
+    rejectionThreshold: 0.70
+  }
+}

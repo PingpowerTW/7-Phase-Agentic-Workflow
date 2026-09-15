@@ -1,0 +1,100 @@
+# 7-Phase Agentic Workflow Macro Shortcuts & Commands
+# Mapped to native Copilot Prompts, Cursor Commands, and Claude Slash Commands
+
+@shortcuts {
+  "/spec": {
+    prompt: true
+    description: "Initialize Phase 0: Requirement Specification & Problem Formulation mode"
+    content: """
+      Switch to Phase 0 (Specification Mode).
+      1. Interview user to clarify ambiguous requirements, constraints, and success criteria.
+      2. Produce `spec.md` including Functional, Non-Functional, Acceptance Criteria, and Edge Cases.
+      3. Wait for user sign-off before proceeding to code context gathering.
+    """
+  }
+
+  "/teamwork": {
+    prompt: true
+    description: "Invoke the 5-Agent Quality League for multi-file or complex tasks"
+    content: """
+      Activate the 5-Agent Collaborative Quality Assurance workflow:
+      1. Explorer maps context & seams.
+      2. Worker crafts implementation plan.
+      3. Reviewer (Rational) and Critic (Adversarial) perform parallel dual-perspective review.
+      4. Worker implements code addressing all critical objections.
+      5. Auditor runs full verification tests and outputs summary report.
+    """
+  }
+
+  "/review": {
+    prompt: true
+    description: "Run adversarial code review (Rational vs Grumpy Critic)"
+    content: """
+      Execute dual-perspective adversarial code review:
+      - Rational Reviewer: Evaluates SOLID, DRY, typing, and test coverage.
+      - Grumpy Critic: Stresses unhandled exceptions, race conditions, edge cases, and failure modes.
+      - Output structured findings (🔴 Critical / 🟡 Warning / 🟢 Suggestion).
+    """
+  }
+
+  "/trust": {
+    prompt: true
+    description: "Evaluate BTC Thermodynamic Trust score and Oxford SHARS hallucination index"
+    content: """
+      Evaluate current session trust metrics:
+      - Compute Thermodynamic Trust T = PPV * exp(-sigma * T_comp).
+      - Check against threshold theta = 0.65.
+      - Decompose latest responses into atomic claims and compute SHARS verification scores.
+      - Report governance status and credit balance.
+    """
+  }
+
+  "/diagnosing-bugs": {
+    prompt: true
+    description: "Trigger 6-Phase Systematic Debugging Loop for hard/flaky bugs"
+    content: """
+      Trigger the 6-Phase Deep Debugging Loop:
+      1. Isolate minimal reproduction steps.
+      2. Formulate testable hypothesis.
+      3. Write failing regression test first.
+      4. Inspect root cause (trace logs & memory state).
+      5. Apply surgical fix.
+      6. Verify regression test passes.
+    """
+  }
+
+  "/ui-check": {
+    prompt: true
+    description: "Invoke visual and UX audit for frontend components"
+    content: """
+      Execute visual and UX quality audit:
+      - Inspect contrast, alignment, typography hierarchy, and spacing.
+      - Check responsive behavior across desktop, tablet, mobile viewports.
+      - Verify accessibility (ARIA labels, keyboard navigation, focus rings).
+      - Flag template 'slop' and apply intentional design aesthetics.
+    """
+  }
+
+  "/caveman": {
+    prompt: true
+    description: "Enable token-compressed concise communication mode"
+    content: """
+      Enable Caveman token-saving mode:
+      - Strip conversational fluff and boilerplate explanations.
+      - Keep code diffs, architectural decisions, and precise instructions.
+      - Reduce token consumption by 65-75%.
+    """
+  }
+
+  "/audit": {
+    prompt: true
+    description: "Perform comprehensive security, dependency, and technical debt audit"
+    content: """
+      Execute deep project audit:
+      - Layer 0 DROS AST and secret scan.
+      - Dependency vulnerability audit.
+      - Code smell categorization (🔴🟡🟢).
+      - Architecture coupling analysis.
+    """
+  }
+}

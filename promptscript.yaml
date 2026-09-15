@@ -1,0 +1,30 @@
+# PromptScript Configuration for 7-Phase Agentic Workflow
+# Targets 49+ AI coding tools and environments
+
+id: '7-phase-agentic-workflow'
+syntax: '1.5.0'
+description: '7-Phase Agentic Workflow with DROS VajraClaw, BTC Trust Governor & Oxford SHARS'
+
+input:
+  entry: .promptscript/7phase.prs
+
+targets:
+  - antigravity:
+      version: frontmatter
+  - claude:
+      version: full
+  - github:
+      version: full
+  - cursor:
+      version: full
+  - factory:
+      version: full
+  - gemini:
+      version: simple
+  - windsurf:
+      version: simple
+
+validation:
+  rules:
+    empty-block: warn
+    missing-agent-tools: warn

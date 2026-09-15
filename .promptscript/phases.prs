@@ -1,0 +1,89 @@
+# 7-Phase Collaboration State Machine & Workflows
+# Phase 0 to Phase 6 Gating Rules
+
+@workflows {
+  phase-0-spec: {
+    description: "Phase 0: Requirement Specification & Problem Formulation"
+    content: """
+      Trigger: User request or '/spec' command.
+      Objective: Establish unambiguous boundaries and success criteria before touching any code.
+      Deliverables:
+      - spec.md (Problem statement, functional requirements, non-functional requirements, acceptance criteria).
+      - Risk matrix and initial boundary definitions.
+      Gating: User approval required before progressing to Phase 1.
+    """
+  }
+
+  phase-1-context: {
+    description: "Phase 1: Environment & Codebase Context Gathering"
+    content: """
+      Trigger: Approved spec.md.
+      Objective: Safely discover tech stack, architecture seams, dependencies, and baseline state.
+      Rules:
+      - Read files and explore AST without making changes.
+      - Inspect existing configuration and test frameworks.
+      - Output context checklist and dependency graph.
+    """
+  }
+
+  phase-2-debt: {
+    description: "Phase 2: Technical Debt & Code Smell Audit"
+    content: """
+      Trigger: Context checklist established.
+      Objective: Identify pre-existing technical debt, smells, and potential blockers.
+      Classifications:
+      - 🔴 Critical: Security vulnerabilities, race conditions, memory leaks.
+      - 🟡 Warning: Over-coupling, SOLID/DRY violations, missing type definitions.
+      - 🟢 Minor: Style inconsistencies, dead code.
+      Rule: Do NOT refactor unrelated debt in implementation unless < 3 lines or explicitly scoped in Phase 3.
+    """
+  }
+
+  phase-3-design: {
+    description: "Phase 3: Solution Architecture & Technical Design"
+    content: """
+      Trigger: Debt audit completed.
+      Objective: Formulate surgical implementation plan, state transitions, and API contracts.
+      Deliverables:
+      - implementation_plan.md (Detailed step-by-step diff plan, verification plan).
+      - Architecture diagrams (Mermaid) if multi-component.
+      Gating: User approval required before writing production code (Phase 4).
+    """
+  }
+
+  phase-4-implement: {
+    description: "Phase 4: Surgical Implementation & Atomic Commits"
+    content: """
+      Trigger: Approved implementation_plan.md.
+      Objective: Write clean, defensive, and typed code strictly adhering to the approved plan.
+      Rules:
+      - Karpathy principle: Touch ONLY requested parts.
+      - Inline comments explain 'Why', not 'What'.
+      - Continuous Layer 0 DROS AST inspection and Layer 1 BTC credit maintenance.
+    """
+  }
+
+  phase-5-test: {
+    description: "Phase 5: Automated Verification & Adversarial Code Walk"
+    content: """
+      Trigger: Code implementation completed.
+      Objective: Rigorous test verification and adversarial sanity review.
+      Rules:
+      - Execute unit, integration, and regression test suites.
+      - Zero warnings, zero failing tests.
+      - No test = No ship.
+    """
+  }
+
+  phase-6-evolve: {
+    description: "Phase 6: Retrospective, Decision Logging & Knowledge Distillation"
+    content: """
+      Trigger: Passing test suite.
+      Objective: Update documentation, record Architecture Decision Records (ADR), and capture snapshots.
+      Deliverables:
+      - walkthrough.md (Final delivery walkthrough).
+      - auto-snapshot capture milestone/decision.
+      - Update spec.md acceptance status.
+    """
+  }
+}
