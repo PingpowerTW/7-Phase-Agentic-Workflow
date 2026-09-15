@@ -34,6 +34,10 @@
 - Prefer `const` over `let`, never `var`
 - Use named exports over default exports
 - Async/await over raw promises
+- **LLM 結構化輸出容錯規範 (Coercion-First & Path-Precise Validation)**：
+  - 處理模型產出之 JSON 時，優先在本地執行確定性型別強制轉換（Coercion，如去除 Markdown 圍欄、字串數字轉型、布林正規化），**容錯修復優先於 API 重試**，杜絕無謂的 Token 浪費。
+  - 驗證失敗需修正時，回注精準屬性路徑（如 `items[0].price: expected number`）至修正提示詞，引導模型一次性精準修復 (Reflexion)。
+
 
 ### Python
 - Type hints on all public functions

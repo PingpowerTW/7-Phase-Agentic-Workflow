@@ -391,6 +391,11 @@ flowchart LR
 > - **評估結論**：Context Diamond 提供純確定性上下文壓縮膠囊與 Loss Report；但其現行版本（v0.7.0 Alpha）關鍵字比對僅支援英/俄文硬編碼，若直接安裝會因無法辨識繁體中文語意而粗暴截斷關鍵中文決策與約束，造成反覆試錯。
 > - **採納決策**：**方案 B（純吸收優化，原生融合進化）**。
 > - **落地成果**：不安裝外部 Alpha 套件，將其「8 大刻面 (Pulse, Goal, Constraints, Decisions, Facts, State, Risks, Anchors)」與「Loss Report 遺失審計」機制完全中文化原生融合至專案之 `context-pruner` 與 `context-compressor` 技能中，達成無損可審計跨階段交接。
+>
+> **經典案例 3：llm-schema-validator (`ashwinpaulallen/llm-schema-validator`) 決策存證**
+> - **評估結論**：該專案為 Node.js 應用層之結構化輸出抽取與 Coercion 驗證庫，屬於產品代碼依賴，而非 Agent 開發工作流本體之工具，直接安裝會產生死代碼與環境污染。
+> - **採納決策**：**方案 B（純吸收架構模式，沈澱至後端規範）**。
+> - **落地成果**：不安裝 npm 套件，汲取其「容錯轉型優先於重試 (Coercion-First over Retry)」與「路徑精準錯誤回注 (Path-Precise Reflexion)」模式，原生納入 `STUDIO_RULES.md` 的 TypeScript 規範與 `prompts/nodejs-ts/create-service.prompt.md` 標準，有效杜絕多輪 API 盲目重試之 Token 浪費。
 
 ---
 

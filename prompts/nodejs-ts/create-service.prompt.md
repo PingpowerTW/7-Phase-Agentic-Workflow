@@ -19,6 +19,7 @@ Implement a standalone business service with complete TypeScript types, error ha
 - **Strict Error Handling**: Custom domain errors extending `Error`. No unhandled promise rejections.
 - **Async Safety**: Correct `async/await` usage with timeouts on external calls.
 - **Zero Placeholder**: No `TODO`, `any`, or stubbed implementations.
+- **LLM & External Data Resilience (Coercion-First & Path-Precise Validation)**: When parsing structured LLM outputs or untrusted JSON, apply deterministic local coercion (markdown fence stripping, numeric string casting) before retries. On schema mismatch, report exact property paths (e.g. `items[0].id: expected string`) for precise error recovery.
 
 # Output Format
 ```ts
