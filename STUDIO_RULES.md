@@ -240,6 +240,10 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 2. **Plan-and-Execute 範式**：生成代碼前必須先輸出 3–8 步可驗證行動計畫（Action Verb + Expected Output）。
 3. **Reflexion 自我反思閉環**：當 Worker 代碼未通過 Reviewer/Auditor 驗收時，進入最多 2 輪自我診斷與修正迴圈。
 4. **LLM-as-a-Judge 驗收量表**：Auditor 評估必須包含 Faithfulness ($\ge 4.5$), Constraint ($\ge 4.8$), Structure ($\ge 4.0$) 多維度量化打分。
+5. **DSPy Signature 契約化簽名 (Declarative I/O Signatures)**：
+   - 拒絕模糊散漫的文字指令，所有任務與 Prompt 必須具備清晰的宣告式簽名（`Signature: [Inputs] -> [Transformation] -> [Strict Outputs]`），以契約化代替字串拼貼。
+6. **GEPA 反思演化突變 (Reflective Prompt Evolution, Stanford 2025)**：
+   - 當單元測試或架構驗收失敗時，嚴禁無意義的隨機重新生成。Auditor 必須輸出結構化反思診斷（`Failure Rationale -> Root Cause -> Targeted Constraint Mutation`），將失敗路徑轉化為確定性負向約束，驅使模型進行單輪精準修復，避免盲目重試消耗 Token。
 
 ---
 

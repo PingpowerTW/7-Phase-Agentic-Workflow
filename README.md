@@ -396,6 +396,11 @@ flowchart LR
 > - **評估結論**：該專案為 Node.js 應用層之結構化輸出抽取與 Coercion 驗證庫，屬於產品代碼依賴，而非 Agent 開發工作流本體之工具，直接安裝會產生死代碼與環境污染。
 > - **採納決策**：**方案 B（純吸收架構模式，沈澱至後端規範）**。
 > - **落地成果**：不安裝 npm 套件，汲取其「容錯轉型優先於重試 (Coercion-First over Retry)」與「路徑精準錯誤回注 (Path-Precise Reflexion)」模式，原生納入 `STUDIO_RULES.md` 的 TypeScript 規範與 `prompts/nodejs-ts/create-service.prompt.md` 標準，有效杜絕多輪 API 盲目重試之 Token 浪費。
+>
+> **經典案例 4：DSPy (`stanfordnlp/dspy`) 決策存證**
+> - **評估結論**：史丹佛出品之重型 AI Pipeline 自動優化與編譯框架，依賴 PyTorch/Transformers 龐大依賴庫，且其編譯搜尋（Optimizer）需消耗海量 Token 跑樣本評估；在即時動態的 Agent 開發工作流中缺乏訓練場景，直接安裝會引發嚴重的依賴污染。
+> - **採納決策**：**方案 B（純吸收架構哲學，零依賴進化）**。
+> - **落地成果**：不安裝任何外部 heavy 套件，將其「Signature 契約化宣告 (`[Inputs] -> [Transformation] -> [Strict Outputs]`)」與 2025 最新「GEPA 反思演化突變 (Reflective Mutation)」哲學深度沉澱至 `STUDIO_RULES.md` 第 10 節，確立失敗時以結構化反思替代盲目重新生成，維持專案極致輕量與零 Token 浪費。
 
 ---
 
