@@ -1,10 +1,15 @@
 import sys
 import re
 import os
+import shutil
 
-# Auto-inject Graphviz path for Windows
-if os.name == 'nt':
-    os.environ["PATH"] += os.pathsep + r"C:\Program Files\Graphviz\bin"
+# Dynamically locate Graphviz on Windows if not already on PATH
+if os.name == 'nt' and not shutil.which('dot'):
+    pf = os.environ.get("ProgramFiles")
+    if pf:
+        default_gv = os.environ.get("GRAPHVIZ_DOT", os.path.join(pf, "Graphviz", "bin"))
+        if os.path.exists(default_gv):
+            os.environ["PATH"] += os.pathsep + default_gv
 
 from diagrams import Diagram, Edge
 from diagrams.onprem.database import PostgreSQL

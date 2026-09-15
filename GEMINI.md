@@ -88,6 +88,8 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 
 ## 8. Macro Commands (高階工作流)
 - `/spec`: Phase 0 spec mode. Generates `spec.md`.
+- `/teamwork`: 啟動 5 人品質制衡軍團協作模式（Explorer, Worker, Reviewer, Critic, Auditor）。
+- `/agy-studio`: 啟動 7 人全端開發領域專家團隊。
 - `/onboard`: Scan architecture, align with GEMINI.md.
 - `/refactor`: Arch review, find SOLID/DRY violations, modularize.
 - `/review`: Adversarial review (Grumpy vs Rational).
