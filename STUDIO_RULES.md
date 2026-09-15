@@ -246,3 +246,29 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 2. **跨平台編譯與驗證**：
    - 每次修改規則後，必須執行 `python scripts/sync_promptscript.py` 驗證語意一致性。
    - 支援透過 `promptscript.yaml` 一鍵編譯導出至 Antigravity (`.agent/rules/project.md`)、Claude Code (`CLAUDE.md`)、Cursor (`.cursor/rules/`)、GitHub Copilot (`.github/copilot-instructions.md`) 等 49+ 款目標環境。
+
+---
+
+## 12. 🔍 Project & External Tool Evaluation SOP (外部專案與工具評估三準則)
+
+當使用者提供任何外部 GitHub 專案、工具庫、或前沿技術框架要求評估時，Agent **嚴禁盲目安裝或直接套用**。必須嚴格遵循以下三部曲評估報告框架，提供充分的判斷依據供使用者決策：
+
+### 1. 核心定位與技術機制 (What It Does)
+- **痛點與初衷**：該專案解決軟體工程、提示工程或代理人協作中的何種具體瓶頸？
+- **底層實作架構**：運行環境、依賴複雜度、核心演算法或編譯解析機制。
+
+### 2. 現況對標與深度比較 (Comparative Benchmark)
+- **既有架構覆蓋度**：與現行 `7-Phase-Agentic-Workflow`、Antigravity 原生規範或專案既有模組重疊度為何？
+- **差異與互補點**：它帶來了什麼我們現有系統完全沒有的能力？哪些部分存在冗餘或架構衝突？
+
+### 3. 實裝路線、Token 節能效益與決策矩陣 (ROI & Decision Matrix)
+- **Token 經濟學評估**：
+  - 是否能在對話 Context、Prompt 載入、或除錯迴圈中帶來具體可量化的 Token 節省？
+  - 亦或反而增加 Context 膨脹與多層抽象開銷？
+- **實作效果提昇**：代碼生成正確率、工程邊界防護、跨平台同步效能的具體增益。
+- **實裝方法 vs 學習優化**：
+  - **路線 A（直接安裝）**：安裝全域/本地套件（依賴成本、維護負擔、版本衝突風險）。
+  - **路線 B（純吸收優化 - 推薦優先）**：汲取其設計哲學、架構模式或核心算法，以原生零依賴 Python/腳本自主實作。
+- **決策矩陣 (Go / No-Go / Hybrid)**：
+  - 明確給出推薦選項與充分的判斷依據，待使用者審查授權後方可執行。
+

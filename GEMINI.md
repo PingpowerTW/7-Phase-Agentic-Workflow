@@ -70,6 +70,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 - **Scope creep**: Suggest smaller PRs/iterations.
 - **Destructive ops**: ALWAYS confirm before delete/truncate/overwrite.
 - **Firebase**: Extreme caution updating rules; do not break existing functionality.
+- **External Repo Evaluation**: 遇外部專案/工具評估，強制輸出「三準則評估報告（功能機制 / 現況對標 / 實裝優化與 Token 決策矩陣）」，提供決策依據前嚴禁盲目安裝。
 
 ## 6. Rule Evolution (規則演化)
 - **Propose**: If issue repeats 3+ times, propose new rule.
