@@ -382,10 +382,15 @@ flowchart LR
 * **決策矩陣 (Go / No-Go / Hybrid)**：提供明確的判斷依據與推薦選項，經審查授權後才執行動作。
 
 > [!TIP]
-> **經典案例：PromptScript (`mrwogu/promptscript`) 決策存證**
-> - **評估結論**：經三準則評估，PromptScript 之核心價值在於 `.prs` 宣告式語法與單一真實來源 (SSOT) 概念；但其全域 CLI 依賴 Node.js，且在對話執行期無法節省 Context Token。
+> **經典案例 1：PromptScript (`mrwogu/promptscript`) 決策存證**
+> - **評估結論**：PromptScript 核心價值在於 `.prs` 宣告式語法與單一真實來源 (SSOT)；其全域 CLI 依賴 Node.js，且在對話執行期無法節省 Context Token。
 > - **採納決策**：**方案 A（純吸收優化，維持原生零依賴）**。
-> - **落地成果**：完整吸納其 DSL 架構至本專案 `.promptscript/` 6 大模組，並自研純標準庫驗證器 `scripts/sync_promptscript.py`，免裝全域 npm CLI 即可達成跨 IDE 語意對齊，達成 0 外部相依與 0 Token 膨脹。
+> - **落地成果**：吸納其 DSL 架構至本專案 `.promptscript/` 6 大模組，自研純標準庫驗證器 `scripts/sync_promptscript.py`，達成 0 外部相依與 0 Token 膨脹。
+>
+> **經典案例 2：Context Diamond (`RainCherb/context-diamond`) 決策存證**
+> - **評估結論**：Context Diamond 提供純確定性上下文壓縮膠囊與 Loss Report；但其現行版本（v0.7.0 Alpha）關鍵字比對僅支援英/俄文硬編碼，若直接安裝會因無法辨識繁體中文語意而粗暴截斷關鍵中文決策與約束，造成反覆試錯。
+> - **採納決策**：**方案 B（純吸收優化，原生融合進化）**。
+> - **落地成果**：不安裝外部 Alpha 套件，將其「8 大刻面 (Pulse, Goal, Constraints, Decisions, Facts, State, Risks, Anchors)」與「Loss Report 遺失審計」機制完全中文化原生融合至專案之 `context-pruner` 與 `context-compressor` 技能中，達成無損可審計跨階段交接。
 
 ---
 

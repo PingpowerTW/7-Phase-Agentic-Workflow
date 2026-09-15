@@ -117,6 +117,9 @@ Level 3: 呼叫者/被呼叫者 → 追蹤問題根源
 3. 摘要結構只保留 **Essential Information**（確認無誤的事實），嚴格禁止推論與腦補。
 4. 歷史替換結構：`[System Prompt, 初始目標/需求, 精煉摘要, 繼續執行指令]`。
 
+### 5. 8 刻面膠囊與遺失審計 (8-Facet Capsule & Loss Report)
+當進行跨 Phase 階段交接或執行上下文替換時，精煉摘要採用 **8 刻面可審計上下文膠囊**（Pulse 當前脈動, Goal 目標驗收, Constraints 規則約束, Decisions 已定決策, Facts 穩定事實, State 進行中狀態, Open Loops 未決風險, Anchors 代碼錨點），並附帶 **Loss Report** 宣告本次剪除之暫存除錯日誌，確保交接透明且兼具可審計性（詳見 `context-pruner`）。
+
 ## Troubleshooting
 
 | 問題               | 解法                           |

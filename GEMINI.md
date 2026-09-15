@@ -100,7 +100,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 - `/dros`: 啟動或檢查 DROS VajraClaw 執行期安全網關狀態與策略。
 - `/trust`: 觸發 `trust-governor` 熱力學信度校準與行為聚類評估。
 - `ctx`: Context system CLI (`stats`, `doctor`, `upgrade`, `purge`).
-- `/prune` / `/distill`: 上下文主動清理與 6 要素熱蒸餾，自動同步持久化快照。
+- `/prune` / `/distill`: 上下文主動清理與 8 刻面可審計上下文膠囊 (Pulse, Goal, Constraints, Decisions, Facts, State, Risks, Anchors) + Loss Report 遺失審計，自動同步持久化快照。
 
 
 
