@@ -105,6 +105,12 @@ Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`
 - [ ] Types are correct (no `any`)
 - [ ] Breaking changes documented
 - [ ] Self-reviewed diff
+- [ ] **README.md updated** (架構或功能變更必填)
+- [ ] **GitHub synchronized** (`git push origin main` 保持遠端最新)
+
+### 任務完成交割規範 (Task Completion & Sync Duty)
+- **README 同步**：任何功能實作、架構決策、新工具評估或規範變更完成後，**必須同步更新 `README.md`**。
+- **GitHub 即時推送**：確認測試通過與格式正確後，必須即時執行 `git add`、`git commit` 並 `git push origin main`，確保遠端代碼庫永遠保持最新與可重現。
 
 ---
 

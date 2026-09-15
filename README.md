@@ -21,8 +21,9 @@
 8. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
 9. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
 10. [🛡️ 5-Agent 品質大體檢認證 (Full Audit Certificate)](#️-5-agent-品質大體檢認證-full-audit-certificate)
-11. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
-12. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
+11. [🔍 外部專案與工具評估三準則 (External Repo Evaluation SOP)](#-外部專案與工具評估三準則-external-repo-evaluation-sop)
+12. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
+13. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
 
 ---
 
@@ -356,6 +357,35 @@ flowchart LR
 | **跨技術棧 Prompts** | 📐 Reviewer | 15 款 Prompt YAML Frontmatter Schema | 15/15 格式驗證通過 | 🟢 **PASS** |
 | **熱力學信任與 SHARS** | 👹 Critic / ⚖️ Auditor | BTC 閉式解、方差懲罰、逐段防雪崩採樣 | 8/8 測試通過 (100% 覆蓋) | 🟢 **PASS** |
 | **全域安全與跨平台** | 🛡️ Sentinel | Secret 掃描、XML 轉義、動態路徑探測 | 0 安全漏洞、100% 可攜 | 🟢 **PASS** |
+
+---
+
+## 🔍 外部專案與工具評估三準則 (External Repo Evaluation SOP)
+
+為防止團隊或代理人盲目引入外部依賴造成環境污染、維護負擔或 Token 膨脹，本框架確立嚴格的「外部專案評估三部曲」。在決定安裝任何開源專案前，必須輸出量化評估報告供工程師決策：
+
+### 1. 核心定位與技術機制 (What It Does)
+* **痛點與初衷**：該專案解決軟體工程、提示工程或代理人協作中的何種具體瓶頸？是否為當前工作流的關鍵缺口？
+* **底層實作架構**：運行環境依賴（Node/Python/Go）、依賴複雜度、AST 編譯或核心演算法機制。
+
+### 2. 現況對標與深度比較 (Comparative Benchmark)
+* **既有架構覆蓋度**：與現行 `7-Phase-Agentic-Workflow`、Antigravity 原生規範或專案既有模組的重疊度分析。
+* **差異與互補點**：它帶來了什麼全新能力？哪些部分存在冗餘、多層抽象或潛在架構衝突？
+
+### 3. 實裝路線、Token 效益與決策矩陣 (ROI & Decision Matrix)
+* **Token 經濟學量化**：
+  * 對話執行期是否能真正減少 Token 消耗？（嚴防「名為優化、實則膨脹 Context」的工具）。
+  * 編譯期模組化去重（DRY）與語意防呆帶來的 Token 節約效益。
+* **實裝路線 vs 純吸收優化**：
+  * **路線 A（硬實裝）**：安裝全域/本地套件（依賴成本、維護負擔、版本衝突風險）。
+  * **路線 B（純吸收優化 - 推薦優先）**：汲取其設計哲學與架構模式，以原生零依賴 Python/腳本自研實作。
+* **決策矩陣 (Go / No-Go / Hybrid)**：提供明確的判斷依據與推薦選項，經審查授權後才執行動作。
+
+> [!TIP]
+> **經典案例：PromptScript (`mrwogu/promptscript`) 決策存證**
+> - **評估結論**：經三準則評估，PromptScript 之核心價值在於 `.prs` 宣告式語法與單一真實來源 (SSOT) 概念；但其全域 CLI 依賴 Node.js，且在對話執行期無法節省 Context Token。
+> - **採納決策**：**方案 A（純吸收優化，維持原生零依賴）**。
+> - **落地成果**：完整吸納其 DSL 架構至本專案 `.promptscript/` 6 大模組，並自研純標準庫驗證器 `scripts/sync_promptscript.py`，免裝全域 npm CLI 即可達成跨 IDE 語意對齊，達成 0 外部相依與 0 Token 膨脹。
 
 ---
 

@@ -49,9 +49,9 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 | **3. Design** | Propose solution. Compress context after | Architecture doc |
 | **4. Implement** | Write code. Refactor <3 lines tech debt | Code with `diff` |
 | **5. Test** | Auto-test & code walk | Results + rationale |
-| **6. Evolve** | Verify against spec. Log decisions | Update `spec.md` + Decision log |
+| **6. Evolve** | Verify against spec. Log decisions | Update `spec.md`, `README.md` + Sync to GitHub |
 
-> **IMPORTANT**: Always update `Implementation Plan` and `Task` after execution.
+> **IMPORTANT**: Always update `Implementation Plan`, `Task`, and `README.md` after execution, and commit & push all changes to GitHub.
 
 > [!TIP]
 > **Proactive Reminders Duty (主動提醒)**: Must use exact verbatim phrasing:
