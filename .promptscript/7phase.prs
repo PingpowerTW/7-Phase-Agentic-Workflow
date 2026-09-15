@@ -13,6 +13,7 @@
 # === MODULAR IMPORTS ===
 @use ./phases
 @use ./agents
+@use ./skills
 @use ./governance
 @use ./shortcuts
 

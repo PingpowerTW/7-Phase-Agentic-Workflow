@@ -18,13 +18,14 @@ Implement a complete Laravel feature slice adhering to modern enterprise PHP 8.4
 1. **Migration & Eloquent Model**:
    - Define schema with indexes, foreign keys, and fillable.
    - Use Laravel 11/12/13 method-based `protected function casts(): array` instead of `$casts` property.
-   - Leverage PHP 8.4+ property hooks or asymmetric visibility (`public private(set)`) where appropriate.
+   - **Eloquent Property Shadowing Guard**: NEVER declare typed class properties (e.g. `public private(set) string $title`) directly on Eloquent Models for DB columns, as they shadow Eloquent's dynamic `$attributes` hydration and dirty tracking. Reserve asymmetric visibility for DTOs, Value Objects, and Actions.
 2. **FormRequest Validation**:
    - Explicitly implement `authorize(): bool` with Gate/Policy checks or `return true;` for public endpoints.
    - Validate incoming request data with detailed rules and custom error messages.
 3. **Action / Service Class**:
    - Encapsulate business logic in an invokable Action (`app/Actions/...`).
    - Wrap DB mutations in `DB::transaction()`.
+   - Leverage PHP 8.4+ constructor promotion and asymmetric visibility on Action parameters and DTOs.
 4. **Controller / Invokable Handler**:
    - Thin controller injecting the Action and returning an API Resource.
 5. **API Resource**:
@@ -34,9 +35,9 @@ Implement a complete Laravel feature slice adhering to modern enterprise PHP 8.4
 
 # PHP 8.4+ & Laravel 13 Standards
 - **Strict Typing**: Mandatory `declare(strict_types=1);` at the top of every PHP file.
-- **Modern PHP 8.4 Features**: Readonly classes/properties, constructor promotion, backed enums, match expressions, `#[\Override]` attribute, asymmetric visibility.
+- **Modern PHP 8.4 Features**: Readonly classes/properties, constructor promotion, backed enums, match expressions, `#[\Override]` attribute, asymmetric visibility (on DTOs/Actions).
 - **Thin Controller, Fat Action**: Controllers should NOT contain business queries or complex logic; delegate to Actions.
-- **Eloquent Safety**: Never use mass assignment without `$fillable`. Always eager load relations to prevent N+1 (`with()`).
+- **Eloquent Safety & Property Shadowing**: Never use mass assignment without `$fillable`. Always eager load relations to prevent N+1 (`with()`). Never shadow Eloquent attributes with typed class properties.
 - **Zero Placeholders**: Every method must be fully implemented.
 
 # Output Format

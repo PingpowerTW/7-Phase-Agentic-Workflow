@@ -1,0 +1,89 @@
+# 7-Phase Agentic Workflow Specialized Skills Mapping
+# Maps all 17 specialized skills to standard SKILL.md directories
+
+@skills {
+  trust-governor: {
+    path: "./skills/trust-governor"
+    description: "BTC Thermodynamic Trust Governor & Oxford SHARS Hallucination Rejection Sampling"
+  }
+
+  dros-gateway: {
+    path: "./skills/dros-gateway"
+    description: "Deterministic Runtime AST Fuse (<1μs), Docker Governance & W3C did:key Guard"
+  }
+
+  karpathy-guidelines: {
+    path: "./skills/karpathy-guidelines"
+    description: "LLM Coding Behavioral Correction, Surgical Changes & Anti-Speculation Guardrails"
+  }
+
+  caveman: {
+    path: "./skills/caveman"
+    description: "Token-Compressed Concise Communication Mode (Saves 65-75% Output Tokens)"
+  }
+
+  context-compressor: {
+    path: "./skills/context-compressor"
+    description: "Bi-directional Context Pruning & Inter-Phase Conversation Distillation"
+  }
+
+  context-pruner: {
+    path: "./skills/context-pruner"
+    description: "Active Context Distillation Engine for Long-Running Engineering Sessions"
+  }
+
+  auto-snapshot: {
+    path: "./skills/auto-snapshot"
+    description: "Local AI Memory Engine with Append-Only SHA-256 Merkle Snapshot Log"
+  }
+
+  promptcraft: {
+    path: "./skills/promptcraft"
+    description: "Advanced Meta-Prompting, Plan-and-Execute, Reflexion & LLM-as-a-Judge Eval"
+  }
+
+  diagrams-skill: {
+    path: "./skills/diagrams-skill"
+    description: "Declarative Python Diagramming & Reverse ERD Database Architecture"
+  }
+
+  frontend-taste-v2: {
+    path: "./skills/frontend-taste-v2"
+    description: "Anti-Slop Modern UI/UX Design Engine with Hallmark Aesthetic Scorer"
+  }
+
+  ui-designer: {
+    path: "./skills/ui-designer"
+    description: "Open Design 9-Section Design System & Dual-Track Token Engine"
+  }
+
+  ux-audit: {
+    path: "./skills/ux-audit"
+    description: "Quantitative UX Audit based on Gestalt Laws & Fitts's Law Parameters"
+  }
+
+  gsap-motion: {
+    path: "./skills/gsap-motion"
+    description: "GSAP 3 ScrollTrigger, Timeline Orchestration & React Animation System"
+  }
+
+  cinematic-ui: {
+    path: "./skills/cinematic-ui"
+    description: "Cinematic Visuals, Anamorphic Layouts & Ambient Deep Lighting"
+  }
+
+  landing-page-architect: {
+    path: "./skills/landing-page-architect"
+    description: "High-CRO Landing Page Architecture, AIDA/PAS Models & Conversion Blocks"
+  }
+
+  teamwork: {
+    path: "./skills/teamwork"
+    description: "5-Agent Quality League with W3C DID Isolation & Dual-Perspective Review"
+  }
+
+  agy-studio: {
+    path: "./skills/agy-studio"
+    description: "7-Agent Collaborative Fullstack Studio for End-to-End Delivery"
+  }
+}

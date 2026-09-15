@@ -63,6 +63,7 @@
 ### PHP 8.4+ / Laravel 13+
 - `declare(strict_types=1);` mandatory at the top of every PHP file
 - Modern PHP 8.4+: Use property hooks, asymmetric visibility (`public private(set)`), readonly classes, backed enums, `#[\Override]`
+- **Eloquent Property Shadowing Guard**: NEVER declare typed class properties directly on Eloquent Models for DB columns (e.g. `public private(set) string $title`); this shadows Eloquent's dynamic `$attributes` hydration, dirty checking, and relations. Reserve Asymmetric Visibility for DTOs, Value Objects, and Domain Actions.
 - **Eloquent Casts**: Use method-based `protected function casts(): array` instead of `$casts` property
 - **Thin Controller, Fat Action**: Never put raw DB queries or heavy logic in Controllers; use Invokable Actions
 - **Eloquent Safety**: Never mass-assign without `$fillable`; always eager load (`with()`) to prevent N+1

@@ -4,13 +4,16 @@
 Zero-dependency Python 3 standard library script.
 
 Validates .promptscript/ DSL definitions, imports, block syntax, agent tools,
-shortcuts, and governance consistency for cross-IDE compilation.
+skills mapping, shortcuts, and governance consistency for cross-IDE compilation.
+Supports optional --compile flag to trigger native compilation via 'prs compile'.
 """
 
 import os
 import re
 import sys
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 # Ensure UTF-8 output on Windows consoles
@@ -26,6 +29,7 @@ class PromptScriptValidator:
     def __init__(self, repo_root: Path):
         self.repo_root = repo_root
         self.prs_dir = repo_root / ".promptscript"
+        self.skills_dir = repo_root / "skills"
         self.config_file = repo_root / "promptscript.yaml"
         self.errors = []
         self.warnings = []
@@ -59,13 +63,16 @@ class PromptScriptValidator:
         # 5. Check Agent capability matrix
         self._validate_agents()
 
-        # 6. Check Shortcuts definition
+        # 6. Check Skills mapping
+        self._validate_skills()
+
+        # 7. Check Shortcuts definition
         self._validate_shortcuts()
 
-        # 7. Check Governance guards
+        # 8. Check Governance guards
         self._validate_governance()
 
-        # 8. Report Results
+        # 9. Report Results
         print("\n" + "=" * 60)
         if self.warnings:
             for w in self.warnings:
@@ -94,17 +101,30 @@ class PromptScriptValidator:
             self.log_error("promptscript.yaml entry must point to .promptscript/7phase.prs")
 
     def _parse_and_validate_prs(self, file_path: Path):
-        content = file_path.read_text(encoding="utf-8")
+        raw_content = file_path.read_text(encoding="utf-8")
+        
+        # Strip comments to prevent false positive regex matches inside # comments
+        stripped_lines = []
+        for line in raw_content.splitlines():
+            comment_idx = line.find("#")
+            if comment_idx != -1:
+                # Check if hash is inside quotes
+                before = line[:comment_idx]
+                if before.count('"') % 2 == 0 and before.count("'") % 2 == 0:
+                    line = before
+            stripped_lines.append(line)
+        cleaned_content = "\n".join(stripped_lines)
+
         block_pattern = re.compile(r"@([a-zA-Z0-9_-]+)\s*\{", re.MULTILINE)
         use_pattern = re.compile(r"@use\s+([^\s\n]+)", re.MULTILINE)
         
-        blocks = block_pattern.findall(content)
-        imports = use_pattern.findall(content)
+        blocks = block_pattern.findall(cleaned_content)
+        imports = use_pattern.findall(cleaned_content)
 
         self.parsed_blocks[file_path.name] = {
             "blocks": blocks,
             "imports": imports,
-            "raw": content
+            "raw": cleaned_content
         }
 
     def _validate_imports(self, entry_file: Path):
@@ -128,6 +148,23 @@ class PromptScriptValidator:
             if f"{agent}:" not in raw:
                 self.log_error(f"Missing required agent persona in agents.prs: {agent}")
 
+    def _validate_skills(self):
+        skills_data = self.parsed_blocks.get("skills.prs", {})
+        raw = skills_data.get("raw", "")
+        if not raw:
+            self.log_error("skills.prs is empty or not found in .promptscript/")
+            return
+
+        skill_pattern = re.compile(r"path:\s*\"([^\"]+)\"")
+        declared_paths = skill_pattern.findall(raw)
+        
+        for path_str in declared_paths:
+            full_path = self.repo_root / path_str
+            if not full_path.exists():
+                self.log_error(f"Declared skill path not found on filesystem: {path_str} -> {full_path}")
+            elif not (full_path / "SKILL.md").exists():
+                self.log_warning(f"Skill directory missing SKILL.md: {path_str}")
+
     def _validate_shortcuts(self):
         shortcuts_data = self.parsed_blocks.get("shortcuts.prs", {})
         raw = shortcuts_data.get("raw", "")
@@ -147,9 +184,43 @@ class PromptScriptValidator:
         if "oxford-shars" not in raw:
             self.log_error("Layer 2 Oxford SHARS guard missing in governance.prs")
 
+    def run_native_compile(self) -> bool:
+        """Trigger native compilation via 'prs compile' or 'npx @promptscript/cli compile'."""
+        prs_cmd = shutil.which("prs")
+        npx_cmd = shutil.which("npx")
+
+        if prs_cmd:
+            cmd = ["prs", "compile"]
+        elif npx_cmd:
+            cmd = ["npx", "-y", "@promptscript/cli", "compile"]
+        else:
+            print("\n[INFO] Native 'prs' CLI not found on PATH.")
+            print("To generate native files for 49+ IDEs, install via: npm install -g @promptscript/cli")
+            print("Then run: prs compile")
+            return True
+
+        print(f"\n[INFO] Running native compiler: {' '.join(cmd)}...")
+        try:
+            res = subprocess.run(cmd, cwd=str(self.repo_root), capture_output=True, text=True)
+            if res.returncode == 0:
+                print("[SUCCESS] Native compilation finished successfully!")
+                if res.stdout.strip():
+                    print(res.stdout.strip())
+                return True
+            else:
+                self.log_error(f"Native compiler exited with code {res.returncode}:\n{res.stderr.strip()}")
+                return False
+        except Exception as ex:
+            self.log_error(f"Failed to execute native compiler: {ex}")
+            return False
+
 
 if __name__ == "__main__":
     current_dir = Path(__file__).resolve().parent.parent
     validator = PromptScriptValidator(current_dir)
     success = validator.validate_all()
+    
+    if success and "--compile" in sys.argv:
+        success = validator.run_native_compile()
+
     sys.exit(0 if success else 1)
