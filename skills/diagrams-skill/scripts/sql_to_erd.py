@@ -22,9 +22,9 @@ def parse_sql_and_generate_erd(sql_path, output_name):
     with open(sql_path, 'r', encoding='utf-8') as f:
         sql_content = f.read()
 
-    # TODO: This is a very basic regex parser for quick-start. 
-    # For robust parsing of comments and complex constraints, consider refactoring 
-    # this script to use `pip install sqlparse` in the future.
+    # NOTE: Lightweight zero-dependency regex parser for rapid ERD prototyping.
+    # Advanced schema alterations or dialect-specific constraints can be
+    # supplemented with external parsers if required.
     tables = []
     fks = []
     

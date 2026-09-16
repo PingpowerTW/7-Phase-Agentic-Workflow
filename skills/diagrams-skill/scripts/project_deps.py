@@ -27,7 +27,8 @@ def parse_python_imports(filepath):
             elif isinstance(node, ast.ImportFrom):
                 if node.module:
                     deps.append(node.module.split('.')[0])
-    except Exception as e:
+    except (SyntaxError, UnicodeDecodeError, OSError):
+        # Gracefully handle unparseable files or binary assets
         pass
     return deps
 
@@ -41,7 +42,8 @@ def parse_node_imports(filepath):
             # 支援 require('module')
             requires = re.findall(r'require\([\'"]([^\'"]+)[\'"]\)', content)
             deps.extend(imports + requires)
-    except Exception as e:
+    except (UnicodeDecodeError, OSError):
+        # Gracefully handle unreadable files or encoding issues
         pass
     
     # 簡化相對路徑
