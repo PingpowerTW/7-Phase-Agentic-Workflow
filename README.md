@@ -401,6 +401,11 @@ flowchart LR
 > - **評估結論**：史丹佛出品之重型 AI Pipeline 自動優化與編譯框架，依賴 PyTorch/Transformers 龐大依賴庫，且其編譯搜尋（Optimizer）需消耗海量 Token 跑樣本評估；在即時動態的 Agent 開發工作流中缺乏訓練場景，直接安裝會引發嚴重的依賴污染。
 > - **採納決策**：**方案 B（純吸收架構哲學，零依賴進化）**。
 > - **落地成果**：不安裝任何外部 heavy 套件，將其「Signature 契約化宣告 (`[Inputs] -> [Transformation] -> [Strict Outputs]`)」與 2025 最新「GEPA 反思演化突變 (Reflective Mutation)」哲學深度沉澱至 `STUDIO_RULES.md` 第 10 節，確立失敗時以結構化反思替代盲目重新生成，維持專案極致輕量與零 Token 浪費。
+>
+> **經典案例 5：StructLLM (`piotrmaciejbednarski/structllm`) 決策存證**
+> - **評估結論**：StructLLM 僅為 LiteLLM 之 70 行極淺封裝庫 (Shallow Wrapper)，缺乏獨立演算法、容錯 (Coercion) 與錯誤重試機制，且在 Python 生態已有 `instructor` 等成熟方案，直接安裝僅會帶來龐大的 LiteLLM 依賴包袱。
+> - **採納決策**：**方案 B（沉澱架構防坑規範，零依賴進化）**。
+> - **落地成果**：不安裝任何套件，汲取其 Pydantic 資料契約精神，在 `STUDIO_RULES.md` 的 Python 規範中確立原生使用 `model_validate_json()`，並在評估 SOP 中正式確立「超薄包裝層防坑準則 (Reject Shallow Wrappers Guard)」，凡小於 100 行之第三方轉包層一律判定為無引入價值，堅決保持專案純淨。
 
 ---
 

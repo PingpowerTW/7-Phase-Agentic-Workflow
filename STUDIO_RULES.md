@@ -45,6 +45,9 @@
 - Prefer `dataclass` or `pydantic` over raw dicts
 - Use `logging` module, not `print()`
 - Handle exceptions with specific types, never bare `except:`
+- **LLM 結構化輸出與資料契約 (Structured Output & Data Contracts)**：
+  - 處理模型回傳之結構化資料時，優先使用原生 `pydantic.BaseModel.model_validate_json()` 搭配本地前置清洗。
+  - 堅決拒絕引入小於 100 行之第三方極淺包裝庫（Shallow Wrappers）；複雜多模型結構化輸出首選業界標準（如 `instructor`）或廠商原生 API。
 
 ### Go
 - Always wrap errors with `fmt.Errorf("context: %w", err)`
@@ -285,6 +288,9 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
   - **路線 B（純吸收優化 - 推薦優先）**：汲取其設計哲學、架構模式或核心算法，以原生零依賴 Python/腳本自主實作。
 - **決策矩陣 (Go / No-Go / Hybrid)**：
   - 明確給出推薦選項與充分的判斷依據，待使用者審查授權後方可執行。
+
+### 4. 超薄包裝層防坑準則 (Reject Shallow Wrappers Guard)
+- **拒絕極淺封裝**：凡原始碼極短（<100 行）且僅轉調成熟套件（如 LiteLLM / OpenAI SDK）之極淺包裝層，未提供重試、容錯 (Coercion) 或自修復等核心獨立演算法者，一律判定為「無引入價值 (No-Go)」，嚴禁盲目引入第三方依賴負擔，優先採用原生 SDK 或成熟業界標準庫（如 `instructor`）。
 
 ---
 
