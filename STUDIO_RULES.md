@@ -334,5 +334,23 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 2. **環境破壞**：刪除已有模組、覆寫 `.env` 或重設重要全域設定。
 3. **架構分歧**：當 Reviewer / Critic 連續 2 輪反駁或發現根本性設計缺陷時。
 
+---
+
+## 15. ⚡ Tool Call Batching & Token 節能驗證管線 (Token Economy SOP)
+
+為解決多輪工具呼叫（Multi-Step Tool Calls）導致上下文重複傳輸與 Token 線性暴增問題，專案強制實施「一鍵鏈路合併 (Batching)」與「極簡日誌回傳 (Quiet Logs)」標準：
+
+### 1. 統一驗證入口規範 (`scripts/verify_all.py`)
+- **禁止分步分散驗證**：嚴禁連續發起 4 次獨立 Tool Call 分別跑 DSL、Schema、Trust Governor 與 UI 測試。
+- **一鍵秒級批次矩陣**：統一使用 `python scripts/verify_all.py`，以單一 Tool Call 在 <1 秒內完成 4 大測試套件驗證。
+- **極簡回傳防膨脹 (Quiet-by-Default)**：成功時僅回傳 5~7 行摘要（節省 90% stdout Context）；僅在失敗或 `--verbose` 時展開錯誤堆疊。
+
+### 2. 落地發布管線合併 (Full Ship Pipeline)
+完成變更後，優先將「驗證 ➔ 暫存 ➔ 提交 ➔ 推送 ➔ 快照」串接為單一復合指令或腳本，減少中間 API 來回次數：
+```bash
+python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && git push origin main
+```
+
+
 
 

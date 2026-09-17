@@ -482,10 +482,13 @@ flowchart LR
 若您使用 Claude Code、Cursor、GitHub Copilot、Windsurf 或 Antigravity 等不同 AI 工具：
 
 ```bash
-# 1. 執行零依賴語意驗證與技能連結校驗
+# 1. 一鍵執行全專案批次驗證矩陣 (DSL + Schema + Trust Governor + UI 安全)
+python scripts/verify_all.py
+
+# 2. 執行 PromptScript 語意驗證與技能連結校驗
 python scripts/sync_promptscript.py
 
-# 2. 自動編譯輸出至所有目標 IDE 原生配置檔（需要 Node.js 環境）
+# 3. 自動編譯輸出至所有目標 IDE 原生配置檔（需要 Node.js 環境）
 python scripts/sync_promptscript.py --compile
 # 或直接透過 PromptScript 官方 CLI：
 npx -y @promptscript/cli compile
