@@ -9,7 +9,16 @@ Stacks: html-tailwind, react, nextjs
 """
 
 import argparse
+import sys
 from core import CSV_CONFIG, AVAILABLE_STACKS, MAX_RESULTS, search, search_stack
+
+# Ensure UTF-8 output on Windows consoles
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
 
 
 def format_output(result):

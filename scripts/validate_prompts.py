@@ -12,6 +12,14 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
+# Ensure UTF-8 output on Windows consoles
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except AttributeError:
+        pass
+
 
 def parse_frontmatter(content: str) -> Tuple[Dict[str, Any], str]:
     """Extract and parse YAML frontmatter from markdown content without external pyyaml dependency."""
