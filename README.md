@@ -406,6 +406,11 @@ flowchart LR
 > - **評估結論**：StructLLM 僅為 LiteLLM 之 70 行極淺封裝庫 (Shallow Wrapper)，缺乏獨立演算法、容錯 (Coercion) 與錯誤重試機制，且在 Python 生態已有 `instructor` 等成熟方案，直接安裝僅會帶來龐大的 LiteLLM 依賴包袱。
 > - **採納決策**：**方案 B（沉澱架構防坑規範，零依賴進化）**。
 > - **落地成果**：不安裝任何套件，汲取其 Pydantic 資料契約精神，在 `STUDIO_RULES.md` 的 Python 規範中確立原生使用 `model_validate_json()`，並在評估 SOP 中正式確立「超薄包裝層防坑準則 (Reject Shallow Wrappers Guard)」，凡小於 100 行之第三方轉包層一律判定為無引入價值，堅決保持專案純淨。
+>
+> **經典案例 6：LangGraph (`langchain-ai/langgraph`) 決策存證**
+> - **評估結論**：LangGraph 為生產級多 Agent 循環狀態圖編排框架，依賴龐大的 LangChain 生態鏈；其在產品後端中若未精細修剪歷史會導致 Token 爆炸，在即時 Coding Agent 開發工作流內部無調用場景，直接安裝會產生死代碼與依賴污染。
+> - **採納決策**：**方案 B（純吸收狀態圖與 Reducer 架構，零依賴進化）**。
+> - **落地成果**：不安裝套件，吸納其「State Reducer 狀態增量融合規則（Append-Only / Reconcile & Prune / Overwrite-Latest）」與「Human-in-the-Loop 顯式中斷門禁 (Breakpoint Gates)」，深度沉澱至 `STUDIO_RULES.md` 第 14 節，為長流程多代理人開發賦予確定性狀態融合機制，徹底消除狀態衝突與資訊覆蓋。
 
 ---
 

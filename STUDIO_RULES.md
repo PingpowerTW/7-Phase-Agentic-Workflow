@@ -308,4 +308,31 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 8. ⚓ **代碼實體與錨點 (Entities & Anchors)**：關鍵檔案路徑、Symbol 符號、核心函數/類別名稱。
 9. 🔍 **遺失審計報告 (Loss Report)**：明列本次壓縮主動剪除的噪訊（如重複報錯日誌、已排除之試錯路徑），杜絕暗箱截斷。
 
+---
+
+## 14. 🔄 State Reducer 狀態聚合與 Human-in-the-Loop 中斷門禁 (StateGraph Governance)
+
+本專案吸納 LangGraph 循環狀態圖編排哲學，為長流程多代理人協作建立狀態融合與安全中斷標準：
+
+### 1. State Reducer 刻面狀態增量聚合規則 (Facet Reducer Rules)
+跨 Phase 轉換或執行上下文交接時，8 大刻面依照精確的 Reducer 策略進行狀態融合，防止狀態覆蓋與資訊遺失：
+- **Append-Only（只增不減 + 去重）**：
+  - `Decisions Already Made`（架構決策累積）
+  - `Rules & Constraints`（安全約束與負向引導）
+  - `Stable Facts`（環境與相容性前提）
+- **Reconcile & Prune（比對核銷）**：
+  - `Open Loops & Risks`（已解決問題移出並記錄至 Facts，未解決的保留並更新風險等級）
+- **Overwrite-Latest（覆寫最新）**：
+  - `Pulse`（當前心跳與階段宣告）
+  - `Current Working State`（當前活躍檔案與測試結果）
+  - `Goal & Acceptance`（當前階段子目標）
+  - `Loss Report`（本次壓縮修剪之日誌）
+
+### 2. Human-in-the-Loop 顯式中斷門禁 (Explicit Breakpoint Gates)
+借鑑 LangGraph `interrupt_before` 思想，在執行以下高危操作前，Agent **禁止自主執行，必須觸發硬性中斷點**，向人類提交 Impact Plan 並等待確認：
+1. **結構變更**：資料庫 Migration / 破壞性 Schema 變更 / `DROP` / `TRUNCATE`。
+2. **環境破壞**：刪除已有模組、覆寫 `.env` 或重設重要全域設定。
+3. **架構分歧**：當 Reviewer / Critic 連續 2 輪反駁或發現根本性設計缺陷時。
+
+
 
