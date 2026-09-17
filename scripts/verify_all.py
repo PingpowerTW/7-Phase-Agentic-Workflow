@@ -46,6 +46,9 @@ def main():
         ("Prompt Schema (15/15)", [sys.executable, "scripts/validate_prompts.py"], REPO_ROOT),
         ("Trust Governor & SHARS", [sys.executable, "skills/trust-governor/scripts/governor.py", "--test"], REPO_ROOT),
         ("UI-Designer & UTF-8 Safety", [sys.executable, "skills/ui-designer/scripts/search.py", "dark mode"], REPO_ROOT),
+        ("8-Facet Capsule Integrity", [sys.executable, "scripts/capsule.py", "test"], REPO_ROOT),
+        ("UI/UX Anti-Slop Auditor", [sys.executable, "scripts/ui_audit.py", "--test"], REPO_ROOT),
+        ("GEPA Reflexion Engine", [sys.executable, "scripts/reflexion.py", "test"], REPO_ROOT),
     ]
 
     results = []
@@ -60,7 +63,7 @@ def main():
     total_time = time.perf_counter() - start_total
 
     # Render ultra-compact, token-optimized report
-    print(f"[*] 7-Phase Agentic Workflow - Unified Verification Matrix (4 Suites)")
+    print(f"[*] 7-Phase Agentic Workflow - Unified Verification Matrix ({len(suites)} Suites)")
     for name, is_ok, out, elapsed in results:
         status_tag = "PASS" if is_ok else "FAIL"
         symbol = "✓" if is_ok else "✗"

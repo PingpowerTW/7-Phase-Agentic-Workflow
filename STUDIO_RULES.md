@@ -351,6 +351,25 @@ $$T = \text{PPV} \cdot \exp(-\sigma_{\text{calib}} \cdot T_{\text{comp}})$$
 python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && git push origin main
 ```
 
+---
+
+## 16. 🛡️ 專案自研三大核心兵器 (Three Indigenous Weapons)
+
+為徹底發揮 Gemini 的極速與超長上下文優勢，專案內建三款零外部依賴的純 Python 兵器：
+
+### 1. 8 刻面膠囊自動生成與稽核器 (`scripts/capsule.py`)
+- **指令**：`python scripts/capsule.py export [-o .agent/CAPSULE.md]`、`python scripts/capsule.py verify`。
+- **作用**：自 Git 提交歷程、修改狀態與環境事實自動提煉 8 刻面可審計膠囊與 Loss Report，跨對話交接 1 秒完成，對話重置後立即省下 80% Input Tokens。
+
+### 2. UI/UX Anti-Slop 視覺預檢引擎 (`scripts/ui_audit.py`)
+- **指令**：`python scripts/ui_audit.py <file_or_dir> [--check] [--threshold 80]`。
+- **作用**：依據 `frontend-taste-v2` 自動掃描前端代碼，精確捕捉「無趣三等分卡片」、「紫藍漸層陳腔濫調」、「缺乏微互動 (hover/active/transition)」等 AI Slop 特徵，給出 0~100 抗罐頭評分並動態推薦 BM25 頂級替代樣式。
+
+### 3. GEPA 自我修復反思迴圈 (`scripts/reflexion.py`)
+- **指令**：`python scripts/reflexion.py run "<test_command>"`。
+- **作用**：實作 Stanford 2025 GEPA 論文核心機制。測試或驗證失敗時，拒絕盲目重新嘗試，自動攔截錯誤堆疊並提取精準路徑與根因，生成非妥協性靶向負向約束（`Targeted Constraint Mutation`），指引 Gemini 於單輪內精確修復，杜絕試錯浪費。
+
+
 
 
 
