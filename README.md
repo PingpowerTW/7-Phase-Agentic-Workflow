@@ -411,6 +411,11 @@ flowchart LR
 > - **評估結論**：LangGraph 為生產級多 Agent 循環狀態圖編排框架，依賴龐大的 LangChain 生態鏈；其在產品後端中若未精細修剪歷史會導致 Token 爆炸，在即時 Coding Agent 開發工作流內部無調用場景，直接安裝會產生死代碼與依賴污染。
 > - **採納決策**：**方案 B（純吸收狀態圖與 Reducer 架構，零依賴進化）**。
 > - **落地成果**：不安裝套件，吸納其「State Reducer 狀態增量融合規則（Append-Only / Reconcile & Prune / Overwrite-Latest）」與「Human-in-the-Loop 顯式中斷門禁 (Breakpoint Gates)」，深度沉澱至 `STUDIO_RULES.md` 第 14 節，為長流程多代理人開發賦予確定性狀態融合機制，徹底消除狀態衝突與資訊覆蓋。
+>
+> **經典案例 7：Instructor (`567-labs/instructor`) 決策存證**
+> - **評估結論**：Jason Liu 主導之業界結構化輸出頂級開源標竿，深度整合 Pydantic 與主流 LLM；若在開發工作流中直接安裝會引入重型外部依賴，且其單純的 `max_retries` 重試機制容易造成 Token 翻倍浪費。
+> - **採納決策**：**方案 B（純吸收結構化輸出與欄位驗證反饋合約，零依賴進化）**。
+> - **落地成果**：維持 100% 純 Python 零外部依賴，汲取其「Pydantic 欄位驗證反饋合約 (Actionable ValidationError Contract)」與「三級降級容錯矩陣 (Native Schema ➔ Tool Calling ➔ Markdown JSON + Coercion)」，沉澱至 `STUDIO_RULES.md` 第 17 節與 `prompts/python/create-feature.prompt.md`，確保模型在遭遇資料校驗錯誤時能接收具體修復指令，達成單輪百分之百精準修復。
 
 ---
 

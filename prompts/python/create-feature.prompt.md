@@ -26,6 +26,7 @@ Before writing any code, output a 3–5 step execution plan:
 - **Docstrings**: Google style with `Args`, `Returns`, `Raises`, and minimal usage doctest.
 - **Error Handling**: Custom exception hierarchy. Fail-fast validation. Never use bare `except:`.
 - **Zero Placeholder**: No `TODO`, `FIXME`, `pass`, or `...`. Every function must be fully implemented.
+- **Instructor Actionable Validation**: When defining Pydantic `@field_validator`, error messages must provide explicit corrective instructions (e.g. `MUST be one of [...]`) to enable single-turn model self-healing.
 - **BTC Gate**: Self-evaluate confidence. If uncertainty on edge cases > 25%, state assumptions explicitly.
 
 # Output Format
