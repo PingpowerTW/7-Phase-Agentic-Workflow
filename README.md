@@ -416,6 +416,11 @@ flowchart LR
 > - **評估結論**：Jason Liu 主導之業界結構化輸出頂級開源標竿，深度整合 Pydantic 與主流 LLM；若在開發工作流中直接安裝會引入重型外部依賴，且其單純的 `max_retries` 重試機制容易造成 Token 翻倍浪費。
 > - **採納決策**：**方案 B（純吸收結構化輸出與欄位驗證反饋合約，零依賴進化）**。
 > - **落地成果**：維持 100% 純 Python 零外部依賴，汲取其「Pydantic 欄位驗證反饋合約 (Actionable ValidationError Contract)」與「三級降級容錯矩陣 (Native Schema ➔ Tool Calling ➔ Markdown JSON + Coercion)」，沉澱至 `STUDIO_RULES.md` 第 17 節與 `prompts/python/create-feature.prompt.md`，確保模型在遭遇資料校驗錯誤時能接收具體修復指令，達成單輪百分之百精準修復。
+>
+> **經典案例 8：TypeSafe AI Jev / System One Models (`typesafe.ai`) 決策存證**
+> - **評估結論**：前 OpenAI 研究員、InstructGPT 與 RLHF 核心貢獻者 Diogo Almeida 於 2026/09 推出首款 System One 決策模型 Jev，主打非自回歸 (NAR) 單次前向推論 (70~500ms)、原生 Type-Safe 輸出與 RLCD 概率校準；但其目前為閉源專有雲端 API (Early Access Waitlist)，無法本地離線運行或無限制存取。
+> - **採納決策**：**方案 B（純吸收非自回歸快思考與決策原語架構，零依賴進化）**。
+> - **落地成果**：吸納其「三大決策原語 (Noul, Choice, Score)」、「快慢雙軌分流架構 (System 1 快判定 ➔ System 2 慢推理)」與「RLCD 概率校準門禁」核心精神，於專案實作零外部依賴之 `scripts/system_one.py` 決策閘門，並深度沉澱至 `STUDIO_RULES.md` 第 18 節；全面終結在單純是非、分類與打分環節呼叫大型生成式 LLM 產生冗贅說明的 Token 浪費，達成輸出端零 Token 開銷與毫秒級響應。
 
 ---
 
@@ -445,6 +450,11 @@ flowchart LR
 │   ├── laravel/                                 # Laravel 13+ / PHP 8.4+ (Feature, Migration, Pest, Action)
 │   └── fullstack/                               # API Route & DB Migration 模板
 ├── scripts/                                     # 🛠️ 自動化驗證與同步工具
+│   ├── verify_all.py                            # 一鍵全專案 8 大套件批次驗證入口
+│   ├── system_one.py                            # 🧠 System 1 非自回歸決策閘門 (Noul/Choice/Score)
+│   ├── capsule.py                               # 8 刻面膠囊自動提煉與 Loss Report 審計器
+│   ├── ui_audit.py                              # UI/UX Anti-Slop 視覺預檢引擎
+│   ├── reflexion.py                             # GEPA 自我修復反思迴圈 (ICML 2025/2026)
 │   ├── sync_promptscript.py                     # PromptScript 語意驗證與跨 IDE 同步校驗器
 │   └── validate_prompts.py                      # Prompt Schema 嚴格校驗腳本
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/

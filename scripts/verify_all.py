@@ -49,6 +49,7 @@ def main():
         ("8-Facet Capsule Integrity", [sys.executable, "scripts/capsule.py", "test"], REPO_ROOT),
         ("UI/UX Anti-Slop Auditor", [sys.executable, "scripts/ui_audit.py", "--test"], REPO_ROOT),
         ("GEPA Reflexion Engine", [sys.executable, "scripts/reflexion.py", "test"], REPO_ROOT),
+        ("System 1 Decision Gate", [sys.executable, "scripts/system_one.py", "--test"], REPO_ROOT),
     ]
 
     results = []

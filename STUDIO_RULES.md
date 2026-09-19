@@ -396,6 +396,25 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 2. **Tier 2 (廣泛相容)**：`TOOL_CALLING`（將期望之 Schema 宣告為單一 Tool/Function 呼叫參數，強制結構化回傳）。
 3. **Tier 3 (終極保底)**：`MARKDOWN_JSON + Coercion`（正則提取 ` ```json ` 圍欄，並於本地執行寬容型別修剪轉型，完全不消耗額外 API 重試）。
 
+---
+
+## 18. ⚡ System 1 快思考決策原語與極速非自回歸路由門禁 (System 1 Primitives & Zero-Output Gate)
+
+本專案吸納 TypeSafe AI Jev「System One Models」架構哲學，不引入閉源外部依賴，確立軟體自動化中快慢決策的雙軌分流規範：
+
+### 1. 三大決策原語標準 (Canonical Decision Primitives)
+在日常開發與工作流內部，高頻軟體決策全面重構為三大原語，**嚴禁呼叫生成式大模型撰寫無意義的自然語言長篇大論**：
+- **`Noul` (Boolean / 二元開關)**：用於安全護欄、Prompt Injection 檢查、檔案是否受影響、測試是否通過。輸出 `true`/`false` 與校準信度。
+- **`Choice` (Categorical / 候選路由)**：用於子代理人派發、工單分類、技術棧識別。提供明確枚舉候選集，輸出最優標籤與分佈權重。
+- **`Score` (Continuous / 連續評分)**：用於 RAG 相關度評估、任務緊急程度、代碼異味等級。輸出 `0.0 ~ 1.0` 浮點數與信度。
+
+### 2. 雙軌自適應降級矩陣 (Dual-Track Adaptive Hierarchy)
+所有高頻判斷優先走 System 1 快路徑，達成輸出端零 Token 浪費與毫秒級延遲：
+1. **Fast-Path (System 1 零耗時)**：調用 `scripts/system_one.py` 或本地確定性啟發式規則，延遲 `<5ms`，輸出 Token 費用為 $0。
+2. **Cloud Adapter (System 1 API 擴充)**：若設定 `TYPESAFE_API_KEY`，可透明掛載 Jev 非自回歸決策 API (70~500ms)。
+3. **Fallback Gate (System 2 慢思考深推理)**：當 System 1 校準信度低於門檻（預設 `< 0.75`）或面臨高度語意歧義時，主動釋放控制權，降級呼叫 Frontier LLM (Gemini/Claude) 進行多步長思考推理。
+
+
 
 
 
