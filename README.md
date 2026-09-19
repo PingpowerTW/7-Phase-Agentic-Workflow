@@ -497,7 +497,7 @@ flowchart LR
 若您使用 Claude Code、Cursor、GitHub Copilot、Windsurf 或 Antigravity 等不同 AI 工具：
 
 ```bash
-# 1. 一鍵執行全專案 7 大批次驗證矩陣 (DSL + Schema + Governor + UI + Capsule + Anti-Slop + GEPA)
+# 1. 一鍵執行全專案 9 大批次驗證矩陣 (DSL + Schema + Governor + UI + Capsule + Anti-Slop + GEPA + System 1 + Loop Gate)
 python scripts/verify_all.py
 
 # 2. 匯出或驗證 8 刻面可審計上下文膠囊 (8-Facet Context Capsule + Loss Report)
@@ -510,10 +510,22 @@ python scripts/ui_audit.py src/ --check --threshold 80
 # 4. GEPA 自我修復反思迴圈 (攔截失敗並自動生成靶向約束)
 python scripts/reflexion.py run "python scripts/validate_prompts.py"
 
-# 5. PromptScript 語意驗證與多 IDE 編譯 (49+ Targets)
+# 5. System 1 極速決策閘門 (Noul/Choice/Score <5ms 零 Token 初篩)
+python scripts/system_one.py --test
+
+# 6. Loop Engineering 物理安全硬門禁 (Path Denylist & Windows Backslash Protection)
+python scripts/loop_gate.py --test
+
+# 7. PromptScript 語意驗證與多 IDE 編譯 (49+ Targets)
 python scripts/sync_promptscript.py
 python scripts/sync_promptscript.py --compile
 ```
+
+---
+
+### 🔄 姊妹專案推薦 (Ecosystem Companions)
+
+- 🔗 [**PingpowerTW/agent-loop-engineering**](https://github.com/PingpowerTW/agent-loop-engineering)：開箱即用的獨立 Loop Engineering L3 實踐樣板庫，涵蓋 `STATE.md` 狀態脊椎、`gate.yaml`、Token 預算守護與多代理人驗證迴圈。
 
 ---
 
@@ -524,9 +536,9 @@ python scripts/sync_promptscript.py --compile
 >
 > 1. **定位設定檔目錄**：確認使用者的全域設定路徑。通常為 `~/.gemini/`（Windows: `C:\Users\<Username>\.gemini\`）。
 > 2. **部署全域規則 (Layer 1)**：將本 Repo 根目錄的 `GEMINI.md` 複製至 `~/.gemini/GEMINI.md`。
-> 3. **部署技能模組**：將本 Repo 中 `skills/` 目錄下的所有 17 款特化技能資料夾（含 `trust-governor`, `dros-gateway`, `promptcraft`, `teamwork`, `agy-studio`, `caveman`, `context-compressor`, `karpathy-guidelines` 等），複製至 `~/.gemini/config/skills/`。若目錄不存在請先建立。
+> 3. **部署技能模組**：將本 Repo 中 `skills/` 目錄下的所有特化技能資料夾（含 `trust-governor`, `dros-gateway`, `promptcraft`, `teamwork`, `agy-studio`, `caveman`, `context-compressor`, `karpathy-guidelines` 等），複製至 `~/.gemini/config/skills/`。若目錄不存在請先建立。
 > 4. **部署專案級規則 (Layer 2, 可選)**：若使用者有指定的開發專案目錄，將 `STUDIO_RULES.md` 複製至該專案的根目錄。
-> 5. **回報安裝結果**：完成後回覆：「✅ 7 階段 Agentic 工作流已安裝完畢（全域規則 + 17 大特化技能包）。輸入 `/spec` 或 `/teamwork` 即可開始工作！」
+> 5. **回報安裝結果**：完成後回覆：「✅ 7 階段 Agentic 工作流已安裝完畢。輸入 `/spec` 或 `/teamwork` 即可開始工作！」
 
 ---
 

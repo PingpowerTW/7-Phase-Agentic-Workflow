@@ -8,8 +8,13 @@ Executes all core project verification suites in a single batch process:
 2. Prompt Frontmatter Schema Validation (15/15 Prompts)
 3. Trust Governor & SHARS Thermodynamics Suite (8/8 Tests)
 4. UI-Designer BM25 Engine & Windows UTF-8 Console Safety Check
+5. 8-Facet Capsule Integrity Suite
+6. UI/UX Anti-Slop Auditor Suite
+7. GEPA Reflexion Engine Suite
+8. System 1 Decision Gate (Noul / Choice / Score)
+9. Loop Engineering Physical Safety Gate (Backslash & MaxFiles Protection)
 
-Outputs a compact, token-optimized summary (<10 lines) unless --verbose is passed.
+Outputs a compact, token-optimized summary (<12 lines) unless --verbose is passed.
 """
 
 import sys

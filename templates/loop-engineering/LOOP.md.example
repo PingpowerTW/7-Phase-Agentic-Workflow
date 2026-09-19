@@ -1,0 +1,28 @@
+# LOOP.md — AI 優化 Workspace Loop Specification
+
+This file documents the autonomous and assisted loop operations for the AI optimization workspace.
+
+## Active Loops
+
+### Daily Triage (L1 — Report Only)
+- Cadence: 1d
+- Skill: `loop-triage`
+- State: `STATE.md`
+- Mode: Report-only. Inspects Git changes, dependencies, test suite status, and pending items.
+
+### Feature / Refactor Babysitter (L2 — Assisted)
+- Cadence: On-demand (e.g. `/agy-studio` or task trigger)
+- Strategy: Isolated Git Worktree per task
+- Maker/Checker: Implementer creates diff; Verifier runs test suite and confirms scope.
+- Hard Gate: `gate.yaml` checked before any file is touched.
+
+## Safety & Gates
+- Mechanical enforcement via `gate.yaml`
+- Path denylist: `.env*`, `credentials/**`, `secrets/**`, `auth/**`, `billing/**`, `migrations/**`
+- Max files changed per run: `8`
+- Default auto-merge: Disabled (requires human review)
+
+## Budget & Observability
+- Budget policy: `loop-budget.md`
+- Run history log: `loop-run-log.md`
+- Kill switch: `loop-pause-all` flag in `loop-budget.md`
