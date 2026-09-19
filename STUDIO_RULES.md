@@ -438,6 +438,13 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 - 每日設定 Token 消耗上限與單次任務上限。
 - 消耗達到 80% 時自動降級為 Report-only 唯讀巡檢模式；若觸發異常連鎖錯誤，立即啟用 `loop-pause-all: true` 物理熔斷。
 
+### 5. 跨層級執行優先級與時序規範 (Execution Precedence Hierarchy)
+面對任何 Agent 動作，系統嚴格依循由硬至軟、由快至慢的四級執行時序，杜絕層級衝突：
+1. **Level 0 (Zero-Order Physical Gate — 最高物理優先級)**：`scripts/loop_gate.py`。在任何實體檔案讀寫前執行，強制檢驗 `gate.yaml` 之 Denylist 與變更上限（`maxFiles: 8`），並自動正規化 Windows 反斜線（`\` -> `/`）。若違規立即 Exit 2 物理熔斷，**直接無條件終止後續所有決策**。
+2. **Level 1 (System 1 Fast Classifier)**：`scripts/system_one.py`。若 Level 0 放行，進行非自回歸快初篩（`Noul` / `Choice` / `Score`），延遲 `<5ms`，Token 消耗 $0。
+3. **Level 2 (System 2 Deep Reasoning & Maker)**：若 System 1 判斷需深推理或校準信度不足（`< 0.75`），交由 Frontier LLM 遵循 Phase 0-6 規範產出實質代碼與測試。
+4. **Level 3 (Loop Verifier & State Spine Sync)**：獨立 Checker 跑真實 test suite，驗證通過後雙軌回寫 `STATE.md` 狀態脊椎與 `SNAPSHOT.jsonl` 事件日誌。
+
 
 
 
