@@ -414,6 +414,30 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 2. **Cloud Adapter (System 1 API 擴充)**：若設定 `TYPESAFE_API_KEY`，可透明掛載 Jev 非自回歸決策 API (70~500ms)。
 3. **Fallback Gate (System 2 慢思考深推理)**：當 System 1 校準信度低於門檻（預設 `< 0.75`）或面臨高度語意歧義時，主動釋放控制權，降級呼叫 Frontier LLM (Gemini/Claude) 進行多步長思考推理。
 
+---
+
+## 19. 🔄 Loop Engineering 雙軌閉環架構與安全硬門禁 (Dual-Track State & Safety Gates)
+
+本專案全面融合 Cobus Greyling 與 Addy Osmani 之 **Loop Engineering（迴圈工程）** 體系，將 Agent 協作由手動逐回合 Prompting 升級為自主閉環控制系統：
+
+### 1. 雙軌記憶架構 (Dual-Track State Architecture)
+- **微觀軌道 (`SNAPSHOT.jsonl`)**：記錄每一個 milestone、decision、handoff 的高頻歷史事件日誌。
+- **宏觀軌道 (`STATE.md`)**：作為專案活體狀態脊椎（State Spine），維護 `High Priority`、`Watch List` 與 `Recent Noise`。新會話啟動時優先讀取，開場以 0 Token 成本瞬間重建全局視野。
+
+### 2. 機械化安全門禁 (`gate.yaml`)
+拒絕依賴 Agent 的自律假設，以實體設定檔進行物理硬阻斷：
+- **Path Denylist**：嚴禁自動修改敏感路徑（`.env*`, `credentials/**`, `secrets/**`, `auth/**`, `billing/**`, `migrations/**`）。
+- **變更上限 (`maxFiles: 8`)**：單次變更超過 8 個檔案判定為意圖偏離，強制退出並向人類 Maintainer 升級。
+- **Auto-Merge 白名單**：預設全面禁止自動合併，僅放行純文件（`docs/**`, `*.md`）與獨立單元測試。
+
+### 3. Maker / Checker 角色硬分離
+- **Maker (實作者)**：專注撰寫代碼與提供 diff，嚴禁自行宣稱「測試已通過」或結案打勾。
+- **Checker (驗證者 / loop-verifier)**：獨立執行真實測試命令，以「預設 REJECT」為原則稽核 diff scope、測試結果與代碼實質性（零容忍假測試與 TODO 佔位符）。
+
+### 4. 預算守護與緊急熔斷 (`loop-budget.md`)
+- 每日設定 Token 消耗上限與單次任務上限。
+- 消耗達到 80% 時自動降級為 Report-only 唯讀巡檢模式；若觸發異常連鎖錯誤，立即啟用 `loop-pause-all: true` 物理熔斷。
+
 
 
 

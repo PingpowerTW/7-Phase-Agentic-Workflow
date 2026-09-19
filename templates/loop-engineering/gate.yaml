@@ -1,0 +1,26 @@
+# Machine-readable twin of safety policies.
+# Enforces Path Denylist, max files changed per run, and auto-merge allowlist.
+version: 1
+
+denylist:
+  - "**/.env"
+  - "**/.env.*"
+  - "**/secrets/**"
+  - "**/credentials/**"
+  - "**/*_key*"
+  - "**/*_secret*"
+  - "**/.terraform/**"
+  - "**/k8s/production/**"
+  - "**/migrations/**"
+  - "**/auth/**"
+  - "**/payments/**"
+  - "**/billing/**"
+
+maxFiles: 8
+
+autoMergeAllowlist:
+  - "docs/**"
+  - "**/*.md"
+  - "**/*.test.mjs"
+  - "**/*.test.ts"
+  - "**/*.test.js"
