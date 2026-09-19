@@ -10,7 +10,8 @@ Inspired by TypeSafe AI / Jev "System One Models":
 
 Architecture:
 - Fast Path (System 1): Local deterministic heuristics / semantic matching (0ms, 0 Token)
-- Cloud Adapter: TypeSafe API integration hook (when TYPESAFE_API_KEY is configured)
+- Negation Engine: 25-char prefix window to prevent semantic inversion blindspots
+- Cloud Adapter: Native urllib integration hook for TypeSafe API (with auto-fallback)
 - Fallback Gate: If confidence < threshold, signal fallback to System 2 (Gemini/Claude)
 """
 
@@ -19,8 +20,10 @@ import os
 import re
 import json
 import time
+import urllib.request
+import urllib.error
 from dataclasses import dataclass
-from typing import Any, Optional, Union
+from typing import Any, Optional, Union, List
 
 # Ensure UTF-8 output on Windows consoles
 if sys.platform == "win32":
@@ -50,6 +53,20 @@ DOMAIN_LEXICON = {
     "devops": ["devops", "docker", "ci", "cd", "deploy", "kubernetes", "infra", "pipeline", "compose"],
 }
 
+# Negation indicators for context window analysis
+NEGATION_TOKENS = ["not", "no", "never", "without", "none", "neither", "nor", "非", "不", "無", "未", "別"]
+
+
+def is_negated(match_start: int, text: str, window_chars: int = 25) -> bool:
+    """Check if a keyword match is immediately preceded by a negation token."""
+    start = max(0, match_start - window_chars)
+    prefix = text[start:match_start].lower()
+    for neg in NEGATION_TOKENS:
+        # Match English word boundary or direct Chinese character
+        if re.search(r"\b" + re.escape(neg) + r"\b", prefix) or (len(neg) == 1 and neg in prefix):
+            return True
+    return False
+
 
 class SystemOneGate:
     """
@@ -58,16 +75,63 @@ class SystemOneGate:
     routing, and binary checks in <5ms without generative LLM overhead.
     """
 
-    def __init__(self, confidence_threshold: float = 0.75):
+    def __init__(self, confidence_threshold: float = 0.75, custom_lexicon: Optional[dict] = None):
         self.threshold = confidence_threshold
         self.api_key = os.getenv("TYPESAFE_API_KEY", "").strip()
+        self.lexicon = dict(DOMAIN_LEXICON)
+        if custom_lexicon:
+            self.lexicon.update(custom_lexicon)
+
+    def _call_cloud_adapter(self, endpoint: str, payload: dict) -> Optional[dict]:
+        """
+        Cloud adapter calling TypeSafe AI Jev endpoint via standard urllib.
+        Returns None on timeout or error to trigger seamless local fallback.
+        """
+        if not self.api_key:
+            return None
+
+        url = f"https://api.typesafe.ai/v1/systemone/{endpoint}"
+        req_data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=req_data,
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "Antigravity-SystemOne-Client/1.0"
+            },
+            method="POST"
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=0.8) as resp:
+                if resp.status == 200:
+                    return json.loads(resp.read().decode("utf-8"))
+        except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
+            return None
+        return None
 
     def noul(self, prompt: str, context: str = "") -> DecisionResult:
         """
         Binary No/Yes decision (Noul).
-        E.g. Security check, bug presence, or gating condition.
+        Handles negation prefixes and provides graceful cloud fallback.
         """
         start = time.perf_counter()
+
+        # Try cloud adapter if configured
+        cloud_res = self._call_cloud_adapter("noul", {"prompt": prompt, "context": context})
+        if cloud_res and "decision" in cloud_res and "probability" in cloud_res:
+            elapsed = (time.perf_counter() - start) * 1000
+            prob = float(cloud_res["probability"])
+            return DecisionResult(
+                primitive="noul",
+                value=bool(cloud_res["decision"]),
+                probability=prob,
+                latency_ms=round(elapsed, 2),
+                engine="typesafe-jev",
+                fallback_required=(prob < self.threshold)
+            )
+
+        # Local deterministic heuristic with negation awareness
         clean = (prompt + " " + context).lower()
 
         positive_patterns = [
@@ -79,8 +143,21 @@ class SystemOneGate:
             r"(拒絕|攔截|錯誤|失敗|禁止|非法)",
         ]
 
-        pos_matches = sum(1 for p in positive_patterns if re.search(p, clean))
-        neg_matches = sum(1 for p in negative_patterns if re.search(p, clean))
+        pos_matches, neg_matches = 0, 0
+
+        for pat in positive_patterns:
+            for m in re.finditer(pat, clean):
+                if is_negated(m.start(), clean):
+                    neg_matches += 1
+                else:
+                    pos_matches += 1
+
+        for pat in negative_patterns:
+            for m in re.finditer(pat, clean):
+                if is_negated(m.start(), clean):
+                    pos_matches += 1
+                else:
+                    neg_matches += 1
 
         if pos_matches > 0 and neg_matches == 0:
             val, prob = True, min(0.70 + 0.15 * pos_matches, 0.98)
@@ -103,19 +180,47 @@ class SystemOneGate:
             fallback_required=(prob < self.threshold)
         )
 
-    def choice(self, prompt: str, candidates: list[str], context: str = "") -> DecisionResult:
+    def choice(self, prompt: str, candidates: List[str], context: str = "") -> DecisionResult:
         """
         Categorical single-choice selection from candidate labels.
-        E.g. Routing to subagent (Explorer, DB Architect, Backend Lead).
+        Deduplicates candidate names and handles domain vocabulary.
         """
         start = time.perf_counter()
-        if not candidates:
-            raise ValueError("Candidates list must not be empty.")
+
+        # Deduplicate candidates while preserving order and non-empty strings
+        normalized_candidates = []
+        seen = set()
+        for c in candidates:
+            cleaned_c = str(c).strip()
+            if cleaned_c and cleaned_c.lower() not in seen:
+                seen.add(cleaned_c.lower())
+                normalized_candidates.append(cleaned_c)
+
+        if not normalized_candidates:
+            raise ValueError("Candidates list must contain at least one non-empty string.")
+
+        # Try cloud adapter if configured
+        cloud_res = self._call_cloud_adapter("choice", {
+            "prompt": prompt,
+            "candidates": normalized_candidates,
+            "context": context
+        })
+        if cloud_res and "decision" in cloud_res and "probability" in cloud_res:
+            elapsed = (time.perf_counter() - start) * 1000
+            prob = float(cloud_res["probability"])
+            return DecisionResult(
+                primitive="choice",
+                value=str(cloud_res["decision"]),
+                probability=prob,
+                latency_ms=round(elapsed, 2),
+                engine="typesafe-jev",
+                fallback_required=(prob < self.threshold)
+            )
 
         clean = (prompt + " " + context).lower()
-        scores = {c: 0 for c in candidates}
+        scores = {c: 0 for c in normalized_candidates}
 
-        for c in candidates:
+        for c in normalized_candidates:
             c_lower = c.lower()
             # Direct match bonus
             pat = r"\b" + re.escape(c_lower) + r"\b"
@@ -123,7 +228,7 @@ class SystemOneGate:
             scores[c] += direct_hits * 3
 
             # Lexicon expansion match
-            keywords = DOMAIN_LEXICON.get(c_lower, [])
+            keywords = self.lexicon.get(c_lower, [])
             for kw in keywords:
                 if re.search(r"\b" + re.escape(kw) + r"\b", clean) or kw in clean:
                     scores[c] += 2
@@ -133,12 +238,11 @@ class SystemOneGate:
         total_hits = sum(scores.values())
 
         if total_hits > 0 and best_hits > 0:
-            # Calibrated probability based on hit dominance
             dominance = best_hits / total_hits
             prob = min(0.65 + 0.32 * dominance, 0.98)
         else:
-            best_candidate = candidates[0]
-            prob = 1.0 / len(candidates)
+            best_candidate = normalized_candidates[0]
+            prob = 1.0 / len(normalized_candidates)
 
         elapsed = (time.perf_counter() - start) * 1000
         return DecisionResult(
@@ -153,27 +257,63 @@ class SystemOneGate:
     def score(self, prompt: str, context: str = "") -> DecisionResult:
         """
         Continuous relevance / urgency / quality scoring (0.0 ~ 1.0).
+        Includes negation compensation to avoid misclassifying negated severity.
         """
         start = time.perf_counter()
+
+        # Try cloud adapter if configured
+        cloud_res = self._call_cloud_adapter("score", {"prompt": prompt, "context": context})
+        if cloud_res and "score" in cloud_res and "probability" in cloud_res:
+            elapsed = (time.perf_counter() - start) * 1000
+            prob = float(cloud_res["probability"])
+            return DecisionResult(
+                primitive="score",
+                value=float(cloud_res["score"]),
+                probability=prob,
+                latency_ms=round(elapsed, 2),
+                engine="typesafe-jev",
+                fallback_required=(prob < self.threshold)
+            )
+
         clean = (prompt + " " + context).lower()
 
         high_signals = ["urgent", "critical", "blocker", "crash", "fatal", "嚴重", "緊急", "崩潰"]
         med_signals = ["warning", "moderate", "slow", "smell", "警告", "延遲", "優化"]
         low_signals = ["trivial", "typo", "minor", "cosmetic", "微小", "格式", "白字"]
 
-        h_count = sum(1 for w in high_signals if w in clean)
-        m_count = sum(1 for w in med_signals if w in clean)
-        l_count = sum(1 for w in low_signals if w in clean)
+        h_count, m_count, l_count = 0, 0, 0
 
-        if h_count > 0:
-            score_val = min(0.75 + 0.08 * h_count, 0.99)
+        for w in high_signals:
+            for m in re.finditer(re.escape(w), clean):
+                if is_negated(m.start(), clean):
+                    l_count += 1
+                else:
+                    h_count += 1
+
+        for w in med_signals:
+            for m in re.finditer(re.escape(w), clean):
+                if is_negated(m.start(), clean):
+                    l_count += 1
+                else:
+                    m_count += 1
+
+        for w in low_signals:
+            for m in re.finditer(re.escape(w), clean):
+                if is_negated(m.start(), clean):
+                    m_count += 1
+                else:
+                    l_count += 1
+
+        # Calculate balanced score with net weighting
+        if h_count > 0 and h_count > l_count:
+            score_val = min(0.75 + 0.08 * (h_count - l_count), 0.99)
             prob = 0.90
         elif m_count > 0:
             score_val = min(0.45 + 0.08 * m_count, 0.74)
             prob = 0.82
-        elif l_count > 0:
+        elif l_count > 0 or (h_count > 0 and l_count >= h_count):
             score_val = max(0.15 - 0.03 * l_count, 0.05)
-            prob = 0.85
+            prob = 0.88
         else:
             score_val = 0.50
             prob = 0.60
@@ -190,7 +330,7 @@ class SystemOneGate:
 
 
 def run_tests() -> bool:
-    """Self-test verifying all 3 primitives and fallback gating."""
+    """Adversarial test suite verifying edge cases, negation, and duplicate protection."""
     gate = SystemOneGate(confidence_threshold=0.75)
 
     # Test 1: Noul positive
@@ -212,11 +352,24 @@ def run_tests() -> bool:
     res4 = gate.choice("Design PostgreSQL schema and indexes", candidates)
     assert res4.value == "database" and res4.probability >= 0.75, f"Choice failed: {res4}"
 
-    # Test 5: Score rating
+    # Test 5: Score rating standard
     res5 = gate.score("System crash on startup, urgent blocker")
     assert res5.value >= 0.75 and not res5.fallback_required, f"Score failed: {res5}"
 
-    print("[PASS] SystemOneGate: 5/5 assertions passed cleanly (Noul, Choice, Score, Fallback).")
+    # Adversarial Test 6: Semantic negation blindspot
+    # "not a fatal crash" should NOT be scored as critical urgency
+    res6 = gate.score("This is not a fatal crash, it is just a minor cosmetic typo")
+    assert res6.value <= 0.30, f"Negation blindspot triggered! Score was {res6.value}"
+
+    # Adversarial Test 7: Duplicate and mixed-case candidate list
+    res7 = gate.choice("PostgreSQL migration", ["Database", "database", "DATABASE", "frontend"])
+    assert res7.value.lower() == "database" and not res7.fallback_required, f"Duplicate candidates broke choice: {res7}"
+
+    # Adversarial Test 8: Noul negation ("not allowed")
+    res8 = gate.noul("This action is not allowed under any circumstances")
+    assert res8.value is False, f"Negated positive should be false: {res8}"
+
+    print("[PASS] SystemOneGate: 8/8 adversarial assertions passed cleanly (Negation, Deduplication, Fallbacks).")
     return True
 
 
