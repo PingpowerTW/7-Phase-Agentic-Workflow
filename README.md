@@ -1,6 +1,6 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
 
-> **版本**：v2.10 (Universal Multi-IDE Compiler & PromptScript Edition)  
+> **版本**：v2.11 (PromptScript Compiler, Invariants Sentinel & Loop Graph Edition)  
 > **適用環境**：Antigravity, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Factory, OpenCode 等 49+ 款 AI 開發工具  
 > **核心理念**：Write Once, Compile Anywhere（一次宣告、全端編譯）、Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）、SelfCompact First-Principles（第一性原理自適應壓縮）
 
@@ -497,7 +497,7 @@ flowchart LR
 若您使用 Claude Code、Cursor、GitHub Copilot、Windsurf 或 Antigravity 等不同 AI 工具：
 
 ```bash
-# 1. 一鍵執行全專案 9 大批次驗證矩陣 (DSL + Schema + Governor + UI + Capsule + Anti-Slop + GEPA + System 1 + Loop Gate)
+# 1. 一鍵執行全專案 11 大批次驗證矩陣 (DSL + Schema + Governor + UI + Capsule + Anti-Slop + GEPA + System 1 + Loop Gate + Loop Sentinel + Loop Graph)
 python scripts/verify_all.py
 
 # 2. 匯出或驗證 8 刻面可審計上下文膠囊 (8-Facet Context Capsule + Loss Report)
@@ -516,7 +516,14 @@ python scripts/system_one.py --test
 # 6. Loop Engineering 物理安全硬門禁 (Path Denylist & Windows Backslash Protection)
 python scripts/loop_gate.py --test
 
-# 7. PromptScript 語意驗證與多 IDE 編譯 (49+ Targets)
+# 7. Loop Sentinel 漂移哨兵與金鑰防護 (Invariants & Git Test Co-evolution)
+python scripts/loop_drift.py
+
+# 8. Loop Graph 確定性架構知識圖譜與衝擊半徑分析 (AST Extraction & Blast Radius)
+python scripts/loop_graph.py --scan
+python scripts/loop_graph.py --impact <file_or_function>
+
+# 9. PromptScript 語意驗證與多 IDE 編譯 (49+ Targets)
 python scripts/sync_promptscript.py
 python scripts/sync_promptscript.py --compile
 ```

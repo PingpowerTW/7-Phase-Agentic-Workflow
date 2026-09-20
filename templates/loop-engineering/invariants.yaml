@@ -1,0 +1,66 @@
+# Invariants Specification (Loop Sentinel)
+# Inspired by Microsoft PromptKit - Formal system-level constraints and guarantees.
+version: 1
+
+invariants:
+  # 1. 安全不變量 (Safety Invariants) - 任何情況下絕對不可打破的物理與資料邊界
+  safety:
+    - id: INV_SAFE_01
+      name: "No Hardcoded Secrets"
+      description: "嚴禁在任何代碼、設定檔或日誌中硬編碼 API 金鑰、Token、私鑰或密碼"
+      severity: "CRITICAL"
+      category: "security"
+
+    - id: INV_SAFE_02
+      name: "Normalized Path Sanitization"
+      description: "所有檔案與目錄路徑操作必須經由正規化處理（轉換反斜線並過濾相對目錄穿透），防止 Windows/POSIX 繞過"
+      severity: "CRITICAL"
+      category: "security"
+
+    - id: INV_SAFE_03
+      name: "Denylist Path Protection"
+      description: "禁止對 gate.yaml 定義之敏感路徑（.env*, credentials/**, secrets/**, auth/**, billing/**）進行寫入或刪除"
+      severity: "CRITICAL"
+      category: "security"
+
+  # 2. 狀態不變量 (State Invariants) - 確保持久化記憶與工作流狀態具備單調性與完整性
+  state:
+    - id: INV_STATE_01
+      name: "Monotonic State Timestamp"
+      description: "STATE.md 的 Last run 時間戳每次更新時必須單調遞增，不可倒退"
+      severity: "HIGH"
+      category: "integrity"
+
+    - id: INV_STATE_02
+      name: "Snapshot Closed-Loop Verification (C1/N1)"
+      description: "寫入 SNAPSHOT.jsonl 前必須符合 C1 閉環檢驗（模組已驗證），若處於報錯狀態（N1）嚴禁封裝長期快照"
+      severity: "HIGH"
+      category: "memory"
+
+  # 3. 範疇與漂移不變量 (Scope & Drift Invariants) - 防止意圖膨脹與未經審查代碼散落
+  scope:
+    - id: INV_SCOPE_01
+      name: "Max Files Bound"
+      description: "單次任務變更之有效檔案數不得超過 gate.yaml 上限 (預設 8 檔案)"
+      severity: "CRITICAL"
+      category: "blast_radius"
+
+    - id: INV_SCOPE_02
+      name: "Code-Test Co-evolution"
+      description: "新增或修改關鍵邏輯（.py, .js, .ts）時，必須有對應之單元測試或整合測試相伴提交"
+      severity: "MEDIUM"
+      category: "verification"
+
+  # 4. 驗證協議不變量 (Verification Protocol Invariants) - 確保 Maker / Checker 嚴格制衡
+  verification:
+    - id: INV_VERIFY_01
+      name: "Maker/Checker Separation"
+      description: "實作者 (Maker) 不得自行宣稱測試通過；必須由驗證者 (Checker) 獨立複檢"
+      severity: "HIGH"
+      category: "governance"
+
+    - id: INV_VERIFY_02
+      name: "Zero Fake Assertion"
+      description: "測試代碼中嚴禁空斷言、套套邏輯（如 expect(true).toBe(true)）或無實質驗證之假綠燈"
+      severity: "HIGH"
+      category: "quality"

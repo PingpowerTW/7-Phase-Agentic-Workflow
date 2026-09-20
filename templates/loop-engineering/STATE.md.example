@@ -1,17 +1,22 @@
 # Loop State — AI 優化 Workspace
 
-Last run: 2026-09-19T13:17:00+08:00 (Adversarial Review & System 1 Hardening Completed — Grade A+)
+Last run: 2026-09-20T14:54:00+08:00 (Loop Graph Engine Activated — 4,484 Nodes, 9,974 Edges, Suite 16 100% Green)
 
 ## High Priority (loop is acting or waiting on human)
 
 - [x] **Loop Architecture Initialization**: 已建立 Loop Engineering 基礎架構（gate.yaml, STATE.md, loop-budget.md, loop-constraints.md）。
 - [x] **Maker / Checker Hard Split**: 已引入 loop-verifier 與 gate.yaml 物理門禁。
-- [x] **TypeSafe AI Jev System 1 Absorption**: 已吸收 System 1 決策原語 (Noul/Choice/Score) 與 `scripts/system_one.py` 決策閘門，沉澱至 `STUDIO_RULES.md` 第 18 節與 `README.md`，8 大測試套件 100% 通過並已推送遠端。
-- [x] **Adversarial Review Passed**: 完成 8 項對抗性測試（消滅否定詞盲區、候選詞去重相容、實裝標準庫 Cloud Adapter），代碼庫健康無異味。
-- [ ] **Daily Triage Routine**: 規劃定期執行巡檢迴圈以保持專案健康。
+- [x] **TypeSafe AI Jev System 1 Absorption**: 已吸收 System 1 決策原語 (Noul/Choice/Score) 與 `scripts/system_one.py` 決策閘門，沉澱至 `STUDIO_RULES.md` 第 18 節與 `README.md`。
+- [x] **Adversarial Review & Suite 9 Matrix**: 完成對抗審查，修復 Windows 反斜線路徑穿透漏洞，建立 `scripts/loop_gate.py` 並升級為 9 大測試矩陣 100% 通過。
+- [x] **Loop Sentinel & Invariants Engine**: 已實裝 `invariants.yaml` 形式化系統不變量與 `scripts/loop_drift.py` 漂移哨兵，10 大單元測試 100% 綠燈。
+- [x] **Daily Triage Routine**: 已正式整合由 `scripts/loop_drift.py` 執行之日常架構漂移巡檢與證偽審查協議。
+- [x] **Loop Fleet & Memory Tiers Full Stack**: 已建立 `memory-tiers.md` (L1-L3 記憶階層), `memory-budget.md` (Token 預算上限), `fleet-registry.md` (5大 Agent 最小權限授權), `fleet-inbox.md` (跨 Agent 通訊信箱), 與 `LOOP.md` 防卡死斷路器 (Stall Detection & Circuit Breaker)。
+- [x] **Loop Graph Knowledge & Blast Radius Engine**: 成功自研純標準庫 AST 圖譜引擎 (`scripts/loop_graph.py`)，秒級萃取 4,484 節點與 9,974 條邊，支援 God Nodes 樞紐識別、衝擊半徑 (Blast Radius) 與離線 Canvas 視覺化。
 
 ## Watch List
 
+- [ ] **God Nodes Hub Monitoring**: 監控 God Nodes 關鍵中樞（如 gateguard, dashboard, instinct-cli），避免高耦合單點崩潰。
+- [ ] **Invariants Drift Monitor**: 定期透過 `scripts/loop_drift.py` 確保程式碼、測試與系統不變量無脫節。
 - [ ] **Loop Readiness Score**: 保持 100/100 (L3) 狀態，定期透過 loop-audit 巡檢。
 - [ ] **auto-snapshot vs STATE.md 同步**: 確保本地快照與專案狀態脊椎保持一致。
 - [ ] **SelfCompact 記憶熱蒸餾門檻**: 監控快照數量，累積接近 200 條時觸發情節壓縮。

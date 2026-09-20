@@ -56,6 +56,8 @@ def main():
         ("GEPA Reflexion Engine", [sys.executable, "scripts/reflexion.py", "test"], REPO_ROOT),
         ("System 1 Decision Gate", [sys.executable, "scripts/system_one.py", "--test"], REPO_ROOT),
         ("Loop Engineering Gate", [sys.executable, "scripts/loop_gate.py", "--test"], REPO_ROOT),
+        ("Loop Sentinel Drift (10 Tests)", [sys.executable, "-m", "unittest", "tests/test_loop_drift.py"], REPO_ROOT),
+        ("Loop Graph Engine (6 Tests)", [sys.executable, "-m", "unittest", "tests/test_loop_graph.py"], REPO_ROOT),
     ]
 
     results = []
