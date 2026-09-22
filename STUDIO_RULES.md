@@ -376,9 +376,9 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 
 ---
 
-## 17. 📦 Instructor 結構化輸出精髓：可操作驗證錯誤與三級降級容錯 (Actionable Validation & Tri-Mode Fallback)
+## 17. 📦 結構化輸出治理體系：可操作驗證錯誤與四級降級容錯 (Actionable Validation & Quad-Tier Fallback)
 
-本專案吸納 Instructor (`567-labs/instructor`) 核心架構精華，不引入重型依賴，沉澱為全端結構化資料萃取與驗證黃金標準：
+本專案吸納 Instructor (`567-labs/instructor`) 與 Outlines (`dottxt-ai/outlines`) 核心架構精華，不引入重型依賴，沉澱為全端結構化資料萃取與推論約束黃金標準：
 
 ### 1. Pydantic 欄位驗證反饋合約 (Actionable ValidationError Contract)
 當定義 Pydantic 模型之自訂驗證器 (`@field_validator` / `@model_validator`) 時，**禁止拋出乾癟模糊的報錯**，必須提供「模型一眼即懂的修正引導」：
@@ -395,9 +395,12 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
   ```
   當驗證失敗時，此引導字串能精確作為下輪 Reflection 輸入，達成 1 輪百分之百修復。
 
-### 2. 結構化輸出三級降級容錯矩陣 (Tri-Mode Fallback Hierarchy)
-面對不同模型環境或 API 支援度，嚴格落實三級安全降級防線，杜絕解析崩潰：
-1. **Tier 1 (原生最佳)**：`NATIVE_JSON_SCHEMA`（使用模型廠商原生結構化輸出約束，如 Gemini `response_schema`）。
+### 2. 結構化輸出四級降級容錯矩陣 (Quad-Tier Fallback Hierarchy)
+面對不同推論引擎、模型環境與 API 支援度，嚴格落實四級安全降級防線，兼顧數學級正確性與全宇宙相容性：
+0. **Tier 0 (數學級保證 — 開源/私有模型最佳解)**：`CONSTRAINED_DECODING (FSM / Outlines)`。
+   - 適用環境：vLLM、llama.cpp、HuggingFace Transformers、SGLang 等自建推論引擎。
+   - 機制：利用有限狀態機 (FSM) 於 Sampling 階段進行逐 Token Logit 遮罩，非法 Token 機率強制置為 $-\infty$。在數學上 100% 杜絕語法錯誤，原生支援正則表達式 (Regex) 與 Pydantic 語法樹，$0$ 重試、$0$ 額外 Token 浪費。
+1. **Tier 1 (雲端原生最佳)**：`NATIVE_JSON_SCHEMA`（使用商用模型原生結構化輸出，如 Gemini `response_schema`、OpenAI `json_schema`）。
 2. **Tier 2 (廣泛相容)**：`TOOL_CALLING`（將期望之 Schema 宣告為單一 Tool/Function 呼叫參數，強制結構化回傳）。
 3. **Tier 3 (終極保底)**：`MARKDOWN_JSON + Coercion`（正則提取 ` ```json ` 圍欄，並於本地執行寬容型別修剪轉型，完全不消耗額外 API 重試）。
 

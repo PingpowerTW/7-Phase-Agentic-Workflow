@@ -2,7 +2,7 @@
 mode: 'agent'
 description: 'Generate a production-grade Python feature module with strict typing, docstrings, and pytest'
 version: '1.0.0'
-tags: [feature, scaffolding, pytest, type-hints, python3.12]
+tags: [feature, scaffolding, pytest, type-hints, python3.12, outlines, constrained-generation]
 stack: python
 patterns: [role-playing, plan-and-execute, btc-calibrated]
 eval_criteria: [faithfulness, zero-placeholder, type-safety, test-coverage]
@@ -27,7 +27,9 @@ Before writing any code, output a 3–5 step execution plan:
 - **Error Handling**: Custom exception hierarchy. Fail-fast validation. Never use bare `except:`.
 - **Zero Placeholder**: No `TODO`, `FIXME`, `pass`, or `...`. Every function must be fully implemented.
 - **Instructor Actionable Validation**: When defining Pydantic `@field_validator`, error messages must provide explicit corrective instructions (e.g. `MUST be one of [...]`) to enable single-turn model self-healing.
+- **Constrained Generation (Outlines / Guided Decoding)**: When building LLM pipelines or inference microservices, use `outlines` (FSM / regex / grammar-guided decoding) on local/vLLM engines to guarantee 100% syntactic adherence at zero retry cost.
 - **BTC Gate**: Self-evaluate confidence. If uncertainty on edge cases > 25%, state assumptions explicitly.
+
 
 # Output Format
 Output each file with a clear markdown header and path:

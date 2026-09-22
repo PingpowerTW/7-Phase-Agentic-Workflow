@@ -431,6 +431,12 @@ flowchart LR
 > - **評估結論**：全球頂級開源 Headless + Tailwind 組件範式（基於 Radix UI Primitives），非傳統黑盒 npm 套件，採用直接複製源碼至專案（Code Ownership）模式；無障礙標準極高且 Tree-shaking 零負擔。
 > - **採納決策**：**方案 B（確立為前端專案 Canonical UI 標準，維持工作流零依賴）**。
 > - **落地成果**：工作流核心不引入任何外部依賴，正式將 `shadcn/ui` 沉澱為 `STUDIO_RULES.md` 的 React 預設標準庫與 `prompts/react-ts/create-component.prompt.md` 標準原語；並與 `ui_audit.py` 審美門禁深度整合，防範預設黑白模板的 AI Slop 罐頭感。
+>
+> **經典案例 11：outlines (`dottxt-ai/outlines`) 決策存證**
+> - **評估結論**：dottxt-ai 出品之引導式生成 (Guided Generation) 標竿庫，核心在於有限狀態機 (FSM) 與 Token-Level Logit Masking；直接在推論採樣階段物理阻斷非法 Token，達成數學級 100% 格式遵從與 0 語法錯誤重試。屬於 Python 推論期依賴（需 PyTorch/vLLM），若直接作為 7-Phase 工作流本體依賴會引發重度環境污染。
+> - **採納決策**：**方案 B（純吸收 FSM 引導式生成架構，升級結構化防線至 Quad-Tier）**。
+> - **落地成果**：維持工作流 100% 純標準庫零依賴，將其「Token 級 Logit 遮罩 / FSM 受限採樣」沉澱為 `STUDIO_RULES.md` 第 17 節的 **Tier 0 終極防線**，並於 `prompts/python/create-feature.prompt.md` 注入受限解碼範式；為專案自建 LLM 推論服務提供數學級可靠性。
+
 
 
 
