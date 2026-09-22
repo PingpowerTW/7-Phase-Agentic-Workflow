@@ -66,6 +66,11 @@
 - No business logic in components — extract to hooks/composables
 - Proper key props on lists (no index-as-key unless static)
 - Use React.memo / computed wisely — profile before optimizing
+- **UI 組件基底標準 (Canonical UI Standard — shadcn/ui)**：
+  - React 前端介面全面採用 `shadcn/ui` (Radix UI Primitives + Tailwind CSS) 作為第一推薦組件庫，原始碼直接置於 `src/components/ui/`，享有 100% 原始碼所有權，拒絕黑盒 npm 肥大依賴。
+  - 嚴禁手造未經無障礙檢驗之複雜控制項（如 Dialog, Dropdown, Tooltip, Sheet），一律使用 `npx shadcn@latest add`。
+  - 必須搭配 `ui_audit.py` 與 `frontend-taste-v2` 注入自訂主題 Token 與微互動（`hover:`, `focus-visible:`），杜絕千篇一律的「黑白罐頭模板 (AI Slop)」。
+
 
 ### PHP 8.4+ / Laravel 13+
 - `declare(strict_types=1);` mandatory at the top of every PHP file

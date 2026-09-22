@@ -426,6 +426,12 @@ flowchart LR
 > - **評估結論**：Vercel Labs 出品之 Generative UI 框架，主打 Catalog 封閉白名單約束與 RFC 6902 扁平樹串流；屬於應用程式執行期 (Runtime) 前端組件庫，若作為 7-Phase 開發工作流本體之依賴會引發重型 Node.js 依賴污染，且全量注入 Catalog 會造成嚴重的 System Prompt Token 膨脹。
 > - **採納決策**：**方案 B（純吸收 Generative UI 契約架構，結合自研兵器進化）**。
 > - **落地成果**：維持 100% 零外部依賴，吸納其「Catalog-First SDD 白名單」與「SpecStream 扁平樹增量修補」架構，結合專案自研之 `system_one.py` 實施動態目錄裁剪（降低 70%+ System Prompt Token 開銷）、結合 `STUDIO_RULES.md` 第 17 節注入 Coercion-First 本地容錯防線，並藉由 `ui_audit.py` 確立 Catalog 組件 Anti-Slop 審美門禁；沉澱至 `STUDIO_RULES.md` 第 20 節與 `prompts/react-ts/create-generative-catalog.prompt.md`。
+>
+> **經典案例 10：shadcn/ui (`shadcn-ui/ui`) 決策存證**
+> - **評估結論**：全球頂級開源 Headless + Tailwind 組件範式（基於 Radix UI Primitives），非傳統黑盒 npm 套件，採用直接複製源碼至專案（Code Ownership）模式；無障礙標準極高且 Tree-shaking 零負擔。
+> - **採納決策**：**方案 B（確立為前端專案 Canonical UI 標準，維持工作流零依賴）**。
+> - **落地成果**：工作流核心不引入任何外部依賴，正式將 `shadcn/ui` 沉澱為 `STUDIO_RULES.md` 的 React 預設標準庫與 `prompts/react-ts/create-component.prompt.md` 標準原語；並與 `ui_audit.py` 審美門禁深度整合，防範預設黑白模板的 AI Slop 罐頭感。
+
 
 
 ---
