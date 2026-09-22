@@ -150,6 +150,16 @@ Last run: 2026-09-20T11:00:00+08:00
         rules = [f["rule_id"] for f in res["findings"]]
         self.assertIn("INV_STATE_01", rules)
 
+    def test_template_fallback_resolution(self):
+        # Sub-workspace without root gate.yaml or STATE.md
+        sub_workspace = self.test_dir / "consumer_app"
+        sub_workspace.mkdir()
+        # Fallback resolves to self.test_dir / gate.yaml and STATE.md
+        inspector = DriftInspector(root_dir=sub_workspace)
+        res = inspector.audit(target_files=[])
+        rules = [f["rule_id"] for f in res["findings"]]
+        self.assertNotIn("INV_STATE_01", rules)
+
 
 if __name__ == "__main__":
     unittest.main()

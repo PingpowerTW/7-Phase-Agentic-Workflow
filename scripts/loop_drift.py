@@ -141,9 +141,24 @@ class DriftInspector:
 
     def __init__(self, root_dir: Optional[Path] = None):
         self.root = root_dir or REPO_ROOT
-        self.gate_config = parse_simple_yaml(self.root / "gate.yaml")
-        self.invariants_config = parse_simple_yaml(self.root / "invariants.yaml")
+        gate_path = self.resolve_config_path("gate.yaml")
+        invariants_path = self.resolve_config_path("invariants.yaml")
+        self.gate_config = parse_simple_yaml(gate_path)
+        self.invariants_config = parse_simple_yaml(invariants_path)
         self.findings: List[Dict[str, Any]] = []
+
+    def resolve_config_path(self, filename: str) -> Path:
+        """Resolve config file with fallback to templates/loop-engineering and parent."""
+        candidates = [
+            self.root / filename,
+            self.root / "templates" / "loop-engineering" / filename,
+            REPO_ROOT / "templates" / "loop-engineering" / filename,
+            self.root.parent / filename,
+        ]
+        for c in candidates:
+            if c.is_file():
+                return c
+        return self.root / filename
 
     def log_finding(self, rule_id: str, severity: str, message: str, file_path: Optional[str] = None):
         self.findings.append({
@@ -233,14 +248,36 @@ class DriftInspector:
 
     def check_state_freshness(self):
         """Audit STATE.md timestamp and active items."""
-        state_file = self.root / "STATE.md"
-        if not state_file.exists():
+        state_candidates = [
+            self.root / "STATE.md",
+            self.root.parent / "STATE.md",
+            self.root / "templates" / "loop-engineering" / "STATE.md",
+            REPO_ROOT / "templates" / "loop-engineering" / "STATE.md",
+            self.root / "templates" / "loop-engineering" / "STATE.md.example",
+            REPO_ROOT / "templates" / "loop-engineering" / "STATE.md.example",
+        ]
+        state_file = None
+        for c in state_candidates:
+            if c.is_file():
+                state_file = c
+                break
+
+        if not state_file:
             self.log_finding(
                 rule_id="INV_STATE_01",
                 severity="WARNING",
-                message="STATE.md does not exist in workspace root.",
+                message="STATE.md does not exist in workspace root or templates fallback.",
                 file_path="STATE.md"
             )
+            return
+
+        try:
+            rel_display = str(state_file.relative_to(self.root))
+        except ValueError:
+            rel_display = state_file.name
+
+        # Template example files are not subject to staleness checks
+        if state_file.name.endswith(".example"):
             return
 
         content = state_file.read_text(encoding="utf-8", errors="replace")
@@ -250,7 +287,7 @@ class DriftInspector:
                 rule_id="INV_STATE_01",
                 severity="WARNING",
                 message="STATE.md is missing a valid ISO-8601 'Last run' timestamp header.",
-                file_path="STATE.md"
+                file_path=rel_display
             )
             return
 
@@ -266,14 +303,14 @@ class DriftInspector:
                     rule_id="INV_STATE_01",
                     severity="WARNING",
                     message=f"STATE.md has not been updated for {delta_days:.1f} days (Last run: {ts_str}).",
-                    file_path="STATE.md"
+                    file_path=rel_display
                 )
         except Exception as err:
             self.log_finding(
                 rule_id="INV_STATE_01",
                 severity="WARNING",
                 message=f"Malformed or unparseable timestamp '{ts_str}' in STATE.md: {err}",
-                file_path="STATE.md"
+                file_path=rel_display
             )
 
     def audit(self, target_files: Optional[List[str]] = None) -> Dict[str, Any]:

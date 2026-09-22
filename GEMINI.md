@@ -2,6 +2,7 @@
 
 > **[MANDATORY] context-mode routing rules**
 > Context-mode MCP tools enabled. Protect context window from bloat. No forced interceptors; strictly self-enforced.
+> *[Graceful Fallback]*：若當前執行環境未配置或未啟用 `context-mode` MCP 工具，允許降級使用標準 Python/Node.js/Shell 腳本在本地安全執行分析（如使用 scratch 腳本寫入檔案再讀取精煉輸出），嚴禁反覆報錯或工具幻覺。
 
 ## 1. Context-Mode Sandbox (沙盒模式)
 When analyzing, calculating, filtering, comparing, searching, parsing, or transforming data: **WRITE CODE** via `mcp__context-mode__ctx_execute(language, code)` and `console.log()` the final answer.
