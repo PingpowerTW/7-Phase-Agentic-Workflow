@@ -421,6 +421,12 @@ flowchart LR
 > - **評估結論**：前 OpenAI 研究員、InstructGPT 與 RLHF 核心貢獻者 Diogo Almeida 於 2026/09 推出首款 System One 決策模型 Jev，主打非自回歸 (NAR) 單次前向推論 (70~500ms)、原生 Type-Safe 輸出與 RLCD 概率校準；但其目前為閉源專有雲端 API (Early Access Waitlist)，無法本地離線運行或無限制存取。
 > - **採納決策**：**方案 B（純吸收非自回歸快思考與決策原語架構，零依賴進化）**。
 > - **落地成果**：吸納其「三大決策原語 (Noul, Choice, Score)」、「快慢雙軌分流架構 (System 1 快判定 ➔ System 2 慢推理)」與「RLCD 概率校準門禁」核心精神，於專案實作零外部依賴之 `scripts/system_one.py` 決策閘門，並深度沉澱至 `STUDIO_RULES.md` 第 18 節；全面終結在單純是非、分類與打分環節呼叫大型生成式 LLM 產生冗贅說明的 Token 浪費，達成輸出端零 Token 開銷與毫秒級響應。
+>
+> **經典案例 9：json-render (`vercel-labs/json-render`) 決策存證**
+> - **評估結論**：Vercel Labs 出品之 Generative UI 框架，主打 Catalog 封閉白名單約束與 RFC 6902 扁平樹串流；屬於應用程式執行期 (Runtime) 前端組件庫，若作為 7-Phase 開發工作流本體之依賴會引發重型 Node.js 依賴污染，且全量注入 Catalog 會造成嚴重的 System Prompt Token 膨脹。
+> - **採納決策**：**方案 B（純吸收 Generative UI 契約架構，結合自研兵器進化）**。
+> - **落地成果**：維持 100% 零外部依賴，吸納其「Catalog-First SDD 白名單」與「SpecStream 扁平樹增量修補」架構，結合專案自研之 `system_one.py` 實施動態目錄裁剪（降低 70%+ System Prompt Token 開銷）、結合 `STUDIO_RULES.md` 第 17 節注入 Coercion-First 本地容錯防線，並藉由 `ui_audit.py` 確立 Catalog 組件 Anti-Slop 審美門禁；沉澱至 `STUDIO_RULES.md` 第 20 節與 `prompts/react-ts/create-generative-catalog.prompt.md`。
+
 
 ---
 

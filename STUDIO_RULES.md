@@ -445,6 +445,35 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 3. **Level 2 (System 2 Deep Reasoning & Maker)**：若 System 1 判斷需深推理或校準信度不足（`< 0.75`），交由 Frontier LLM 遵循 Phase 0-6 規範產出實質代碼與測試。
 4. **Level 3 (Loop Verifier & State Spine Sync)**：獨立 Checker 跑真實 test suite，驗證通過後雙軌回寫 `STATE.md` 狀態脊椎與 `SNAPSHOT.jsonl` 事件日誌。
 
+---
+
+## 20. 🎨 Generative UI 與動態目錄合約規範 (Generative UI & Catalog Governance)
+
+本專案吸納 `json-render` (Vercel Labs)「讓 AI 負責數據組合，前端負責渲染」之核心哲學，將 Generative UI 納入全端開發與契約規範，嚴格杜絕 LLM 直接生成原始未受控代碼帶來的 XSS、組件幻覺與樣式失控：
+
+### 1. Catalog-First SDD 白名單原則 (Strict Catalog White-Listing)
+- **封閉白名單**：所有 Generative UI 必須使用 Zod 於獨立 `catalog.ts` 中以 `defineCatalog` 嚴格宣告組件清單與屬性邊界。禁止允許 AI 調用未經註冊之動態組件或任意執行原始 JavaScript。
+- **Actionable Validation 錯誤引導**：參照第 17 節 Instructor 精神，組件 Props 之 Zod 驗證器必須提供具體修正建議（例如：`z.enum(['card', 'metric']).describe("MUST be strictly 'card' or 'metric'")`），便於模型單輪精準自我修復。
+- **分離關注點**：純 Schema（`catalog.ts`）與前端 React 實作（`registry.tsx`）必須物理分離，渲染層一律採用原生 Design System 組件（如 Radix / Tailwind），保障 100% 設計規範遵從。
+
+### 2. System 1 動態目錄裁剪路由 (Dynamic Catalog Pruning via System 1)
+- **Prompt Token 防膨脹**：嚴禁在組件數量龐大（>15 個）時直接調用 `catalog.prompt()` 將全部 Schema 塞進 System Prompt，此舉會引發數千 Token 的持續開銷。
+- **毫秒級意圖快篩**：在調用生成式 LLM 前，強制調用 `scripts/system_one.py` 之 `Choice` 原語（延遲 `<5ms`，輸出 Token 費用 $0）辨識當前業務領域（如 `analytics`、`forms`、`tables`），動態過濾並僅載入該領域的最小 Catalog 子集（5~8 個組件），使 System Prompt Token 驟降 70%~85%。
+
+### 3. SpecStream RFC 6902 本地容錯防線 (Coercion-First Streaming Guard)
+- **Patch 容錯修剪**：前端在接收以 JSONL 形式傳輸之 RFC 6902 JSON Patch（`add`, `replace`, `remove`）時，強制實施本地 Coercion 容錯處理：
+  1. 自動清洗 Markdown 圍欄（` ```jsonl `）。
+  2. 自動補齊缺失之路徑前綴（若為 `elements/node1` 補齊為 `/elements/node1`）。
+  3. 寬容型別轉換（如字串轉數字）。
+- **杜絕全樹崩潰**：單一無效 Patch 僅觸發警告或局部略過，禁止引發前台整樹 Unmount 或白屏死當。
+
+### 4. Catalog 組件審美與 Anti-Slop 門禁 (Catalog Aesthetic Guard)
+- **拒絕罐頭排列**：AI 拼裝 UI 極易退化為「對稱三等分卡片堆疊」之 AI Slop 乏味介面。
+- **靜態預檢門禁**：在 Phase 3 設計 Catalog 組件庫時，強制使用 `python scripts/ui_audit.py` 進行代碼掃描：
+  1. Catalog 內之 Atoms/Molecules 必須包含微互動狀態（`hover:`, `focus-visible:`, 轉場動效）。
+  2. 強制定義非對稱排版組件（如 Bento Grid、Split Hero、Timeline），禁止僅提供單一對稱矩形容器。
+
+
 
 
 

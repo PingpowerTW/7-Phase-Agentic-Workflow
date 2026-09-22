@@ -5,7 +5,7 @@ Pure Python Standard Library (Zero External Dependencies).
 
 Executes all core project verification suites in a single batch process:
 1. PromptScript DSL Validation (.promptscript/)
-2. Prompt Frontmatter Schema Validation (15/15 Prompts)
+2. Prompt Frontmatter Schema Validation (16/16 Prompts)
 3. Trust Governor & SHARS Thermodynamics Suite (8/8 Tests)
 4. UI-Designer BM25 Engine & Windows UTF-8 Console Safety Check
 5. 8-Facet Capsule Integrity Suite
@@ -48,7 +48,7 @@ def main():
 
     suites = [
         ("PromptScript DSL", [sys.executable, "scripts/sync_promptscript.py", "--check"], REPO_ROOT),
-        ("Prompt Schema (15/15)", [sys.executable, "scripts/validate_prompts.py"], REPO_ROOT),
+        ("Prompt Schema (16/16)", [sys.executable, "scripts/validate_prompts.py"], REPO_ROOT),
         ("Trust Governor & SHARS", [sys.executable, "skills/trust-governor/scripts/governor.py", "--test"], REPO_ROOT),
         ("UI-Designer & UTF-8 Safety", [sys.executable, "skills/ui-designer/scripts/search.py", "dark mode"], REPO_ROOT),
         ("8-Facet Capsule Integrity", [sys.executable, "scripts/capsule.py", "test"], REPO_ROOT),
