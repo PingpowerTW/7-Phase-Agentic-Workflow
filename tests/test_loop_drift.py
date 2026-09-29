@@ -44,11 +44,13 @@ autoMergeAllowlist:
             encoding="utf-8"
         )
 
-        # Create minimal STATE.md
+        # Create minimal STATE.md with fresh timestamp
+        from datetime import datetime
+        now_ts = datetime.now().astimezone().isoformat()
         state_md = self.test_dir / "STATE.md"
         state_md.write_text(
-            """# Loop State
-Last run: 2026-09-20T11:00:00+08:00
+            f"""# Loop State
+Last run: {now_ts}
 ## High Priority
 - [x] Initialized
 """,

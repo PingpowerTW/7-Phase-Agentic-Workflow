@@ -21,6 +21,3 @@ maxFiles: 8
 autoMergeAllowlist:
   - "docs/**"
   - "**/*.md"
-  - "**/*.test.mjs"
-  - "**/*.test.ts"
-  - "**/*.test.js"

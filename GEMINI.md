@@ -46,10 +46,10 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 |---|---|---|
 | **0. Spec** | Define what/why. Trigger on `/spec` | `spec.md` (What/Why/Acceptance) |
 | **1. Context** | Verify details via `ctx_execute` | Checklist |
-| **2. Debt** | Audit code smells in sandbox | Debt summary (🔴🟡🟢) |
+| **2. Debt** | Audit code smells & test bloat via `test-audit` | Debt summary (🔴🟡🟢) |
 | **3. Design** | Propose solution. Compress context after | Architecture doc |
-| **4. Implement** | Write code. Refactor <3 lines tech debt | Code with `diff` |
-| **5. Test** | Auto-test & code walk | Results + rationale |
+| **4. Implement** | Write code with Authoring Gate (No Seams) | Code with `diff` |
+| **5. Test** | Auto-test & verify junk patterns (`loop-verifier`) | Results + rationale |
 | **6. Evolve** | Verify against spec. Log decisions | Update `spec.md`, `README.md` + Sync to GitHub |
 
 > **IMPORTANT**: Always update `Implementation Plan`, `Task`, and `README.md` after execution, and commit & push all changes to GitHub.
@@ -60,8 +60,16 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 >    - Ambiguous:「💡 *需求尚待釐清，建議可輸入 `/spec` 進入 Phase 0 規格定義模式。*」
 >    - Large scale:「🤝 *當前任務規模較大(≥3檔案)，建議可輸入 `/teamwork` 啟動 5 人品質制衡軍團。*」
 >    - Fullstack:「🚀 *檢測到全端開發需求，建議可輸入 `/agy-studio` 啟動 7 人團隊。*」
-> 2. **At Impl End**:「🔍 *實作與測試已完成，建議可輸入 `/review` 進行對抗審查，或輸入 `/ui-check` 進行畫面驗收。*」
-> 3. **Model Switch**:
+> 2. **At Bug Report (回報異常時)**:
+>    - Hard Bug:「🐛 *遇到難以重現或不明的 Bug，建議輸入 `/diagnosing-bugs` 啟動嚴格的 6 階段除錯迴圈。*」
+> 3. **At Code Smell / High Complexity (發現架構過於肥大或難以測試時)**:
+>    - Architecture:「🏗️ *檢測到模組可能過度耦合，建議輸入 `/improve-codebase-architecture` 產出架構重構 HTML 報表。*」
+>    - Test Bloat:「🗑️ *檢測到測試檔案臃腫或執行過慢，建議輸入 `/test-audit` 啟動戰役級修剪 (Campaign Mode)。*」
+> 4. **At Impl End**:
+>    - Testing:「🧪 *準備撰寫測試，建議觸發 `/tdd` 進入垂直切片的紅綠開發循環。*」
+>    - Test Audit:「🧹 *檢測到新增或修改測試，建議輸入 `/test-audit` 進行門禁四問與垃圾模式稽核，確保零生產接縫。*」
+>    - Code Review:「🔍 *實作與測試已完成，建議可輸入 `/review` 進行對抗審查，或輸入 `/ui-check` 進行畫面驗收。*」
+> 5. **Model Switch**:
 >    - Post-Design:「*規劃已完成並生成交辦文件，建議切換至 Gemini 3.5 Flash 執行實作，並可考慮啟動 /caveman 模式。*」
 >    - Post-Impl:「*代碼實作已完成，建議切換至 Gemini 3.1 Pro / Claude 進行 Review 審查。*」
 
@@ -81,7 +89,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 ## 7. SKILL Triggers (強制觸發規則)
 * **Coding/Review**: `karpathy-guidelines`
 * **Firebase Rules**: `firebase-rules`
-* **Bug/Audit/Perf**: `bug-tracker`, `ux-audit`, `performance-profiling`, `dependency-auditor`, `security-best-practices`
+* **Bug/Audit/Perf**: `bug-tracker`, `test-audit`, `ux-audit`, `performance-profiling`, `dependency-auditor`, `security-best-practices`
 * **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`, `frontend-taste-v2`
 * **Defensive/React**: `defensive-coding-checker`, `error-handling`, `data-validator`, `react-performance-patterns`
 * **Workflow/Handoff**: `release-checklist`, `work-resume-sop`, `session-handoff`, `async-agent-patterns`, `context-pruner`
@@ -98,6 +106,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 - `/ui-check`: Invoke Browser agent for visual diff/screenshots.
 - `/fix`: Deep debug mode (isolate root cause via logs).
 - `/audit`: Tech debt & scaling audit.
+- `/test-audit`: 啟動測試品質與架構門禁稽核，修剪無效測試與拔除生產接縫 (Campaign Mode)。
 - `/dros`: 啟動或檢查 DROS VajraClaw 執行期安全網關狀態與策略。
 - `/trust`: 觸發 `trust-governor` 熱力學信度校準與行為聚類評估。
 - `ctx`: Context system CLI (`stats`, `doctor`, `upgrade`, `purge`).

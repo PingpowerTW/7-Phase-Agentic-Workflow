@@ -18,6 +18,9 @@
   - 嚴禁自動修改 `denylist` 路徑（`.env*`, `credentials/**`, `secrets/**`, `auth/**`, `billing/**`, `migrations/**`）。
   - 單次修改超過 8 個檔案強制向人類 Escalation。
 - **Maker / Checker 角色硬分離**：
-  - Maker 負責產出 diff；Checker (loop-verifier) 預設以 REJECT 立場接手跑真實測試與確認 scope。
+  - Maker 負責產出 diff；新增測試必須符合 Authoring Gate（保護契約、可信退化、非重複覆蓋、零生產接縫）。
+  - Checker (loop-verifier) 預設以 REJECT 立場接手跑真實測試、確認 scope、掃描 15 種垃圾模式，並檢驗 Bug 修復之「先紅後綠 (Fail-Before-Pass)」。
+- **零非必要生產接縫 (Zero Production Seams)**：
+  - 嚴禁為了寫單元測試而在生產代碼開洞（如 export private、加 optional mock 參數、wrapper）。
 - **Git Worktree 實體隔離**：
   - 涉及架構調整或跨檔案重構任務，優先於獨立 Git Worktree 進行。

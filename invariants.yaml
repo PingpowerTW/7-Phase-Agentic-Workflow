@@ -46,9 +46,9 @@ invariants:
       category: "blast_radius"
 
     - id: INV_SCOPE_02
-      name: "Code-Test Co-evolution"
-      description: "新增或修改關鍵邏輯（.py, .js, .ts）時，必須有對應之單元測試或整合測試相伴提交"
-      severity: "MEDIUM"
+      name: "Value-Driven Testing (Authoring Gate)"
+      description: "新增或修改測試必須通過門禁四問：保護可觀察契約、具可信退化、非重複覆蓋、不增設生產接縫；嚴禁為追求行數而撰寫無效測試"
+      severity: "HIGH"
       category: "verification"
 
   # 4. 驗證協議不變量 (Verification Protocol Invariants) - 確保 Maker / Checker 嚴格制衡
@@ -60,7 +60,19 @@ invariants:
       category: "governance"
 
     - id: INV_VERIFY_02
-      name: "Zero Fake Assertion"
-      description: "測試代碼中嚴禁空斷言、套套邏輯（如 expect(true).toBe(true)）或無實質驗證之假綠燈"
+      name: "Zero Junk Test Patterns"
+      description: "測試代碼中嚴禁 15 種垃圾模式（如空斷言、Mock 自身被測行為、自我比較、純字串 grep、受測者自算期望值等）"
       severity: "HIGH"
       category: "quality"
+
+    - id: INV_VERIFY_03
+      name: "No Unnecessary Production Seams"
+      description: "嚴禁僅為測試目的而在生產代碼中暴露 private 介面、新增可選 mock 參數、注入包裝函式或全域重置鉤子"
+      severity: "CRITICAL"
+      category: "architecture"
+
+    - id: INV_VERIFY_04
+      name: "Fail-Before-Pass Bug Verification"
+      description: "Bug 修復測試必須在修復前源碼上明確失敗，修復後通過；未曾失敗過之測試判定為無效，嚴禁偽造回歸證明"
+      severity: "HIGH"
+      category: "verification"
