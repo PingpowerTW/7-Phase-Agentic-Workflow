@@ -59,19 +59,19 @@ flowchart TD
 
 ## ⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
 
-在 v2.10 中，本框架原生引入 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth)**。
+在 v2.11 中，本框架全面升級 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth)**。
 
 以往各 AI 編輯器配置格式高度破碎（Claude Code 讀 `CLAUDE.md`、Cursor 讀 `.cursor/rules/`、Copilot 讀 `.github/copilot-instructions.md`、Antigravity 讀 `.agent/rules/`）。現在只需維護 `.promptscript/`，即可自動編譯輸出原生支援：
 
 ```mermaid
 flowchart TD
     subgraph DSL [".promptscript/ (Single Source of Truth)"]
-        A["7phase.prs (Identity &amp; Restrictions)"]
+        A["7phase.prs (Identity & Restrictions)"]
         B["phases.prs (Phase 0~6 Gating Workflows)"]
-        C["agents.prs (5-Agent League &amp; DID Permissions)"]
-        D["governance.prs (DROS, BTC Trust &amp; SHARS)"]
-        E["shortcuts.prs (Macro Commands: /spec, /teamwork...)"]
-        F["skills.prs (17 Specialized Skills Mapping)"]
+        C["agents.prs (5-Agent League & DID Permissions)"]
+        D["governance.prs (DROS, BTC Trust, SHARS, System 1 & Invariants Sentinel)"]
+        E["shortcuts.prs (Macro Commands: /spec, /teamwork, /gate, /loop...)"]
+        F["skills.prs (23 Specialized Skills Mapping)"]
     end
 
     SYNC["PromptScript 編譯與同步引擎<br/>(scripts/sync_promptscript.py / prs compile)"]
@@ -360,6 +360,12 @@ def quality_gate_execution(task):
 15. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
 16. **`teamwork`**：5 人多代理人品質保證、W3C DID 權限隔離、BTC 行為探針與 LLM-as-a-Judge 審計循環。
 17. **`agy-studio`**：7 人全端開發團隊協作 SOP、DID 角色綁定與 Milestone 追蹤。
+18. **`loop-budget`**：多代理人迴圈預算與 Token 配額管理系統，防止代理人無限迴圈與預算超支。
+19. **`loop-constraints`**：硬性約束與不變量守護（基於 `invariants.yaml` 與 `gate.yaml`）。
+20. **`loop-triage`**：自動化迴圈失敗分析、分類分級與自動升級 (Escalation) 機制。
+21. **`loop-verifier`**：Maker/Checker 角色硬分離、15 種代碼垃圾模式掃描與 Fail-Before-Pass 檢驗。
+22. **`test-audit`**：嚴謹測試品質審計、斷言完整性哨兵與防退化防線。
+23. **`ollaya-decision`**：地端 Laya 決策模型與 Ollaya 快速推理技能（<50ms 響應、0 輸出 Token 消耗）。
 
 ---
 

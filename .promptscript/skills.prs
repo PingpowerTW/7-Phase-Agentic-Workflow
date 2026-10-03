@@ -1,5 +1,5 @@
 # 7-Phase Agentic Workflow Specialized Skills Mapping
-# Maps all 17 specialized skills to standard SKILL.md directories
+# Maps all 23 specialized skills to standard SKILL.md directories
 
 @skills {
   trust-governor: {
@@ -85,5 +85,35 @@
   agy-studio: {
     path: "./skills/agy-studio"
     description: "7-Agent Collaborative Fullstack Studio for End-to-End Delivery"
+  }
+
+  loop-budget: {
+    path: "./skills/loop-budget"
+    description: "Multi-Agent Loop Budget & Token Quota Management System"
+  }
+
+  loop-constraints: {
+    path: "./skills/loop-constraints"
+    description: "Hard Constraints and Invariant Enforcement for Agentic Execution Loops"
+  }
+
+  loop-triage: {
+    path: "./skills/loop-triage"
+    description: "Failure Analysis, Triage and Escalation for Automated Loops"
+  }
+
+  loop-verifier: {
+    path: "./skills/loop-verifier"
+    description: "Maker/Checker Separation, Anti-Slop Scanning & Fail-Before-Pass Verifier"
+  }
+
+  test-audit: {
+    path: "./skills/test-audit"
+    description: "Rigorous Test Quality Auditing and Assertion Integrity Sentinel"
+  }
+
+  ollaya-decision: {
+    path: "./skills/ollaya-decision"
+    description: "Local Laya Decision Model & Ollaya Fast Inference Runtime (<50ms, 0 Token)"
   }
 }

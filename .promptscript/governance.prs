@@ -1,5 +1,5 @@
 # 7-Phase Agentic Workflow Governance & Safety Specifications
-# Layer 0 (DROS) + Layer 1 (BTC) + Layer 2 (Oxford SHARS)
+# Layer 0 (DROS) + Layer 1 (BTC) + Layer 2 (Oxford SHARS) + Layer 3 (System 1) + Layer 4 (Invariants Sentinel)
 
 @guards {
   # === LAYER 0: DROS VajraClaw Deterministic Runtime Safety ===
@@ -39,5 +39,25 @@
     dynamicDeltaRewriting: true
     followingConstraintGeneration: true
     rejectionThreshold: 0.70
+  }
+
+  # === LAYER 3: System 1 Decision Gate ===
+  system-one-gate: {
+    latency: "<50ms"
+    tokenOutput: 0
+    mode: "pluggable-system-1-decision"
+    protocol: "/v1/systemone"
+    referenceModel: "laya:multilingual"
+    primitives: ["Noul (Zero Seams)", "Choice (Ponytail Tier)", "Score (Bloat Index)"]
+    actionOnBlock: "block-and-demand-refactor"
+  }
+
+  # === LAYER 4: Invariants Sentinel & Loop Gate ===
+  invariants-sentinel: {
+    mode: "mechanical-gate-and-graph"
+    config: "gate.yaml & invariants.yaml"
+    enforcement: "denylist-hard-block"
+    maxFileEdits: 8
+    driftMonitoring: "ast-call-graph-impact"
   }
 }

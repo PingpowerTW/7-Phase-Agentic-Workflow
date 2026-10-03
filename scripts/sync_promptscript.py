@@ -183,25 +183,59 @@ class PromptScriptValidator:
             self.log_error("Layer 1 BTC Trust Governor guard missing in governance.prs")
         if "oxford-shars" not in raw:
             self.log_error("Layer 2 Oxford SHARS guard missing in governance.prs")
+        if "system-one-gate" not in raw:
+            self.log_error("Layer 3 System 1 Decision Gate missing in governance.prs")
+        if "invariants-sentinel" not in raw:
+            self.log_error("Layer 4 Invariants Sentinel missing in governance.prs")
 
     def run_native_compile(self) -> bool:
-        """Trigger native compilation via 'prs compile' or 'npx @promptscript/cli compile'."""
+        """Trigger native compilation via 'prs compile --force' or 'npx @promptscript/cli compile --force'."""
         prs_cmd = shutil.which("prs")
         npx_cmd = shutil.which("npx")
 
+        # Prepare Node.js polyfill for environments with Node < 21 (where Object.groupBy is undefined)
+        env = os.environ.copy()
+        polyfill_path = Path.home() / ".local" / "share" / "prs_polyfill.js"
+        if not polyfill_path.exists():
+            polyfill_path.parent.mkdir(parents=True, exist_ok=True)
+            polyfill_code = (
+                "if (!Object.groupBy) {\n"
+                "  Object.groupBy = function(items, callback) {\n"
+                "    const res = Object.create(null);\n"
+                "    let i = 0;\n"
+                "    for (const item of items) {\n"
+                "      const key = callback(item, i++);\n"
+                "      if (!res[key]) res[key] = [];\n"
+                "      res[key].push(item);\n"
+                "    }\n"
+                "    return res;\n"
+                "  };\n"
+                "}\n"
+            )
+            try:
+                polyfill_path.write_text(polyfill_code, encoding="utf-8")
+            except Exception:
+                pass
+
+        if polyfill_path.exists():
+            current_node_options = env.get("NODE_OPTIONS", "")
+            req_flag = f"--require {polyfill_path}"
+            if req_flag not in current_node_options:
+                env["NODE_OPTIONS"] = f"{current_node_options} {req_flag}".strip()
+
         if prs_cmd:
-            cmd = ["prs", "compile"]
+            cmd = ["prs", "compile", "--force"]
         elif npx_cmd:
-            cmd = ["npx", "-y", "@promptscript/cli", "compile"]
+            cmd = ["npx", "-y", "@promptscript/cli", "compile", "--force"]
         else:
             print("\n[INFO] Native 'prs' CLI not found on PATH.")
             print("To generate native files for 49+ IDEs, install via: npm install -g @promptscript/cli")
-            print("Then run: prs compile")
+            print("Then run: prs compile --force")
             return True
 
         print(f"\n[INFO] Running native compiler: {' '.join(cmd)}...")
         try:
-            res = subprocess.run(cmd, cwd=str(self.repo_root), capture_output=True, text=True)
+            res = subprocess.run(cmd, cwd=str(self.repo_root), capture_output=True, text=True, env=env)
             if res.returncode == 0:
                 print("[SUCCESS] Native compilation finished successfully!")
                 if res.stdout.strip():
@@ -224,3 +258,4 @@ if __name__ == "__main__":
         success = validator.run_native_compile()
 
     sys.exit(0 if success else 1)
+

@@ -1,0 +1,5 @@
+---
+# promptscript-generated: 2026-10-03T12:06:54.219Z | source: .promptscript/7phase.prs | target: cursor
+name: test-audit
+description: Rigorous Test Quality Auditing and Assertion Integrity Sentinel
+---

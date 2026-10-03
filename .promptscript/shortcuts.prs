@@ -8,8 +8,9 @@
     content: """
       Switch to Phase 0 (Specification Mode).
       1. Interview user to clarify ambiguous requirements, constraints, and success criteria.
-      2. Produce `spec.md` including Functional, Non-Functional, Acceptance Criteria, and Edge Cases.
-      3. Wait for user sign-off before proceeding to code context gathering.
+      2. Apply Ponytail Tier 1 (YAGNI) to drop speculative requirements.
+      3. Produce `spec.md` including Functional, Non-Functional, Acceptance Criteria, and Edge Cases.
+      4. Wait for user sign-off before proceeding to code context gathering.
     """
   }
 
@@ -56,7 +57,7 @@
       Trigger the 6-Phase Deep Debugging Loop:
       1. Isolate minimal reproduction steps.
       2. Formulate testable hypothesis.
-      3. Write failing regression test first.
+      3. Write failing regression test first (Fail-Before-Pass).
       4. Inspect root cause (trace logs & memory state).
       5. Apply surgical fix.
       6. Verify regression test passes.
@@ -95,6 +96,29 @@
       - Dependency vulnerability audit.
       - Code smell categorization (🔴🟡🟢).
       - Architecture coupling analysis.
+    """
+  }
+
+  "/gate": {
+    prompt: true
+    description: "Run local System 1 Decision Gate and loop safety verification"
+    content: """
+      Execute local System 1 Decision Gate:
+      1. Inspect git diff against Ponytail 7-ladder principles.
+      2. Verify zero production seams and credential safety via /v1/systemone.
+      3. Validate gate.yaml denylist and file count bounds.
+      4. Report pass/block status with zero output token bloat.
+    """
+  }
+
+  "/loop": {
+    prompt: true
+    description: "Check loop budget, constraints, and drift across sessions"
+    content: """
+      Evaluate loop engineering state:
+      1. Check loop budget and memory tiers in STATE.md.
+      2. Run loop drift analysis against invariants.yaml.
+      3. Validate impact graph via loop_graph.py.
     """
   }
 }
