@@ -144,13 +144,13 @@ flowchart LR
 
 | Phase | 階段名稱 | 關鍵動作 (Action) | 產出與交付物 (Output) | 推薦模型 |
 |:---:|:---|:---|:---|:---|
-| **Phase 0** | **Spec (規格定義)** | 用自然語言定義 What & Why，劃定範疇，產出可驗證 Success Criteria。 | `spec.md` | Claude Opus / Pro |
-| **Phase 1** | **Context & Validation** | 透過 Context Sandbox 靜態掃描 codebase，確認規格可行性。 | Requirement Checklist | Claude Opus / Pro |
-| **Phase 2** | **Debt Audit** | 盤點影響範圍內的 Code Smells (🔴🟡🟢)，決定標記或修復策略。 | Debt Summary | Claude Opus / Pro |
-| **Phase 3** | **Design Proposal** | 提出技術架構、Open Design 9-Section 設計系統。結束前執行 Context Pruning。 | `implementation_plan.md` + `DESIGN.md` | Claude Opus / Pro |
-| **Phase 4** | **Implementation** | 進行程式碼實作，遵守 Karpathy 四大護欄。建議啟用 `/caveman` 省話模式。 | Source Code + Diff Blocks | **Gemini 3.6 Flash** |
-| **Phase 5** | **Test & Review** | 執行自動化測試、PencilPlaybook 量化審查 (`/review`) 及視覺驗收 (`/ui-check`)。 | Test Results + Walkthrough | Claude / 3.1 Pro |
-| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 的 Success Criteria 逐項驗收，auto-snapshot 經驗歸檔。 | Updated `spec.md` + ADR | Claude Opus / Pro |
+| **Phase 0** | **Spec (規格定義)** | 用自然語言定義 What & Why，貫徹 **Ponytail 階梯 1 (YAGNI)** 剔除投機需求，產出可驗證 Success Criteria。 | `spec.md` | Claude Opus / Pro |
+| **Phase 1** | **Context & Validation** | 透過 Context Sandbox 靜態掃描 codebase，實踐 **Ponytail 階梯 2 (現有重用)**，確認規格可行性。 | Requirement Checklist | Claude Opus / Pro |
+| **Phase 2** | **Debt Audit** | 盤點影響範圍內的 Code Smells (🔴🟡🟢)，執行 **`/ponytail-debt`** 盤點技術債與刻意捷徑。 | Debt Summary | Claude Opus / Pro |
+| **Phase 3** | **Design Proposal** | 提出技術架構，優先選擇標準庫與原生平台特性（**Ponytail 階梯 3~5**）。結束前執行 Context Pruning。 | `implementation_plan.md` + `DESIGN.md` | Claude Opus / Pro |
+| **Phase 4** | **Implementation** | 進行程式碼實作，落實 **Ponytail 階梯 6~7 (單行簡潔/最小可行)** 與 Karpathy 四大護欄。啟用 `/caveman` 省話模式。 | Source Code + Diff Blocks | **Gemini 3.6 Flash** |
+| **Phase 5** | **Test & Review** | 執行自動化測試、**System 1 本機高速決策門禁 (`scripts/local_guard.py`)** 0 Token 驗證零生產接縫與過度工程 (`/ponytail-review`)。 | Test Results + Local Guard Pass | Claude / 3.1 Pro |
+| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 逐項驗收，結算 **`/ponytail-gain`** 代碼淨減行數，auto-snapshot 經驗歸檔。 | Updated `spec.md` + ADR | Claude Opus / Pro |
 
 ### 🚀 如何發動 7-Phase 工作流 (Quick Launch Guide)
 
@@ -168,6 +168,28 @@ flowchart LR
 > **💡 發動後實戰心法：**
 > - 規劃完畢 (Phase 3 結束) ➡️ 點擊確認或輸入 `/caveman`，切換至 **Flash 模型** 執行快速實作。
 > - 實作完成 (Phase 4 結束) ➡️ 輸入 **`/review`** 切換至 **Pro/Claude 模型** 執行對抗審查，或輸入 **`/ui-check`** 進行視覺驗收。
+
+### 🛡️ System 1 插拔式決策閘門與跨主機運作機制 (Pluggable System 1 Decision Gate)
+
+本框架引入開創性的 **System 1 快思維決策層**，將「意圖路由、門禁阻斷、過度工程評分」從耗時耗費的雲端自回歸大模型中解放，並採用**極致解耦設計，杜絕任何單一模型鎖定 (Vendor/Model Lock-in)**：
+
+```mermaid
+flowchart LR
+    Diff["代碼變更 (Git Diff / Snippet)"] --> Router["scripts/local_guard.py (System 1 Gate)"]
+    Router --> G0["Level 0: 物理阻斷 (gate.yaml + 正則憑證)"]
+    G0 --> G1{"是否檢測到 System 1 端點?"}
+    G1 -- "在線" --> S1["System 1 決策模型 (/v1/systemone)<br/>• Noul: 零生產接縫審查<br/>• Choice: Ponytail 階梯定位<br/>• Score: 過度工程評分"]
+    G1 -- "離線 / 無模型主機" --> S0["純靜態規則引擎 (Static Fallback)<br/>自動放行業務邏輯，100% 跨主機零卡死"]
+```
+
+- **統一協議標準**：全面對標 TypeSafe Jev 與 Ollaya 的 `/v1/systemone` 開放 API，僅認 `Noul`（二元機率）、`Choice`（多選一）、`Score`（數值評分）三大標準原語。
+- **隨插即用後端**：
+  - 當前本地參考模型為 **Laya**（ModernBERT-large，421M 參數，歐美非中國開源）。
+  - 可透過環境變數無縫抽換模型：`DECISION_MODEL="your_model"`、`DECISION_API_URL="http://..."`。
+- **跨主機多環境執行器**：
+  - Windows: `powershell .\scripts\guard.ps1`
+  - Linux / macOS / Raspberry Pi: `./scripts/guard.sh`
+  - 若其他伺服器節點未部署 Ollaya，腳本自動觸發 **Static Fallback** 安全降級，保障多主機環境 100% 開箱即用！
 
 ---
 

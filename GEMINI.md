@@ -65,6 +65,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 > 3. **At Code Smell / High Complexity (發現架構過於肥大或難以測試時)**:
 >    - Architecture:「🏗️ *檢測到模組可能過度耦合，建議輸入 `/improve-codebase-architecture` 產出架構重構 HTML 報表。*」
 >    - Test Bloat:「🗑️ *檢測到測試檔案臃腫或執行過慢，建議輸入 `/test-audit` 啟動戰役級修剪 (Campaign Mode)。*」
+>    - Over-Engineering:「✂️ *檢測到可能過度工程化或依賴冗餘，建議輸入 `/ponytail-review` 進行簡化審查，或輸入 `/ponytail-audit` 進行全庫瘦身。*」
 > 4. **At Impl End**:
 >    - Testing:「🧪 *準備撰寫測試，建議觸發 `/tdd` 進入垂直切片的紅綠開發循環。*」
 >    - Test Audit:「🧹 *檢測到新增或修改測試，建議輸入 `/test-audit` 進行門禁四問與垃圾模式稽核，確保零生產接縫。*」
@@ -88,6 +89,7 @@ When analyzing, calculating, filtering, comparing, searching, parsing, or transf
 
 ## 7. SKILL Triggers (強制觸發規則)
 * **Coding/Review**: `karpathy-guidelines`
+* **Ponytail/Lazy Dev**: `ponytail`, `ponytail-review`, `ponytail-audit`, `ponytail-debt`, `ponytail-gain`
 * **Firebase Rules**: `firebase-rules`
 * **Bug/Audit/Perf**: `bug-tracker`, `test-audit`, `ux-audit`, `performance-profiling`, `dependency-auditor`, `security-best-practices`
 * **Design/API**: `project-planner`, `api-design`, `api-connector`, `database-optimization`, `frontend-taste-v2`

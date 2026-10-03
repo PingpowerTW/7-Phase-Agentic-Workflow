@@ -481,6 +481,41 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
   1. Catalog 內之 Atoms/Molecules 必須包含微互動狀態（`hover:`, `focus-visible:`, 轉場動效）。
   2. 強制定義非對稱排版組件（如 Bento Grid、Split Hero、Timeline），禁止僅提供單一對稱矩形容器。
 
+---
+
+## 21. 🪓 Ponytail 7 階梯與 7-Phase 協作生命週期映射規範 (Ponytail Lazy Senior Dev Mode)
+
+如同房間裡最偷懶的資深工程師：**最好的代碼就是從未寫過的代碼**。
+本專案全面整合 Ponytail 核心哲學，寫代碼前必須停在第一個可行的階梯（先讀懂問題與全域調用流，再挑選最偷懶且正確的解法），並與 7-Phase 生命週期緊密咬合：
+
+### 1. 7-Phase 協作生命週期與 Ponytail 階梯映射矩陣
+
+| 7-Phase 階段 | Ponytail 階梯與核心動作 | 實踐標準 |
+|---|---|---|
+| **Phase 0: Spec (規格定義)** | **第 1 階：YAGNI (投機需求直接略過)** | 自然語言定界，未明確要求的功能一行告知跳過，拒絕過度設計。 |
+| **Phase 1: Context (靜態掃描)** | **第 2 階：現有重用 (Already in Codebase)** | Context Sandbox 優先掃描專案內既有 helper、util 或 pattern，嚴禁重複造輪子。 |
+| **Phase 2: Debt (技術債審查)** | **Ponytail 捷徑盤點 (`/ponytail-debt`)** | 掃描代碼中的 `# ponytail:` 標記，確認極限門檻與升級路徑，記錄到 `STATE.md`。 |
+| **Phase 3: Design (架構方案)** | **第 3~5 階：標準庫 ➔ 原生特性 ➔ 現有依賴** | 嚴禁隨意新增套件依賴；優先使用語言標準庫、瀏覽器原生 CSS/HTML 或 DB Constraint。 |
+| **Phase 4: Impl (代碼實作)** | **第 6~7 階：單行簡潔 ➔ 最小可行 MVP** | 結合 `/caveman` 洞穴人模式，代碼優先、說明至多三行；只動受影響區域（精準開刀）。 |
+| **Phase 5: Test & Review** | **本地 Laya 門禁審查 + `/ponytail-review`** | 調用 `scripts/local_guard.py`，0 Token 判定 Ponytail 階梯、過度工程分數與零生產接縫。 |
+| **Phase 6: Evolve (演進回顧)** | **成效記分板 (`/ponytail-gain`)** | 結算本輪淨減少行數（Net-negative LOC），將刻意捷徑納入長期觀察清單。 |
+
+### 2. 插拔式 System 1 高速決策門禁架構 (Pluggable System 1 Decision Gate)
+- **解耦核心原則**：協議至上，拒絕供應商/模型鎖定（Vendor/Model Lock-in）。工作流統一對接標準 System 1 原語（`Noul` 二元機率、`Choice` 多選一、`Score` 離散評分），任何符合 `/v1/systemone` 規範之引擎皆可無縫抽換。
+- **插拔式後端支援 (透過環境變數動態切換)**：
+  - `DECISION_API_URL`：決策端點（預設 `http://127.0.0.1:11435/v1/systemone`）。
+  - `DECISION_MODEL`：模型名稱（當前本地參考模型為 `laya:latest`，亦可無縫切換為 `decider` 或未來任何新興決策模型）。
+  - `DECISION_TIMEOUT`：超時門檻（預設 10.0 秒）。
+- **跨平台執行器**：
+  - Windows: `powershell .\scripts\guard.ps1`
+  - Linux / macOS / Raspberry Pi: `./scripts/guard.sh`
+- **門禁指標與審查底線**：
+  - **Zero Production Seams**：嚴禁為了寫測試在生產代碼開後門（export private、加 mock 參數）；違規立即攔截。
+  - **No Hardcoded Secrets**：物理阻斷 API Key 與敏感憑證。
+  - **Ponytail Ladder 定位**：若代碼能落在 `3_stdlib` 或 `6_oneliner` 卻寫了大量冗贅類別，提示重構。
+  - **離線純規則自動降級 (Static Fallback)**：若遠端伺服器未部署決策模型或離線，腳本自動降級為 Level 0 純靜態規則（`gate.yaml` + 正則金鑰防線），安全放行業務代碼，絕不卡死其他主機開發。
+
+
 
 
 
