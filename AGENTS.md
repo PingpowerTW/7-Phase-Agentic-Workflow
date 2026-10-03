@@ -24,7 +24,7 @@
   - 嚴禁為了寫單元測試而在生產代碼開洞（如 export private、加 optional mock 參數、wrapper）。
 - **本機 System 1 決策門禁自動化 (System 1 Decision Gate)**：
   - 代碼實作完成後，Checker 優先執行本機 System 1 決策門禁審查 (`python scripts/local_guard.py --git`)。
-  - 0 Token 秒級檢驗「零生產接縫」、「硬編碼憑證」與「Ponytail 階梯定位」；支援插拔式後端（相容 TypeSafe/Ollaya 規範，當前預設模型為 Laya，未啟動時自動降級至靜態規則）；若回傳 BLOCK 嚴禁結案並立即重構。
+  - 0 Token 秒級檢驗「零生產接縫」、「硬編碼憑證」與「Ponytail 階梯定位」；支援通用 System 1 插拔式後端（相容 TypeSafe Jev / Ollaya 等開放 `/v1/systemone` 規範，當前本地參考模型為 Laya，未啟動時自動降級至靜態規則）；若回傳 BLOCK 嚴禁結案並立即重構。
 - **Git Worktree 實體隔離**：
   - 涉及架構調整或跨檔案重構任務，優先於獨立 Git Worktree 進行。
 

@@ -497,12 +497,18 @@ python scripts/verify_all.py && git add . && git commit -m "feat/fix: ..." && gi
 | **Phase 2: Debt (技術債審查)** | **Ponytail 捷徑盤點 (`/ponytail-debt`)** | 掃描代碼中的 `# ponytail:` 標記，確認極限門檻與升級路徑，記錄到 `STATE.md`。 |
 | **Phase 3: Design (架構方案)** | **第 3~5 階：標準庫 ➔ 原生特性 ➔ 現有依賴** | 嚴禁隨意新增套件依賴；優先使用語言標準庫、瀏覽器原生 CSS/HTML 或 DB Constraint。 |
 | **Phase 4: Impl (代碼實作)** | **第 6~7 階：單行簡潔 ➔ 最小可行 MVP** | 結合 `/caveman` 洞穴人模式，代碼優先、說明至多三行；只動受影響區域（精準開刀）。 |
-| **Phase 5: Test & Review** | **本地 Laya 門禁審查 + `/ponytail-review`** | 調用 `scripts/local_guard.py`，0 Token 判定 Ponytail 階梯、過度工程分數與零生產接縫。 |
+| **Phase 5: Test & Review** | **System 1 決策門禁審查 + `/ponytail-review`** | 調用 `scripts/local_guard.py`（相容 `/v1/systemone` 通用協議），0 Token 判定 Ponytail 階梯、過度工程分數與零生產接縫。 |
 | **Phase 6: Evolve (演進回顧)** | **成效記分板 (`/ponytail-gain`)** | 結算本輪淨減少行數（Net-negative LOC），將刻意捷徑納入長期觀察清單。 |
 
 ### 2. 插拔式 System 1 高速決策門禁架構 (Pluggable System 1 Decision Gate)
-- **解耦核心原則**：協議至上，拒絕供應商/模型鎖定（Vendor/Model Lock-in）。工作流統一對接標準 System 1 原語（`Noul` 二元機率、`Choice` 多選一、`Score` 離散評分），任何符合 `/v1/systemone` 規範之引擎皆可無縫抽換。
-- **插拔式後端支援 (透過環境變數動態切換)**：
+- **架構標準與解耦原則**：
+  - **協議至上（Protocol-First）**：Jev / System 1 是「架構標準」（如同 HTTP 協議）。Laya、Decider 或 Jev Cloud 僅為「插拔式實作後端」（如同 Nginx 或 Apache）。
+  - **零供應商/模型鎖定（Zero Vendor Lock-in）**：工作流統一對接標準 `/v1/systemone` 規範與三大決策原語（`Noul` 二元機率、`Choice` 多選一、`Score` 離散評分），任何符合規範之開源或商業引擎皆可無縫熱抽換。
+- **插拔式後端階層 (Provider Hierarchy)**：
+  1. **本機開源參考後端 (Local Provider)**：Ollaya / vLLM（當前預設參考模型為 `laya:latest`，亦可無縫切換為 `decider` 或未來任何 System 1 模型）。
+  2. **雲端託管後端 (Cloud Provider)**：Jev API / TypeSafe（配置 `TYPESAFE_API_KEY` 或 `JEV_API_KEY` 即可透明轉接）。
+  3. **零依賴保底引擎 (Deterministic Static Fallback)**：當遠端節點或離線環境未啟動推論服務時，自動降級為 Level 0 純靜態規則，100% 杜絕 CI/CD 與跨主機卡死。
+- **動態環境變數配置**：
   - `DECISION_API_URL`：決策端點（預設 `http://127.0.0.1:11435/v1/systemone`）。
   - `DECISION_MODEL`：模型名稱（當前本地參考模型為 `laya:latest`，亦可無縫切換為 `decider` 或未來任何新興決策模型）。
   - `DECISION_TIMEOUT`：超時門檻（預設 10.0 秒）。

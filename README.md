@@ -182,14 +182,18 @@ flowchart LR
     G1 -- "離線 / 無模型主機" --> S0["純靜態規則引擎 (Static Fallback)<br/>自動放行業務邏輯，100% 跨主機零卡死"]
 ```
 
-- **統一協議標準**：全面對標 TypeSafe Jev 與 Ollaya 的 `/v1/systemone` 開放 API，僅認 `Noul`（二元機率）、`Choice`（多選一）、`Score`（數值評分）三大標準原語。
-- **隨插即用後端**：
-  - 當前本地參考模型為 **Laya**（ModernBERT-large，421M 參數，歐美非中國開源）。
-  - 可透過環境變數無縫抽換模型：`DECISION_MODEL="your_model"`、`DECISION_API_URL="http://..."`。
+- **協議與實作解耦核心**：
+  - **協議標準（Protocol）**：Jev / System 1 規範是跨模型的「架構標準」（如同 HTTP 協議）。
+  - **實作後端（Providers）**：Laya 僅為當前本機之開源參考實作（如同 Nginx 或 Apache）；同時相容雲端 Jev API 與其他開源決策模型（如 Decider、Winnow 等）。
+  - **三大標準原語**：僅認 `Noul`（二元機率）、`Choice`（多選一）、`Score`（數值評分），保證未來 3~5 年任何新決策模型皆能無縫接軌。
+- **隨插即用後端與透明抽換**：
+  - 本地開源參考：Ollaya + Laya (ModernBERT-large，421M 參數)。
+  - 雲端商業適配：Jev Cloud / TypeSafe API (支援 Bearer Token 自動掛載)。
+  - 可透過環境變數動態抽換：`DECISION_MODEL="your_model"`、`DECISION_API_URL="http://..."`。
 - **跨主機多環境執行器**：
   - Windows: `powershell .\scripts\guard.ps1`
   - Linux / macOS / Raspberry Pi: `./scripts/guard.sh`
-  - 若其他伺服器節點未部署 Ollaya，腳本自動觸發 **Static Fallback** 安全降級，保障多主機環境 100% 開箱即用！
+  - 若其他伺服器節點未部署決策模型或離線，腳本自動觸發 **Static Fallback** 安全降級，保障多主機環境 100% 開箱即用！
 
 ---
 

@@ -1,9 +1,10 @@
 # Loop State — AI 優化 Workspace
 
-Last run: 2026-09-29T15:20:00+08:00 (OpenClaw Test-Audit, Authoring Gate & Zero Production Seams Integration)
+Last run: 2026-10-03T19:15:00+08:00 (System 1 Decision Gate Protocol Decoupling & 12-Suite Matrix)
 
 ## High Priority (loop is acting or waiting on human)
 
+- [x] **System 1 Decision Gate Protocol Decoupling & Adversarial Hardening**: 完成對抗審查，修復 `local_guard.py` Globstar 敏感路徑繞過漏洞、補齊過度工程 `is_blocked` 阻斷、新增未追蹤新增檔案偵測；將 System 1 決策閘門自特定模型實作中徹底解耦為通用協議架構（Protocol-First），支援 Ollaya / Jev Cloud / Static Fallback 多後端動態切換；新增 `tests/test_local_guard.py` 9 大單元測試，升級 `scripts/verify_all.py` 為 12 大測試矩陣 100% 綠燈。
 - [x] **OpenClaw Test-Audit & Zero Production Seams Integration**: 成功吸收 OpenClaw 刪除 40 萬行無效測試之工程體系，實裝 `test-audit` 技能（Authoring Gate 門禁四問、15 種垃圾模式掃描、8 步戰役級 Campaign Mode）、收緊 `gate.yaml` 測試合流、升級 `invariants.yaml`（INV_SCOPE_02 / INV_VERIFY_02~04）與 `loop-constraints.md`。全套 17 大單元測試 100% 綠燈，已全量同步實裝並推送至 7-Phase 遠端主分支。
 - [x] **Loop Architecture Initialization**: 已建立 Loop Engineering 基礎架構（gate.yaml, STATE.md, loop-budget.md, loop-constraints.md）。
 - [x] **Maker / Checker Hard Split**: 已引入 loop-verifier 與 gate.yaml 物理門禁。

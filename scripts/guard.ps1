@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Local Guard 快捷執行腳本 (使用本機 Laya 決策模型)
+    System 1 決策門禁快捷執行腳本 (相容 TypeSafe Jev / Ollaya 等開放 /v1/systemone 協議規範)
 .DESCRIPTION
     調用 .venv/Scripts/python.exe 執行 scripts/local_guard.py
-    支援自動檢測 git diff、檔案或代碼字串
+    支援自動檢測 git diff、檔案或代碼字串，具備自動離線降級 (Static Fallback)
 .EXAMPLE
     .\scripts\guard.ps1
     .\scripts\guard.ps1 -Code "export function add(a, b) { return a + b; }"
