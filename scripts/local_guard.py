@@ -156,6 +156,36 @@ def check_regex_secrets(text: str) -> List[str]:
     return found
 
 
+def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tuple[bool, List[str]]:
+    """調用 scripts/ast_guard.js 進行 Level 0.5 確定性 AST 語意審查 (零生產接縫 & 垃圾測試門禁)"""
+    guard_js = Path(__file__).resolve().parent / "ast_guard.js"
+    if not guard_js.exists():
+        return False, []
+
+    js_files = [f for f in (changed_files or []) if re.search(r"\.(js|jsx|ts|tsx|mjs|cjs)$", f, re.I)]
+    if not js_files and not code_content.strip():
+        return False, []
+
+    cmd = ["node", str(guard_js)]
+    if js_files:
+        cmd.extend(js_files)
+    elif code_content.strip():
+        cmd.extend(["--code", code_content])
+
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=15)
+        if proc.returncode == 1:
+            err_output = (proc.stderr or proc.stdout).strip().splitlines()
+            violations = [line for line in err_output if "INV_VERIFY" in line or "BLOCK" in line or "嚴禁" in line]
+            if not violations:
+                violations = ["AST 門禁阻斷：違反零生產接縫 (INV_VERIFY_03) 或垃圾測試規範 (INV_VERIFY_02)"]
+            return True, violations
+    except Exception:
+        pass  # Node 未安裝時自動安全放行，不中斷本地開發
+
+    return False, []
+
+
 def check_gate_yaml(changed_files: List[str], repo_root: Optional[Path] = None) -> Tuple[bool, List[str]]:
     """依據 gate.yaml 審查變更檔案是否觸犯 denylist 或超過 maxFiles"""
     gate_file = find_gate_file(repo_root)
@@ -284,6 +314,12 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
         for s in regex_secrets:
             block_reasons.append(f"物理阻斷：偵測到硬編碼憑證 ({s})")
 
+    # 2.5 物理阻斷 (Level 0.5)：SWC 確定性 AST 門禁審查
+    ast_blocked, ast_violations = check_ast_guard(code_content, changed_files)
+    if ast_blocked:
+        is_blocked = True
+        block_reasons.extend(ast_violations)
+
     # 3. 呼叫 System 1 決策引擎 (可插拔式後端)
     t0 = time.perf_counter()
     answers, engine_name = query_system_one(code_content) if code_content.strip() else (None, "Bypassed")
@@ -329,6 +365,7 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     print(f"│ 審查狀態: {status_header:<49} │")
     print(f"│ 決策引擎: {CYAN}{engine_name:<25}{RESET} 耗時: {elapsed_ms:6.1f} ms    │")
     print("├─────────────────────────────────────────────────────────────┤")
+    print(f"│  • AST 語意門禁 (Level 0.5)      : {format_gate_status(not ast_blocked)}                       │")
     print(f"│  • 生產接縫機率 (Zero Seams)   : {format_prob(seam_prob) if answers else '⚠️  離線降級放行'}                  │")
     print(f"│  • 硬編碼金鑰風險 (Regex Guard): {format_secret(len(regex_secrets))}                  │")
     print(f"│  • Ponytail 階梯定位           : {CYAN}{ladder_choice:<15}{RESET} (信心: {ladder_conf*100:4.1f}%) │")
