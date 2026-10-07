@@ -59,6 +59,7 @@ def main():
         ("Loop Sentinel Drift (11 Tests)", [sys.executable, "-m", "unittest", "tests/test_loop_drift.py"], REPO_ROOT),
         ("Loop Graph Engine (6 Tests)", [sys.executable, "-m", "unittest", "tests/test_loop_graph.py"], REPO_ROOT),
         ("Local Guard Suite (9 Tests)", [sys.executable, "-m", "unittest", "tests/test_local_guard.py"], REPO_ROOT),
+        ("SWC & LLMCompiler (13 Tests)", [sys.executable, "-m", "unittest", "tests/test_swc_llmcompiler.py"], REPO_ROOT),
     ]
 
     results = []
