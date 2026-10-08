@@ -6,6 +6,7 @@ Pure Python standard library unittest.
 
 import os
 import sys
+import math
 import unittest
 import tempfile
 import shutil
@@ -158,7 +159,6 @@ class UserService {}
         self.assertGreater(ranks_focused["fn:a"], ranks_no_focus["fn:a"])
 
     def test_repo_map_respects_budget(self):
-        import math
         g = self._build_pagerank_sample_graph()
         ranks = g.compute_pagerank()
         out_small = g.render_repo_map(ranks, budget=10)
@@ -169,6 +169,19 @@ class UserService {}
         self.assertIn("funcB", out_large)
         self.assertIn("funcC", out_large)
         self.assertIn("funcD", out_large)
+
+    def test_pagerank_conserves_mass_with_external_targets(self):
+        # Real scans contain edges to nodes outside the graph (e.g. stdlib imports).
+        g = self._build_pagerank_sample_graph()
+        g.add_edge("fn:a", "mod:os", "imports")
+        g.add_node("fn:x", "funcX", "function", "src/data_runner.py")
+        ranks = g.compute_pagerank(focus=["runner.py"])
+        self.assertAlmostEqual(sum(ranks.values()), 1.0, places=4)
+        # "runner.py" must not match "data_runner.py" (path-boundary), so no focus boost on funcX
+        self.assertAlmostEqual(ranks["fn:x"], g.compute_pagerank()["fn:x"], places=6)
+        # Nodes unreachable from focus still get non-zero rank
+        focused = g.compute_pagerank(focus=["src/a.py"])
+        self.assertTrue(all(v > 0 for v in focused.values()))
 
     def test_pagerank_empty_graph(self):
         g = ArchitectureGraph()

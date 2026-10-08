@@ -557,7 +557,7 @@ flowchart TD
 ├── tests/                                       # 🧪 專案級驗證測試套件
 │   ├── test_swc_llmcompiler.py                  # SWC AST 門禁與 LLMCompiler DAG 排程器 13 項測試
 │   ├── test_local_guard.py                      # 本機決策閘門 9 項單元測試
-│   ├── test_loop_graph.py                       # 架構圖譜引擎 10 項單元測試
+│   ├── test_loop_graph.py                       # 架構圖譜引擎 11 項單元測試
 │   └── test_loop_drift.py                       # 系統不變量漂移 11 項單元測試
 └── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
     ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準

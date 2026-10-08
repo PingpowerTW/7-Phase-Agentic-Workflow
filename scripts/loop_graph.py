@@ -131,46 +131,33 @@ class ArchitectureGraph:
 
         n_nodes = len(self.nodes)
         node_keys = list(self.nodes.keys())
+        uniform = 1.0 / n_nodes
 
-        # Construct personalization distribution vector
+        # Only edges between known nodes carry rank; external targets (e.g. stdlib imports) would leak mass.
+        outs = {nid: [t for t in self.adj_out[nid] if t in self.nodes] for nid in node_keys}
+
+        # Personalization: blend focus with uniform so nodes unreachable from focus still get a meaningful rank.
+        # ponytail: fixed 0.7/0.3 blend, expose as CLI flag only if tuning is actually needed
         norm_focus = [normalize_path(f) for f in (focus or []) if f]
-        p: Dict[str, float] = {}
-
-        if norm_focus:
-            for nid, ndata in self.nodes.items():
-                nfile = normalize_path(ndata.get("file", ""))
-                matched = False
-                for f in norm_focus:
-                    if nfile == f or nfile.endswith("/" + f) or nfile.endswith(f):
-                        matched = True
-                        break
-                p[nid] = 1.0 if matched else 0.0
-
-            total_p = sum(p.values())
-            if total_p > 0.0:
-                p = {nid: val / total_p for nid, val in p.items()}
-            else:
-                p = {nid: 1.0 / n_nodes for nid in node_keys}
+        hits = {
+            nid for nid, ndata in self.nodes.items()
+            if any(ndata.get("file", "") == f or ndata.get("file", "").endswith("/" + f) for f in norm_focus)
+        }
+        if hits:
+            p = {nid: 0.7 * (1.0 / len(hits) if nid in hits else 0.0) + 0.3 * uniform for nid in node_keys}
         else:
-            p = {nid: 1.0 / n_nodes for nid in node_keys}
+            p = {nid: uniform for nid in node_keys}
 
-        # Initialize rank vector with personalization distribution
         r = dict(p)
-
         for _ in range(max_iter):
-            # Rank sum of dangling nodes (nodes with out-degree == 0)
-            dangling_sum = sum(r[nid] for nid in node_keys if len(self.adj_out[nid]) == 0)
+            dangling_sum = sum(r[nid] for nid in node_keys if not outs[nid])
+            r_new = {nid: (1.0 - damping + damping * dangling_sum) * p[nid] for nid in node_keys}
+            for src in node_keys:
+                if outs[src]:
+                    share = damping * r[src] / len(outs[src])
+                    for t in outs[src]:
+                        r_new[t] += share
 
-            r_new: Dict[str, float] = {}
-            for nid in node_keys:
-                inflow = sum(
-                    r[src] / len(self.adj_out[src])
-                    for src in self.adj_in[nid]
-                    if len(self.adj_out[src]) > 0
-                )
-                r_new[nid] = damping * (inflow + dangling_sum * p[nid]) + (1.0 - damping) * p[nid]
-
-            # Check L1 convergence
             diff = sum(abs(r_new[nid] - r[nid]) for nid in node_keys)
             r = r_new
             if diff < tol:
@@ -984,7 +971,6 @@ def main():
     scanner.scan_repository()
 
     out_dir = root_dir / args.out_dir
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.impact:
         res = graph.compute_blast_radius(args.impact)
@@ -1023,6 +1009,7 @@ def main():
         return
 
     # Default or --scan: Export full graph artifacts
+    out_dir.mkdir(parents=True, exist_ok=True)
     # 1. graph.json
     graph_json_data = {
         "nodes": list(graph.nodes.values()),
