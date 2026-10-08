@@ -134,6 +134,49 @@ class UserService {}
         self.assertIn("canvas id=\"graphCanvas\"", html)
         self.assertIn("INV_01", html)
 
+    def _build_pagerank_sample_graph(self):
+        g = ArchitectureGraph()
+        g.add_node("fn:a", "funcA", "function", "src/a.py")
+        g.add_node("fn:b", "funcB", "function", "src/b.py")
+        g.add_node("fn:c", "funcC", "function", "src/c.py")
+        g.add_node("fn:d", "funcD", "function", "src/d.py")
+        g.add_edge("fn:a", "fn:b", "calls")
+        g.add_edge("fn:c", "fn:b", "calls")
+        g.add_edge("fn:b", "fn:d", "calls")
+        return g
+
+    def test_pagerank_sums_to_one_and_ranks_hub(self):
+        g = self._build_pagerank_sample_graph()
+        ranks = g.compute_pagerank()
+        self.assertAlmostEqual(sum(ranks.values()), 1.0, places=4)
+        self.assertGreater(ranks["fn:b"], ranks["fn:a"])
+
+    def test_pagerank_focus_personalization(self):
+        g = self._build_pagerank_sample_graph()
+        ranks_no_focus = g.compute_pagerank()
+        ranks_focused = g.compute_pagerank(focus=["src/a.py"])
+        self.assertGreater(ranks_focused["fn:a"], ranks_no_focus["fn:a"])
+
+    def test_repo_map_respects_budget(self):
+        import math
+        g = self._build_pagerank_sample_graph()
+        ranks = g.compute_pagerank()
+        out_small = g.render_repo_map(ranks, budget=10)
+        self.assertLessEqual(math.ceil(len(out_small) / 4) if out_small else 0, 10)
+
+        out_large = g.render_repo_map(ranks, budget=10000)
+        self.assertIn("funcA", out_large)
+        self.assertIn("funcB", out_large)
+        self.assertIn("funcC", out_large)
+        self.assertIn("funcD", out_large)
+
+    def test_pagerank_empty_graph(self):
+        g = ArchitectureGraph()
+        ranks = g.compute_pagerank()
+        self.assertEqual(ranks, {})
+        self.assertEqual(g.render_repo_map({}, 100), "")
+
 
 if __name__ == "__main__":
     unittest.main()
+

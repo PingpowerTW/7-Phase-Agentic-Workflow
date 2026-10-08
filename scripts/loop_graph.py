@@ -19,6 +19,7 @@ import os
 import re
 import ast
 import json
+import math
 import collections
 import subprocess
 from pathlib import Path
@@ -113,6 +114,132 @@ class ArchitectureGraph:
             if m["total_degree"] > 0 and nid in self.nodes:
                 god_nodes.append((nid, self.nodes[nid], m["total_degree"]))
         return god_nodes
+
+    def compute_pagerank(
+        self,
+        focus: Optional[List[str]] = None,
+        damping: float = 0.85,
+        max_iter: int = 50,
+        tol: float = 1e-6
+    ) -> Dict[str, float]:
+        """
+        Compute Personalized PageRank over the architecture graph.
+        Ranks flow along edges (A -> B means B is depended upon / called).
+        """
+        if not self.nodes:
+            return {}
+
+        n_nodes = len(self.nodes)
+        node_keys = list(self.nodes.keys())
+
+        # Construct personalization distribution vector
+        norm_focus = [normalize_path(f) for f in (focus or []) if f]
+        p: Dict[str, float] = {}
+
+        if norm_focus:
+            for nid, ndata in self.nodes.items():
+                nfile = normalize_path(ndata.get("file", ""))
+                matched = False
+                for f in norm_focus:
+                    if nfile == f or nfile.endswith("/" + f) or nfile.endswith(f):
+                        matched = True
+                        break
+                p[nid] = 1.0 if matched else 0.0
+
+            total_p = sum(p.values())
+            if total_p > 0.0:
+                p = {nid: val / total_p for nid, val in p.items()}
+            else:
+                p = {nid: 1.0 / n_nodes for nid in node_keys}
+        else:
+            p = {nid: 1.0 / n_nodes for nid in node_keys}
+
+        # Initialize rank vector with personalization distribution
+        r = dict(p)
+
+        for _ in range(max_iter):
+            # Rank sum of dangling nodes (nodes with out-degree == 0)
+            dangling_sum = sum(r[nid] for nid in node_keys if len(self.adj_out[nid]) == 0)
+
+            r_new: Dict[str, float] = {}
+            for nid in node_keys:
+                inflow = sum(
+                    r[src] / len(self.adj_out[src])
+                    for src in self.adj_in[nid]
+                    if len(self.adj_out[src]) > 0
+                )
+                r_new[nid] = damping * (inflow + dangling_sum * p[nid]) + (1.0 - damping) * p[nid]
+
+            # Check L1 convergence
+            diff = sum(abs(r_new[nid] - r[nid]) for nid in node_keys)
+            r = r_new
+            if diff < tol:
+                break
+
+        return r
+
+    def render_repo_map(self, ranks: Dict[str, float], budget: int = 1024) -> str:
+        """
+        Render a token-budgeted repo map using PageRank scores.
+        Only symbols with type in ('class', 'function') are candidate symbol lines.
+        """
+        if not ranks:
+            return ""
+
+        candidates = [
+            nid for nid, ndata in self.nodes.items()
+            if ndata.get("type") in ("class", "function") and nid in ranks
+        ]
+        if not candidates:
+            return ""
+
+        sorted_symbols = sorted(candidates, key=lambda nid: ranks.get(nid, 0.0), reverse=True)
+
+        def format_for_k(k: int) -> str:
+            if k <= 0:
+                return ""
+            chosen = sorted_symbols[:k]
+            file_groups: Dict[str, List[Tuple[str, str, float]]] = collections.defaultdict(list)
+            for nid in chosen:
+                ndata = self.nodes[nid]
+                fpath = ndata.get("file", "unknown")
+                stype = ndata.get("type", "function")
+                slabel = ndata.get("label", nid)
+                srank = ranks.get(nid, 0.0)
+                file_groups[fpath].append((stype, slabel, srank))
+
+            # Sort files descending by the sum of ranks of chosen symbols in that file
+            sorted_files = sorted(
+                file_groups.items(),
+                key=lambda item: sum(s[2] for s in item[1]),
+                reverse=True
+            )
+
+            lines = []
+            for fpath, syms in sorted_files:
+                lines.append(fpath)
+                syms_sorted = sorted(syms, key=lambda s: s[2], reverse=True)
+                for stype, slabel, _ in syms_sorted:
+                    lines.append(f"  - {stype} {slabel}")
+            return "\n".join(lines)
+
+        # Binary search for maximum K such that token estimate <= budget
+        # ponytail: chars/4 heuristic, 換成真 tokenizer 時再改
+        low = 0
+        high = len(sorted_symbols)
+        best_text = ""
+
+        while low <= high:
+            mid = (low + high) // 2
+            rendered = format_for_k(mid)
+            est_tokens = math.ceil(len(rendered) / 4) if rendered else 0
+            if est_tokens <= budget:
+                best_text = rendered
+                low = mid + 1
+            else:
+                high = mid - 1
+
+        return best_text
 
     def compute_blast_radius(self, target_query: str) -> Dict[str, Any]:
         """
@@ -843,6 +970,9 @@ def main():
     parser.add_argument("--scan", action="store_true", help="Scan repository and output graph artifacts")
     parser.add_argument("--impact", type=str, help="Calculate blast radius and impacted dependents for a file/function")
     parser.add_argument("--god-nodes", action="store_true", help="Display top God Nodes (central hubs)")
+    parser.add_argument("--map", action="store_true", help="Output token-budgeted repo map (personalized PageRank)")
+    parser.add_argument("--focus", action="append", default=[], help="Focus file(s) for personalized ranking; repeatable")
+    parser.add_argument("--budget", type=int, default=1024, help="Token budget for --map (chars/4 estimate)")
     parser.add_argument("--out-dir", type=str, default="graph-out", help="Output directory for graph artifacts")
     parser.add_argument("--root", type=str, default=None, help="Root repository directory")
 
@@ -881,6 +1011,15 @@ def main():
         print("👑 TOP GOD NODES (Central Hubs):")
         for idx, (nid, node, deg) in enumerate(gods, start=1):
             print(f"  #{idx} {node['label']} ({node['type']}) - Degree: {deg} | {node['file']}")
+        return
+
+    if args.map:
+        ranks = graph.compute_pagerank(focus=args.focus)
+        repo_map_str = graph.render_repo_map(ranks, budget=args.budget)
+        tokens = math.ceil(len(repo_map_str) / 4) if repo_map_str else 0
+        if repo_map_str:
+            print(repo_map_str)
+        print(f"# ~{tokens} tokens / budget {args.budget}")
         return
 
     # Default or --scan: Export full graph artifacts
