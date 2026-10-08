@@ -85,9 +85,10 @@ async def _terminate_process_tree(proc: asyncio.subprocess.Process):
                 pass
     else:
         try:
-            # POSIX: 嘗試發送 SIGKILL 至 process group 或 direct kill
-            pgid = os.getpgid(pid)
-            os.killpg(pgid, signal.SIGKILL)
+            # POSIX: 若子程序擁有自己的 process group (start_new_session=True)，直接送 SIGKILL 至 pgid
+            os.killpg(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
         except Exception:
             try:
                 proc.kill()
@@ -95,7 +96,7 @@ async def _terminate_process_tree(proc: asyncio.subprocess.Process):
                 pass
 
     try:
-        await asyncio.wait_for(proc.wait(), timeout=5.0)
+        await asyncio.wait_for(proc.wait(), timeout=3.0)
     except Exception:
         pass
 
@@ -188,12 +189,17 @@ class DAGRunner:
                 # 跨平台路徑定位
                 resolved_bin = shutil.which(executable) or executable
 
+                extra_kwargs = {}
+                if sys.platform != "win32":
+                    extra_kwargs["start_new_session"] = True
+
                 proc = await asyncio.create_subprocess_exec(
                     resolved_bin,
                     *cmd_args[1:],
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE,
-                    env={**os.environ, **task.env}
+                    env={**os.environ, **task.env},
+                    **extra_kwargs
                 )
                 self._running_subprocesses[task.id] = proc
 

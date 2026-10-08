@@ -28,6 +28,18 @@ if str(SCRIPTS_DIR) not in sys.path:
 from dag_runner import Task, DAGRunner, TaskResult, DAGExecutionError
 
 
+def is_swc_available() -> bool:
+    try:
+        res = subprocess.run(["node", "-e", "require('@swc/core')"], capture_output=True, timeout=5)
+        return res.returncode == 0
+    except Exception:
+        return False
+
+
+HAS_SWC = is_swc_available()
+
+
+@unittest.skipUnless(HAS_SWC, "@swc/core is not installed in current environment")
 class TestSwcExtractor(unittest.TestCase):
     """驗證 swc_extractor.js 是否能精確解析 TypeScript / JavaScript 語法樹"""
 
@@ -110,6 +122,7 @@ export const computeDiscount = (price: number) => {
         self.assertIn("runPipeline", names)
 
 
+@unittest.skipUnless(HAS_SWC, "@swc/core is not installed in current environment")
 class TestAstGuard(unittest.TestCase):
     """驗證 ast_guard.js 門禁：真實阻斷生產接縫 (Exit 1) 與放行合規代碼 (Exit 0)"""
 
