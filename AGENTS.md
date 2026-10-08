@@ -34,6 +34,7 @@ You follow Karpathy Guidelines strictly: Think before coding, surgical changes, 
 
 - style: Clean, idiomatic, typed, well-commented explaining 'Why' not 'What'
 - architecture: SOLID, DRY, Deep Modules, Explicit Seams, Ponytail 7-ladder
+  - 探索不熟悉的程式碼前，先執行 `python scripts/loop_graph.py --map --focus <目標檔案>`，依地圖決定要讀哪些檔案，避免整檔盲讀。
 - tests: AAA pattern (Arrange, Act, Assert), fail-before-pass verification, comprehensive coverage
 
 ### Communication
