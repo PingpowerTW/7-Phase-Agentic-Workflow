@@ -114,37 +114,59 @@ def find_gate_file(custom_root: Optional[Path] = None) -> Optional[Path]:
     return None
 
 
-def parse_gate_yaml_simple(gate_file: Path) -> Tuple[List[str], int]:
-    """輕量純標準庫 YAML 解析器，支援行內註解過濾"""
+class GateResult(tuple):
+    denylist: List[str]
+    max_files: int
+    allowlist: List[str]
+
+    def __new__(cls, denylist: List[str], max_files: int, allowlist: Optional[List[str]] = None):
+        return super().__new__(cls, (denylist, max_files))
+
+    def __init__(self, denylist: List[str], max_files: int, allowlist: Optional[List[str]] = None):
+        self.denylist = denylist
+        self.max_files = max_files
+        self.allowlist = allowlist or []
+
+
+def parse_gate_yaml_simple(gate_file: Path) -> GateResult:
+    """輕量純標準庫 YAML 解析器，支援行內註解過濾與 autoMergeAllowlist"""
     denylist = []
     max_files = 8
+    allowlist = []
     try:
         lines = gate_file.read_text(encoding="utf-8", errors="replace").splitlines()
-        in_denylist = False
+        current_section = None
         for raw_line in lines:
             line = raw_line.split("#")[0].strip()
             if not line:
                 continue
 
             if line.startswith("denylist:"):
-                in_denylist = True
+                current_section = "denylist"
                 continue
-            elif in_denylist:
-                if line.startswith("-"):
-                    val = line.lstrip("- ").strip().strip('"').strip("'")
-                    if val:
-                        denylist.append(val)
-                elif not line.startswith("-"):
-                    in_denylist = False
-
-            if line.startswith("maxFiles:"):
+            elif line.startswith("autoMergeAllowlist:"):
+                current_section = "autoMergeAllowlist"
+                continue
+            elif line.startswith("maxFiles:"):
+                current_section = None
                 try:
                     max_files = int(line.split(":")[1].strip())
                 except ValueError:
                     pass
+                continue
+            elif not line.startswith("-"):
+                current_section = None
+
+            if line.startswith("-"):
+                val = line.lstrip("- ").strip().strip('"').strip("'")
+                if val:
+                    if current_section == "denylist":
+                        denylist.append(val)
+                    elif current_section == "autoMergeAllowlist":
+                        allowlist.append(val)
     except Exception:
         pass
-    return denylist, max_files
+    return GateResult(denylist, max_files, allowlist)
 
 
 def check_regex_secrets(text: str) -> List[str]:
@@ -187,19 +209,31 @@ def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tu
 
 
 def check_gate_yaml(changed_files: List[str], repo_root: Optional[Path] = None) -> Tuple[bool, List[str]]:
-    """依據 gate.yaml 審查變更檔案是否觸犯 denylist 或超過 maxFiles"""
+    """依據 gate.yaml 審查變更檔案是否觸犯 denylist 或超過 maxFiles (autoMergeAllowlist 不佔代碼上限)"""
     gate_file = find_gate_file(repo_root)
     if not gate_file:
         return False, []
 
-    denylist, max_files = parse_gate_yaml_simple(gate_file)
+    gate_res = parse_gate_yaml_simple(gate_file)
+    denylist = gate_res.denylist if hasattr(gate_res, "denylist") else gate_res[0]
+    max_files = gate_res.max_files if hasattr(gate_res, "max_files") else gate_res[1]
+    allowlist = getattr(gate_res, "allowlist", [])
+
     violations = []
 
-    # 1. 檢查檔案總數上限
-    if len(changed_files) > max_files:
-        violations.append(f"變更檔案數 ({len(changed_files)}) 超過 gate.yaml 上限 ({max_files} 檔案)")
+    # 過濾屬於 autoMergeAllowlist 的文檔/標記檔案 (不計入代碼變更檔案上限)
+    code_files = []
+    for f in changed_files:
+        norm_f = normalize_path(f)
+        is_allowed = any(match_glob(pat, norm_f) for pat in allowlist)
+        if not is_allowed:
+            code_files.append(f)
 
-    # 2. 檢查 denylist 敏感路徑 (Globstar 遞迴比對)
+    # 1. 檢查代碼檔案總數上限
+    if len(code_files) > max_files:
+        violations.append(f"變更代碼檔案數 ({len(code_files)}) 超過 gate.yaml 上限 ({max_files} 檔案)")
+
+    # 2. 檢查 denylist 敏感路徑 (Globstar 遞迴比對，所有檔案一律嚴禁觸犯)
     for f in changed_files:
         norm_f = normalize_path(f)
         for pattern in denylist:

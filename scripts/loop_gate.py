@@ -31,7 +31,7 @@ if sys.platform == "win32":
         pass
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_GATE_PATH = REPO_ROOT / "templates" / "loop-engineering" / "gate.yaml"
+DEFAULT_GATE_PATH = REPO_ROOT / "gate.yaml" if (REPO_ROOT / "gate.yaml").exists() else (REPO_ROOT / "templates" / "loop-engineering" / "gate.yaml")
 
 
 def normalize_path(path_str: str) -> str:
@@ -67,6 +67,10 @@ def match_glob(pattern: str, file_path: str) -> bool:
         base_name = norm_path.split("/")[-1]
         if fnmatch.fnmatch(base_name, sub_pat):
             return True
+        if sub_pat.endswith("/**"):
+            sub_prefix = sub_pat[:-3]
+            if norm_path.startswith(sub_prefix + "/") or norm_path == sub_prefix:
+                return True
 
     # Standard fnmatch
     if fnmatch.fnmatch(norm_path, norm_pat):

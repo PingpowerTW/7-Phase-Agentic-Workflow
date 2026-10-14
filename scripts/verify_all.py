@@ -20,6 +20,7 @@ Outputs a compact, token-optimized summary (<12 lines) unless --verbose is passe
 import sys
 import time
 import subprocess
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 # Ensure UTF-8 output on Windows consoles
@@ -62,14 +63,18 @@ def main():
         ("SWC & LLMCompiler (13 Tests)", [sys.executable, "-m", "unittest", "tests/test_swc_llmcompiler.py"], REPO_ROOT),
     ]
 
-    results = []
-    all_ok = True
-
-    for name, cmd, cwd in suites:
+    def _exec_indexed(item: tuple[int, tuple[str, list[str], Path]]):
+        idx, (name, cmd, cwd) = item
         is_ok, out, elapsed = run_suite(name, cmd, cwd)
-        results.append((name, is_ok, out, elapsed))
-        if not is_ok:
-            all_ok = False
+        return idx, (name, is_ok, out, elapsed)
+
+    max_workers = min(8, len(suites))
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        indexed_results = list(pool.map(_exec_indexed, enumerate(suites)))
+
+    indexed_results.sort(key=lambda x: x[0])
+    results = [r for _, r in indexed_results]
+    all_ok = all(is_ok for _, is_ok, _, _ in results)
 
     total_time = time.perf_counter() - start_total
 

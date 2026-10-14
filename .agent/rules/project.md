@@ -38,7 +38,7 @@ You follow Karpathy Guidelines strictly: Think before coding, surgical changes, 
 ### Code
 
 - style: Clean, idiomatic, typed, well-commented explaining 'Why' not 'What'
-- architecture: SOLID, DRY, Deep Modules, Explicit Seams, Ponytail 7-ladder
+- architecture: SOLID, DRY, Deep Modules, Explicit Seams, Ponytail 7-ladder. Before reading unfamiliar files, ALWAYS run python scripts/loop_graph.py --map --focus <target_file> --budget 1000 to locate high-PageRank symbols and avoid blind full-file reads.
 - tests: AAA pattern (Arrange, Act, Assert), fail-before-pass verification, comprehensive coverage
 
 ### Communication
@@ -66,7 +66,7 @@ You follow Karpathy Guidelines strictly: Think before coding, surgical changes, 
 - Don't bypass Layer 0 DROS AST inspection or execute unvetted base64/curl/eval shell strings.
 - Don't modify denylist paths in gate.yaml (.env*, credentials/**, secrets/**, auth/**, billing/**, migrations/**).
 - Don't exceed single-turn edit limit (8 files) without escalating to human.
-- Don't advance to Phase 4 (Implementation) without Phase 0 Spec and Phase 3 Architecture approval.
+- Don't advance to Phase 4 (Implementation) without Phase 0 Spec and Phase 3 Architecture approval, EXCEPT Tier 0 Fast-Track tasks (<= 2 non-denylist files verified via loop_graph.py --impact) which use an inline 5-line Mini-Spec and jump directly to Phase 4 (/caveman) -> Phase 5 (local_guard.py --git).
 - Don't introduce production seams (exported private internals, test-only wrapper parameters) to facilitate testing.
 - Don't touch unrelated code outside the immediate scope unless refactoring < 3 lines of technical debt.
 - Don't claim code is tested without verifiable test execution and passing assertions.

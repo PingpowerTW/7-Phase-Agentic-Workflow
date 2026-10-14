@@ -60,6 +60,10 @@ def match_glob(pattern: str, file_path: str) -> bool:
         base_name = norm_path.split("/")[-1]
         if fnmatch.fnmatch(base_name, sub_pat):
             return True
+        if sub_pat.endswith("/**"):
+            sub_prefix = sub_pat[:-3]
+            if norm_path.startswith(sub_prefix + "/") or norm_path == sub_prefix:
+                return True
 
     if fnmatch.fnmatch(norm_path, norm_pat):
         return True

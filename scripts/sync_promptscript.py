@@ -248,14 +248,52 @@ class PromptScriptValidator:
             self.log_error(f"Failed to execute native compiler: {ex}")
             return False
 
+    def hydrate_skills(self) -> int:
+        """Populate empty compiled SKILL.md stubs in IDE folders with actual bodies from ./skills/<name>/SKILL.md."""
+        target_roots = [
+            self.repo_root / ".agents" / "skills",
+            self.repo_root / ".claude" / "skills",
+            self.repo_root / ".factory" / "skills",
+            self.repo_root / ".github" / "skills",
+        ]
+        hydrated_count = 0
+        for skill_src_dir in sorted(self.skills_dir.iterdir()):
+            if not skill_src_dir.is_dir():
+                continue
+            src_md = skill_src_dir / "SKILL.md"
+            if not src_md.is_file():
+                continue
+            src_text = src_md.read_text(encoding="utf-8", errors="replace")
+            # Extract markdown body after YAML frontmatter
+            parts = src_text.split("---", 2)
+            body = parts[2].strip() if len(parts) >= 3 else src_text.strip()
+            if not body:
+                continue
+
+            for t_root in target_roots:
+                dst_md = t_root / skill_src_dir.name / "SKILL.md"
+                if not dst_md.is_file():
+                    continue
+                dst_text = dst_md.read_text(encoding="utf-8", errors="replace")
+                dst_parts = dst_text.split("---", 2)
+                if len(dst_parts) >= 3 and len(dst_parts[2].strip()) < 20:
+                    hydrated = f"---{dst_parts[1]}---\n\n{body}\n"
+                    dst_md.write_text(hydrated, encoding="utf-8")
+                    hydrated_count += 1
+        print(f"[INFO] Hydrated {hydrated_count} compiled SKILL.md stub file(s) from canonical ./skills/.")
+        return hydrated_count
+
 
 if __name__ == "__main__":
     current_dir = Path(__file__).resolve().parent.parent
     validator = PromptScriptValidator(current_dir)
     success = validator.validate_all()
-    
+
     if success and "--compile" in sys.argv:
         success = validator.run_native_compile()
+
+    if success and ("--hydrate" in sys.argv or "--compile" in sys.argv):
+        validator.hydrate_skills()
 
     sys.exit(0 if success else 1)
 
