@@ -276,10 +276,12 @@ class PromptScriptValidator:
                     continue
                 dst_text = dst_md.read_text(encoding="utf-8", errors="replace")
                 dst_parts = dst_text.split("---", 2)
-                if len(dst_parts) >= 3 and len(dst_parts[2].strip()) < 20:
-                    hydrated = f"---{dst_parts[1]}---\n\n{body}\n"
-                    dst_md.write_text(hydrated, encoding="utf-8")
-                    hydrated_count += 1
+                if len(dst_parts) >= 3:
+                    current_body = dst_parts[2].strip()
+                    if len(current_body) < 20 or current_body != body:
+                        hydrated = f"---{dst_parts[1]}---\n\n{body}\n"
+                        dst_md.write_text(hydrated, encoding="utf-8")
+                        hydrated_count += 1
         print(f"[INFO] Hydrated {hydrated_count} compiled SKILL.md stub file(s) from canonical ./skills/.")
         return hydrated_count
 

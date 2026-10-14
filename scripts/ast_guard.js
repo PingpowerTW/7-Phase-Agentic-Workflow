@@ -1,14 +1,18 @@
 #!/usr/bin/env node
 /**
- * ast_guard.js — Level 0.5 Deterministic AST Safety Gate
+ * ast_guard.js — Level 0.5 Deterministic AST Safety & Zero-Tech-Debt Gate
  *
- * 【設計目標】
- * 依據 invariants.yaml 與門禁規範，使用 @swc/core 執行確定性微秒級語意檢驗：
+ * 【確定性微秒級語意檢驗清單】
  * 1. 零生產接縫 (INV_VERIFY_03 / INV_VERIFY_04)：
- *    在非測試檔案中，嚴禁 export 帶有 `_test_`, `mock`, `fake`, `stub` 前綴的識別碼，
- *    或在公開簽名中包含 mock 參數。
+ *    非測試檔嚴禁 export 帶有 `_test_`, `mock`, `fake`, `stub` 前綴的識別碼，或公開簽名含 mock 參數。
  * 2. 垃圾測試與佔位符 (INV_VERIFY_02)：
- *    測試檔案中嚴禁空測試區塊 (`test('...', () => {})`)、`test.todo` 或未完工之佔位標籤。
+ *    嚴禁空測試區塊 (`test('...', () => {})`)、`test.todo` 或 TODO/FIXME 佔位標籤。
+ * 3. TypeScript 嚴格型別 (INV_TS_01)：
+ *    非測試檔嚴禁使用 `: any`、`as any`、`<any>` 逃避型別檢查。
+ * 4. React 組件規模上限 (INV_REACT_01)：
+ *    單一 `.tsx` / `.jsx` 組件不得超過 200 行（防止巨石組件技術債）。
+ * 5. GSAP React StrictMode 生命週期安全 (INV_REACT_02)：
+ *    在 React 組件中使用 gsap 動畫，強制使用 `useGSAP` 或 `gsap.context()`，嚴禁在裸 `useEffect` 直接呼叫 `gsap.to/from/timeline`。
  *
  * 【退出碼規範】
  * 0: PASS (全部合規)
@@ -89,8 +93,8 @@ function auditFile(filePath, codeOverride = null) {
   }
 
   const isTest = isTestFile(normPath);
-  const isTs = ext === '.ts' || ext === '.tsx' || ext === '.mts' || ext === '.cts';
-  const isJsx = ext === '.jsx' || ext === '.tsx';
+  const isTs = ext === '.ts' || ext === '.tsx' || ext === '.mts' || ext === '.cts' || codeOverride !== null;
+  const isJsx = ext === '.jsx' || ext === '.tsx' || (codeOverride !== null && /<[a-zA-Z]/.test(codeOverride));
 
   let ast;
   try {
@@ -114,7 +118,7 @@ function auditFile(filePath, codeOverride = null) {
     return violations;
   }
 
-  // 1. 檢查未完工之佔位標籤
+  // 1. 檢查未完工之佔位標籤 & TypeScript `any` 違規
   const lines = content.split('\n');
   lines.forEach((lineText, idx) => {
     const lineNum = idx + 1;
@@ -128,7 +132,47 @@ function auditFile(filePath, codeOverride = null) {
         message: `偵測到佔位標籤 [${placeholderMatch[1]}]: 嚴禁提交未完工之佔位代碼。`
       });
     }
+
+    // INV_TS_01: 非測試檔嚴禁使用 explicit any
+    if (!isTest && isTs) {
+      const strippedComment = lineText.replace(/\/\/.*$/, '');
+      if (/(?::\s*any\b|\bas\s+any\b|<any>)/.test(strippedComment)) {
+        violations.push({
+          rule: 'INV_TS_01',
+          name: 'Zero Any Type Pollution',
+          file: normPath,
+          line: lineNum,
+          message: `偵測到 'any' 型別污染。FIX: 請改用明確介面、泛型或 'unknown' 搭配 Type Guard / Zod Schema。`
+        });
+      }
+    }
   });
+
+  // 1.5 INV_REACT_01 & INV_REACT_02: React 組件行數上限 (200行) 與 GSAP 安全檢查
+  if (!isTest && isJsx) {
+    if (lines.length > 200) {
+      violations.push({
+        rule: 'INV_REACT_01',
+        name: 'Component Size Guard (<200 LOC)',
+        file: normPath,
+        line: lines.length,
+        message: `React 組件達 ${lines.length} 行（上限 200 行）。FIX: 請將商業邏輯抽離至 Custom Hook，或將子區塊拆分為獨立組件。`
+      });
+    }
+
+    const usesGsapCall = /\bgsap\s*\.\s*(?:to|from|fromTo|timeline)\s*\(/.test(content);
+    const usesUseEffect = /\buseEffect\s*\(/.test(content);
+    const usesSafeGsap = /\buseGSAP\s*\(/.test(content) || /\bgsap\s*\.\s*context\s*\(/.test(content);
+    if (usesGsapCall && usesUseEffect && !usesSafeGsap) {
+      violations.push({
+        rule: 'INV_REACT_02',
+        name: 'GSAP StrictMode Lifecycle Guard',
+        file: normPath,
+        line: 1,
+        message: `在 React 組件中使用了 gsap 動畫與 useEffect，但未使用 useGSAP() 或 gsap.context()，將在 React 18/19 StrictMode 下導致動畫重複觸發與記憶體洩漏！`
+      });
+    }
+  }
 
   // 2. 語法樹走訪
   function walk(node) {
@@ -295,7 +339,7 @@ function main() {
   } else if (args.includes('--code')) {
     const codeIdx = args.indexOf('--code');
     codeSnippet = args[codeIdx + 1] || '';
-    filesToAudit = ['<inline_snippet.ts>'];
+    filesToAudit = ['snippet.ts'];
   } else {
     filesToAudit = args.filter(a => !a.startsWith('--'));
   }
@@ -338,4 +382,4 @@ if (require.main === module) {
   main();
 }
 
-module.exports = { auditFile, isTestFile, isSeamIdentifier };
+module.exports = { auditFile, isTestFile, isSeamIdentifier, hasMockParameter };

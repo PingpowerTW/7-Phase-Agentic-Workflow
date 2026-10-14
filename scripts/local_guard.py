@@ -208,6 +208,104 @@ def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tu
     return False, []
 
 
+def check_laravel_php_guard(code_content: str, changed_files: Optional[List[str]]) -> Tuple[bool, List[str]]:
+    """
+    Level 0.5 PHP 8.4+ / Laravel 13+ 確定性零技術債與防 Bug 門禁 (0 Token, <5ms)
+    檢查項目：
+    1. INV_PHP_01: 強制 declare(strict_types=1);
+    2. INV_LARAVEL_01: Eloquent Model Property Shadowing 屬性遮蔽防護
+    3. INV_LARAVEL_02: 強制使用 casts(): array 方法取代舊版 $casts 屬性
+    4. INV_LARAVEL_03: Thin Controller, Fat Action (Controller 嚴禁 >120 行或含裸 DB 查詢)
+    5. INV_LARAVEL_04: 嚴禁 $guarded = [] 批量賦值漏洞
+    """
+    violations: List[str] = []
+    php_files = [f for f in (changed_files or []) if f.lower().endswith(".php") and not f.lower().endswith(".blade.php")]
+
+    # 將要檢查的目標統一轉為 (檔名, 內容) 清單
+    targets: List[Tuple[str, str]] = []
+    if php_files:
+        for pf in php_files:
+            p = Path(pf) if Path(pf).is_absolute() else (REPO_ROOT / pf)
+            if p.is_file():
+                targets.append((normalize_path(pf), p.read_text(encoding="utf-8", errors="replace")))
+    elif code_content.strip() and ("<?php" in code_content or "namespace App\\" in code_content):
+        targets.append(("snippet.php", code_content))
+
+    if not targets:
+        return False, []
+
+    # Model 內合法的 Eloquent 系統屬性白名單
+    ELOQUENT_ALLOWED_PROPS = {
+        "table", "primaryKey", "keyType", "incrementing", "with", "withCount",
+        "preventsLazyLoading", "perPage", "exists", "wasRecentlyCreated",
+        "connection", "timestamps", "dateFormat", "Casts", "touches",
+        "observables", "relations", "hidden", "visible", "appends",
+        "fillable", "guarded", "dates", "casts", "dispatchesEvents"
+    }
+
+    for norm_path, content in targets:
+        lines = content.splitlines()
+        line_count = len(lines)
+        is_model = "/models/" in f"/{norm_path.lower()}" or re.search(r"extends\s+(?:Model|Authenticatable|Pivot)\b", content)
+        is_controller = "/controllers/" in f"/{norm_path.lower()}" or re.search(r"class\s+\w+Controller\b", content)
+
+        # 1. INV_PHP_01: 檢查 declare(strict_types=1);
+        if "<?php" in content and not re.search(r"declare\s*\(\s*strict_types\s*=\s*1\s*\)\s*;", content):
+            violations.append(
+                f"[INV_PHP_01] {norm_path}: 缺少 `declare(strict_types=1);`。"
+                f"FIX: 請在 `<?php` 下方第一行加上 `declare(strict_types=1);`。"
+            )
+
+        # 2. INV_LARAVEL_01 ~ 04: Eloquent Model 專屬防呆
+        if is_model:
+            # 2a. 檢查舊版 $casts 屬性 (INV_LARAVEL_02)
+            if re.search(r"protected\s+(?:array\s+)?\$casts\s*=", content):
+                violations.append(
+                    f"[INV_LARAVEL_02] {norm_path}: 偵測到舊版 `$casts` 屬性。"
+                    f"FIX: Laravel 13 規範強制改用方法宣告 `protected function casts(): array {{ return [...]; }}`。"
+                )
+
+            # 2b. 檢查 $guarded = [] 資安漏洞 (INV_LARAVEL_04)
+            if re.search(r"protected\s+(?:array\s+)?\$guarded\s*=\s*\[\s*\]", content):
+                violations.append(
+                    f"[INV_LARAVEL_04] {norm_path}: 嚴禁使用 `$guarded = []` 開放全欄位 Mass Assignment。"
+                    f"FIX: 請改用 `protected $fillable = [...]` 明確列出允許寫入的欄位。"
+                )
+
+            # 2c. 檢查 Eloquent Property Shadowing 屬性遮蔽 (INV_LARAVEL_01)
+            prop_pattern = re.compile(
+                r"^\s*(?:public|protected|private)\s+(?:private\(set\)\s+|protected\(set\)\s+|readonly\s+)?"
+                r"(?:\??[a-zA-Z0-9_\\|]+\s+)?\$([a-zA-Z0-9_]+)",
+                re.MULTILINE
+            )
+            for match in prop_pattern.finditer(content):
+                prop_name = match.group(1)
+                full_decl = match.group(0).strip()
+                if "static " in full_decl:
+                    continue
+                if prop_name not in ELOQUENT_ALLOWED_PROPS:
+                    violations.append(
+                        f"[INV_LARAVEL_01] {norm_path}: 偵測到 Eloquent 屬性遮蔽 `{full_decl}`！"
+                        f"在 Model 直接宣告 DB 欄位屬性會破壞 Eloquent `$attributes` 動態注水與關聯。"
+                        f"FIX: 請移除該屬性宣告，改用 PHPDoc `@property` 註解，並將 `public private(set)` 保留給 DTO 或 Action。"
+                    )
+
+        # 3. INV_LARAVEL_03: Thin Controller, Fat Action 檢查
+        if is_controller:
+            if line_count > 120:
+                violations.append(
+                    f"[INV_LARAVEL_03] {norm_path}: Controller 行數達 {line_count} 行（上限 120 行），違反 Thin Controller 原則。"
+                    f"FIX: 請將業務邏輯抽離至 `app/Actions/` 下的 Invokable Action 類別。"
+                )
+            if re.search(r"\b(?:DB::table|DB::raw|whereHas|orWhereHas|join|leftJoin)\s*\(", content):
+                violations.append(
+                    f"[INV_LARAVEL_03] {norm_path}: Controller 內偵測到複雜資料庫查詢 (`DB::table / whereHas / join`)。"
+                    f"FIX: Controller 僅負責路由與 FormRequest 轉發，請將查詢邏輯移至 Action 或 Service。"
+                )
+
+    return (len(violations) > 0), violations
+
+
 def check_gate_yaml(changed_files: List[str], repo_root: Optional[Path] = None) -> Tuple[bool, List[str]]:
     """依據 gate.yaml 審查變更檔案是否觸犯 denylist 或超過 maxFiles (autoMergeAllowlist 不佔代碼上限)"""
     gate_file = find_gate_file(repo_root)
@@ -353,6 +451,12 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     if ast_blocked:
         is_blocked = True
         block_reasons.extend(ast_violations)
+
+    # 2.6 物理阻斷 (Level 0.5)：PHP 8.4 / Laravel 13 確定性門禁審查
+    php_blocked, php_violations = check_laravel_php_guard(code_content, changed_files)
+    if php_blocked:
+        is_blocked = True
+        block_reasons.extend(php_violations)
 
     # 3. 呼叫 System 1 決策引擎 (可插拔式後端)
     t0 = time.perf_counter()
