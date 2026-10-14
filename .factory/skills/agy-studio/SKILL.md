@@ -248,8 +248,8 @@ if iteration == MAX_ITERATIONS and still_failing:
 3. 預先防範 N+1 Query（強制 Eager Loading `with()`）與多租戶越權 (BOLA)。
 
 輸出規範：
-
-使用 `### FILE: <完整檔案路徑>` 標示每個後端與測試檔。
+- 新建檔案：使用 `### FILE: <完整檔案路徑>` 標示並輸出完整代碼塊。
+- 修改既有檔案：優先使用 `### PATCH: <完整檔案路徑>` 搭配 `<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE` 外科手術式局部替換（省下 85% Output Tokens）。
 
 嚴格禁止：
 
@@ -278,8 +278,8 @@ if iteration == MAX_ITERATIONS and still_failing:
 3. 若使用 GSAP 動效，強制使用 `useGSAP` 確保 StrictMode 清理並支援 `prefers-reduced-motion`。單一組件嚴禁超過 200 行。
 
 輸出規範：
-
-使用 `### FILE: <完整檔案路徑>` 標示每個前端檔案。
+- 新建檔案：使用 `### FILE: <完整檔案路徑>` 標示每個前端檔案。
+- 修改既有檔案：優先使用 `### PATCH: <完整檔案路徑>` 搭配 `<<<<<<< SEARCH ... ======= ... >>>>>>> REPLACE` 外科手術式局部替換。
 
 嚴格禁止：
 

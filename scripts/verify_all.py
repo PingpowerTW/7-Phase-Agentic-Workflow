@@ -61,6 +61,7 @@ def main():
         ("Loop Graph Engine (11 Tests)", [sys.executable, "-m", "unittest", "tests/test_loop_graph.py"], REPO_ROOT),
         ("Local Guard Suite (9 Tests)", [sys.executable, "-m", "unittest", "tests/test_local_guard.py"], REPO_ROOT),
         ("SWC & LLMCompiler (13 Tests)", [sys.executable, "-m", "unittest", "tests/test_swc_llmcompiler.py"], REPO_ROOT),
+        ("v3.0 Sandbox & Stack Guard", [sys.executable, "-m", "unittest", "tests/test_v3_upgrades.py"], REPO_ROOT),
     ]
 
     def _exec_indexed(item: tuple[int, tuple[str, list[str], Path]]):
