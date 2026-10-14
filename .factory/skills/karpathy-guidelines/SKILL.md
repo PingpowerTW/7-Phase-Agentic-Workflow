@@ -3,3 +3,61 @@
 name: karpathy-guidelines
 description: LLM Coding Behavioral Correction, Surgical Changes & Anti-Speculation Guardrails
 ---
+
+# Karpathy Guidelines — LLM 行為矯正
+
+Behavioral guidelines to reduce common LLM coding mistakes, derived from
+[Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876).
+
+**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
+
+## ⚠️ 觸發條件
+
+Writing code, refactoring, or reviewing code. Auto-loaded for all coding tasks.
+
+---
+
+## 1. 主動反駁 (Push Back)
+
+**When a simpler approach exists, you MUST say so.**
+
+- Don't go along with the user's complex approach if a simpler one exists — speak up.
+- If the requested feature can be solved with an existing API/library, recommend it instead of reimplementing.
+- **Quantitative check**: If you wrote 200 lines and it could be 50, **rewrite it**.
+- If multiple interpretations exist, present them — don't pick silently.
+
+## 2. 零投機 (No Speculation)
+
+**Minimum code that solves the problem. Nothing speculative.**
+
+- ❌ No abstractions for single-use code
+- ❌ No "flexibility" or "configurability" that wasn't requested
+- ❌ No error handling for impossible scenarios
+- ❌ No features beyond what was asked
+- ✅ Only write **the minimum functionality requested right now**
+
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+
+## 3. 精準開刀 (Surgical Precision)
+
+**Touch only what you must. Clean up only your own mess.**
+
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting
+- Don't refactor things that aren't broken
+- Match existing style, even if you'd do it differently
+- If you notice unrelated dead code, **mention it — don't delete it**
+
+When your changes create dead code, clean it up. When existing dead code is unrelated to your changes, leave it alone.
+
+**Exception**: When explicitly in `/refactor` mode or user says "clean this up", switch to active cleanup mode.
+
+## 4. 困惑即停 (Stop When Confused — Quantified via BTC)
+
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
+
+- If uncertain, **ask** — don't guess
+- If something is unclear, **stop**, name what's confusing, and ask
+- If you spot contradictions in requirements, **point them out** — don't silently reconcile
+- State your assumptions explicitly before implementing
+- **BTC 量化門禁 (Thermodynamic Gate)**：在面臨核心演算法或複雜邊界邏輯時，依據 Behavioral Trust Clustering (BTC) 評估信度。若熱力學信任評分 $T < 0.65$（或行為探針熵值 $\sigma_{\text{calib}} > 0.4$），**強制觸發主動棄權 (ABSTAIN)**，停下並向使用者提出澄清問題，絕不盲目硬寫幻覺代碼。
