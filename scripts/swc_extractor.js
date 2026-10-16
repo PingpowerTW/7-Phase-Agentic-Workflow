@@ -123,7 +123,8 @@ function parseFile(filePath) {
         definitions.push({
           name: clsName,
           type: 'class',
-          line: getLineNumber(node.span.start, lineStarts, baseSpanStart)
+          line: getLineNumber(node.span.start, lineStarts, baseSpanStart),
+          endLine: getLineNumber(node.span.end, lineStarts, baseSpanStart)
         });
       }
 
@@ -133,7 +134,8 @@ function parseFile(filePath) {
         definitions.push({
           name: fnName,
           type: 'function',
-          line: getLineNumber(node.span.start, lineStarts, baseSpanStart)
+          line: getLineNumber(node.span.start, lineStarts, baseSpanStart),
+          endLine: getLineNumber(node.span.end, lineStarts, baseSpanStart)
         });
         callerStack.push(fnName);
         pushedCaller = true;
@@ -146,7 +148,8 @@ function parseFile(filePath) {
         definitions.push({
           name: fullName,
           type: 'method',
-          line: getLineNumber(node.span.start, lineStarts, baseSpanStart)
+          line: getLineNumber(node.span.start, lineStarts, baseSpanStart),
+          endLine: getLineNumber(node.span.end, lineStarts, baseSpanStart)
         });
         callerStack.push(fullName);
         pushedCaller = true;
@@ -155,7 +158,8 @@ function parseFile(filePath) {
         definitions.push({
           name: fullName,
           type: 'method',
-          line: getLineNumber(node.span.start, lineStarts, baseSpanStart)
+          line: getLineNumber(node.span.start, lineStarts, baseSpanStart),
+          endLine: getLineNumber(node.span.end, lineStarts, baseSpanStart)
         });
         callerStack.push(fullName);
         pushedCaller = true;
@@ -168,7 +172,8 @@ function parseFile(filePath) {
           definitions.push({
             name: varName,
             type: 'function',
-            line: getLineNumber(node.span.start, lineStarts, baseSpanStart)
+            line: getLineNumber(node.span.start, lineStarts, baseSpanStart),
+            endLine: getLineNumber(node.span.end, lineStarts, baseSpanStart)
           });
           callerStack.push(varName);
           pushedCaller = true;

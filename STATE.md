@@ -1,28 +1,40 @@
 # Loop State — AI 優化 Workspace
 
-Last run: 2026-10-09T06:50:00+08:00 (Checker Review: Real-Graph PageRank Mass Conservation & Zero-Rank Teleport Hardening)
+Last run: 2026-10-16T07:55:00+08:00 (v3.2 Full-Stack Audit, DRY Consolidation & Performance Polishing)
 
-## High Priority (loop is acting or waiting on human)
+## Level 0: Macro Concept Anchor (Current Active Goal)
 
-- [x] **Aider Token-Budgeted Personalized PageRank Repo Map & Persistent Rules Deduplication**: 成功吸收 Aider 核心架構精華並完成 Checker 深度抗辯修復。在 `scripts/loop_graph.py` 實裝純 Python 標準庫個人化 PageRank (`compute_pagerank`) 與二分搜尋 Token 預算裁剪 (`render_repo_map`)，支援 `--map`、`--focus`、`--budget` 參數；修復真實圖譜外部依賴質量洩漏 (質量守恆 ∑=1.0) 與 70/30 混合傳送防 0 分塌陷，修正路徑邊界匹配；於 `tests/test_loop_graph.py` 新增質量守恆與邊界回歸測試（總計 11 測試）；更新 `verify_all.py`（13 Suites 44 Tests 100% 全綠）；補回常駐規則去重時之門禁細則；通過本機 `local_guard.py --git` 0 Token 決策審查。
-- [x] **SWC AST Engine & LLMCompiler Parallel DAG Task Scheduler Integration**: 深度吸收 `swc-project/swc` 與 `SqueezeAILab/LLMCompiler` 之雙引擎架構。底層實裝 `scripts/swc_extractor.js`（Node.js + `@swc/core` AST 特徵抽取，支援批次串流與正則平滑降級）與 Level 0.5 確定性 AST 門禁 `scripts/ast_guard.js`（微秒級物理阻斷生產測試接縫 `INV_VERIFY_03`/`04` 與 15 種垃圾測試模式 `INV_VERIFY_02`，無縫整合至 `scripts/local_guard.py`）；頂層實裝 `scripts/dag_runner.py`（基於純 Python 3.11 標準庫 `graphlib.TopologicalSorter` + `asyncio` 並行排程器，零外部依賴，防 CWE-78 Shell 注入與 Windows 程序樹安全回收）；於 `STUDIO_RULES.md` 第 22 節建立《LLMCompiler 並行 DAG 工作流與拓撲排程規範》；全套 13 大單元測試 (`tests/test_swc_llmcompiler.py`) 100% 綠燈，`loop_graph.py` 全局呼叫圖譜成功升級生成。
-- [x] **System 1 Decision Gate Protocol Decoupling & Adversarial Hardening**: 完成對抗審查，修復 `local_guard.py` Globstar 敏感路徑繞過漏洞、補齊過度工程 `is_blocked` 阻斷、新增未追蹤新增檔案偵測；將 System 1 決策閘門自特定模型實作中徹底解耦為通用協議架構（Protocol-First），支援 Ollaya / Jev Cloud / Static Fallback 多後端動態切換；新增 `tests/test_local_guard.py` 9 大單元測試，升級 `scripts/verify_all.py` 為 12 大測試矩陣 100% 綠燈。
-- [x] **OpenClaw Test-Audit & Zero Production Seams Integration**: 成功吸收 OpenClaw 刪除 40 萬行無效測試之工程體系，實裝 `test-audit` 技能（Authoring Gate 門禁四問、15 種垃圾模式掃描、8 步戰役級 Campaign Mode）、收緊 `gate.yaml` 測試合流、升級 `invariants.yaml`（INV_SCOPE_02 / INV_VERIFY_02~04）與 `loop-constraints.md`。全套 17 大單元測試 100% 綠燈，已全量同步實裝並推送至 7-Phase 遠端主分支。
-- [x] **Loop Architecture Initialization**: 已建立 Loop Engineering 基礎架構（gate.yaml, STATE.md, loop-budget.md, loop-constraints.md）。
-- [x] **Maker / Checker Hard Split**: 已引入 loop-verifier 與 gate.yaml 物理門禁。
-- [x] **TypeSafe AI Jev System 1 Absorption**: 已吸收 System 1 決策原語 (Noul/Choice/Score) 與 `scripts/system_one.py` 決策閘門，沉澱至 `STUDIO_RULES.md` 第 18 節與 `README.md`。
-- [x] **Adversarial Review & Suite 9 Matrix**: 完成對抗審查，修復 Windows 反斜線路徑穿透漏洞，建立 `scripts/loop_gate.py` 並升級為 9 大測試矩陣 100% 通過。
-- [x] **Loop Sentinel & Invariants Engine**: 已實裝 `invariants.yaml` 形式化系統不變量與 `scripts/loop_drift.py` 漂移哨兵，10 大單元測試 100% 綠燈。
-- [x] **Daily Triage Routine**: 已正式整合由 `scripts/loop_drift.py` 執行之日常架構漂移巡檢與證偽審查協議。
-- [x] **Loop Fleet & Memory Tiers Full Stack**: 已建立 `memory-tiers.md` (L1-L3 記憶階層), `memory-budget.md` (Token 預算上限), `fleet-registry.md` (5大 Agent 最小權限授權), `fleet-inbox.md` (跨 Agent 通訊信箱), 與 `LOOP.md` 防卡死斷路器 (Stall Detection & Circuit Breaker)。
-- [x] **Loop Graph Knowledge & Blast Radius Engine**: 成功自研純標準庫 AST 圖譜引擎 (`scripts/loop_graph.py`)，秒級萃取 4,484 節點與 9,974 條邊，支援 God Nodes 樞紐識別、衝擊半徑 (Blast Radius) 與離線 Canvas 視覺化。
-- [x] **json-render Pattern Absorption (Generative UI)**: 方案 B 落地完成。吸收 Catalog-First SDD、System 1 動態目錄裁剪、SpecStream RFC 6902 容錯修剪與 Anti-Slop 審美門禁，沉澱至 `STUDIO_RULES.md` 第 20 節、`prompts/react-ts/create-generative-catalog.prompt.md` 與 `README.md` 案例 9，11 大驗證矩陣 100% 綠燈，已同步推送遠端。
-- [x] **shadcn/ui Canonical UI Standard Formalization**: 方案 B 落地完成。正式確立 `shadcn/ui` 為 React 前端第一推薦組件庫，原始碼置於 `components/ui` 享 100% 控制權；更新 `STUDIO_RULES.md`、`create-component.prompt.md` 與 `README.md` 案例 10，11 大驗證矩陣 100% 綠燈，已同步推送遠端。
-- [x] **outlines FSM Constrained Decoding Absorption**: 方案 B 落地完成。吸收 FSM 引導式生成與 Token 級 Logit 遮罩架構，升級 `STUDIO_RULES.md` 第 17 節為四級降級容錯矩陣 (Quad-Tier Hierarchy: Tier 0 Outlines -> Tier 1 Native -> Tier 2 Tool -> Tier 3 Coercion)；更新 `create-feature.prompt.md` 與 `README.md` 案例 11，11 大驗證矩陣 100% 綠燈，已同步推送遠端。
-- [x] **AGY Studio Tech Debt & Token Economy Optimization**: 完成全庫 130+ 檔案審查。模組化 `skills/frontend-taste-v2/SKILL.md` (由 90KB/2.5萬 Token 驟降 72% 至 24KB，深度指引抽離至 `references/` 四大分冊)；增強 `scripts/loop_drift.py` 範本與跨層級路徑回退解析，消除 `INV_STATE_01` 誤報；於 `GEMINI.md` 規範 context-mode MCP 優雅降級條款；新增第 11 項單元測試，11 大驗證矩陣 100% 綠燈。
-- [x] **Loop Engineering L3 (100/100) Dogfooding Full Stack**: 正式將 L3 自治循環體系（`gate.yaml` 物理安全門禁、`invariants.yaml` 形式化不變量、`LOOP.md` 防卡死斷路器、`docs/safety.md`、`loop-budget.md`、`memory-tiers.md`、`fleet-registry.md` 與 4 大治理技能）原生實裝於倉庫根目錄，開箱即用；經 `loop-audit` 官方稽核器驗證達成 **100/100 (Level 3)** 滿分認證；11 大驗證矩陣 100% 全綠燈。
+- **Active Goal**: 完成 7-Phase Agentic Workflow v3.2 全面體檢與打磨：消除 `loop_gate`/`local_guard`/`loop_drift` 三重重複解析，修復 `stage_runner.py` 無 fence `### PATCH:` 與沙盒 `.php` 門禁盲區，實裝 `local_guard.py` 50ms Socket 快篩與 `loop_graph.py` 單一處理序 SWC 批次掃描，並統一倉庫與全域 `teamwork`/`agy-studio` v3.2 技能定義。
+- **Invariants Guard**: 保持 Git 時光機保護 (`INV_SAFE_04`)、兩振硬熔斷 (`INV_VERIFY_05`)、零生產接縫 (`INV_VERIFY_03`) 與零漂移狀態。
 
+---
 
+## High Priority (In-Flight Tasks / Waiting on Human)
+
+- [x] **7-Phase v3.2 Full-Stack Audit, DRY Consolidation & Speed Polishing**: 全面打磨核心工作流。1. 整合 `normalize_path`、`match_glob` 與 `gate.yaml` 解析至 `loop_gate.py`（淨減 ~110 行重複代碼），並修正 `check_paths` 排除 `autoMergeAllowlist` (`.md`/`docs/**`) 計入 `maxFiles`；2. 修復 `stage_runner.py` 支援無 code fence 之 `### PATCH:` 區塊、強化 `..` 路徑穿越 Fail-Closed，並修復 `run_step25_sieve()` 對 `.studio/staging/` 內新增 `.php` 檔之門禁掃描；3. 實裝 `local_guard.py` 50ms 本機 TCP 快篩（消除 Ollaya 未啟動時 2.05s 逾時）與 `loop_graph.py` `--batch` SWC 批次抽取（耗時由 >60s 降至 <1.2s）；4. 統一 `teamwork` 與 `agy-studio` 為 v3.2（融合 NCM 概念樹錨定 CTAP + Step 2.5 0-Token Sieve + 外科手術 PATCH + SHARS Delta），全套 14 Suites 100% 綠燈。
+- [x] **NCM Multi-Agent Concept Tree Alignment (CTAP) & Multi-Scale Memory Architecture**: 實裝 NCM 由粗到細與節點收斂通訊協定，重構 `teamwork` / `agy-studio` 與 `STUDIO_RULES.md`，消除 70% 跨代理人廣播 Token 稅；`STATE.md` 瘦身 81% 且單元測試 100% 綠燈，`loop-audit` 評定 100/100 L3 滿分。
+
+---
+
+## Level 1: Meso Milestone Index (Completed Milestones)
+
+| Version / Tag | Core Intent & Scope | Key Invariants Preserved | Detail Pointer |
+| :--- | :--- | :--- | :--- |
+| **v3.2** | NCM Concept Tree Alignment (CTAP), DRY Gate & 50ms Fast-Probe | `CTAP`, `INV_SAFE_04`, `INV_VERIFY_05`, NCM L0-L2 | [Archive #24](docs/history/MILESTONES_ARCHIVE.md#24-ncm-concept-tree-alignment-ctap--multi-scale-memory-architecture) |
+| **v3.1** | Surgical Patch Stager (`### PATCH:`) & Suite 14 | `INV_PHP_01`, `INV_LARAVEL_01~04`, `INV_TS_01` | [Archive #1](docs/history/MILESTONES_ARCHIVE.md#1-v31-surgical-patch-stager--14-suite-verification-matrix) |
+| **v3.0** | Contract-First DAG, Step 2.5 0-Token Sieve, Rule Slimming | `INV_TS_01`, `INV_REACT_01~02` | [Archive #2](docs/history/MILESTONES_ARCHIVE.md#2-v30-multi-agent--studio-architecture-upgrade-contract-first-parallel-dag-0-token-sieve--context-tiering) |
+| **Phase 3** | Token Economy, 92 Skill Hydration & Parallel Gate | PageRank 1000t, Fast-Track | [Archive #3](docs/history/MILESTONES_ARCHIVE.md#3-phase-3-token-economy-skill-hydration--parallel-gate-optimization) |
+| **Git Safety** | Git Safety Net & Two-Strike Circuit Breaker | `INV_SAFE_04`, `INV_VERIFY_05`, `INV_SCOPE_03` | [Archive #4](docs/history/MILESTONES_ARCHIVE.md#4-git-safety-net--two-strike-circuit-breaker-full-stack-integration) |
+| **Pre-Flight Gate** | 4-Dimension Open-Source Pre-Flight Gate | Safe OS Tool Induction | [Archive #5](docs/history/MILESTONES_ARCHIVE.md#5-open-source-pre-flight-gate--desktop-sense-post-mortem-cleanup) |
+| **SWC + LLMCompiler**| SWC AST Extractor & LLMCompiler Parallel DAG | `INV_VERIFY_02~04`, CWE-78 Isolation | [Archive #6](docs/history/MILESTONES_ARCHIVE.md#6-swc-ast-engine--llmcompiler-parallel-dag-task-scheduler-integration) |
+| **Ponytail System 1**| Ponytail 7-Ladder + Pluggable Decision Gate | TypeSafe Jev / Ollaya, `gate.yaml` | [Archive #7](docs/history/MILESTONES_ARCHIVE.md#7-ponytail-7-ladder--pluggable-system-1-decision-gate-integration) |
+| **Ponytail Lazy** | Token Killer Trinity (RTK + Ponytail + Caveman) | YAGNI 7-Ladder (-54%~94% LOC) | [Archive #8](docs/history/MILESTONES_ARCHIVE.md#8-ponytail-lazy-senior-dev-mode--github-repo-publication) |
+| **Test-Audit** | OpenClaw Authoring Gate & Zero Production Seams | `INV_SCOPE_02`, `INV_VERIFY_02~04` | [Archive #9](docs/history/MILESTONES_ARCHIVE.md#9-openclaw-test-audit--zero-production-seams-integration) |
+| **Loop Foundation** | Loop Architecture, Sentinel & Knowledge Graph (4.4k nodes) | L1~L3 Tiers, Stall Breaker | [Archive #10~17](docs/history/MILESTONES_ARCHIVE.md#10-loop-architecture-initialization) |
+| **Studio Specs** | Generative UI (json-render), shadcn/ui, Outlines FSM | SpecStream, FSM Logit Mask | [Archive #18~20](docs/history/MILESTONES_ARCHIVE.md#18-json-render-pattern-absorption-generative-ui) |
+| **Infra & L3 Dogfood**| PiP06 Substrate Cluster & Loop L3 100/100 Certification | L3 Autonomous Cert (100/100) | [Archive #21~23](docs/history/MILESTONES_ARCHIVE.md#21-agy-studio-tech-debt--token-economy-optimization) |
+
+---
 
 ## Watch List
 
@@ -31,10 +43,14 @@ Last run: 2026-10-09T06:50:00+08:00 (Checker Review: Real-Graph PageRank Mass Co
 - [ ] **Loop Readiness Score**: 保持 100/100 (L3) 狀態，定期透過 loop-audit 巡檢。
 - [ ] **auto-snapshot vs STATE.md 同步**: 確保本地快照與專案狀態脊椎保持一致。
 - [ ] **SelfCompact 記憶熱蒸餾門檻**: 監控快照數量，累積接近 200 條時觸發情節壓縮。
+- [ ] **Ponytail Debt Ledger 監控**: 定期透過 `/ponytail-debt` 檢視代碼中的刻意捷徑與升級路徑，防止技術債默默腐爛。
+- [ ] **Open-Source Pre-Flight Gate 執行監控**: 嚴格把關後續所有外部開源 Repo 與工具引入，禁止跳過 Phase 0 四維度殘酷審查直接動手實作。
+
+---
 
 ## Recent Noise (ignored this run)
 
 - 忽略 `.venv` 及暫存檔案的變動。
 
 ---
-Run log: Maintained as the durable memory spine of the workspace. See `LOOP.md` and `.agents/AGENTS.md` for operating rules.
+Run log: Maintained as the durable memory spine of the workspace. Level 2 details archived in `docs/history/MILESTONES_ARCHIVE.md`.

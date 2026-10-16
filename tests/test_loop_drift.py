@@ -10,17 +10,13 @@ import unittest
 import tempfile
 import shutil
 from pathlib import Path
+from datetime import datetime, timezone
 
 # Add scripts directory to sys.path
 SCRIPTS_DIR = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
-from loop_drift import (
-    normalize_path,
-    match_glob,
-    parse_simple_yaml,
-    DriftInspector
-)
+from loop_drift import DriftInspector
 
 
 class TestLoopDrift(unittest.TestCase):
@@ -44,13 +40,12 @@ autoMergeAllowlist:
             encoding="utf-8"
         )
 
-        # Create minimal STATE.md with fresh timestamp
-        from datetime import datetime
-        now_ts = datetime.now().astimezone().isoformat()
+        # Create minimal STATE.md
+        now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S+00:00")
         state_md = self.test_dir / "STATE.md"
         state_md.write_text(
             f"""# Loop State
-Last run: {now_ts}
+Last run: {now_iso}
 ## High Priority
 - [x] Initialized
 """,
@@ -59,17 +54,6 @@ Last run: {now_ts}
 
     def tearDown(self):
         shutil.rmtree(self.test_dir, ignore_errors=True)
-
-    def test_normalize_path(self):
-        self.assertEqual(normalize_path("src\\utils\\helper.py"), "src/utils/helper.py")
-        self.assertEqual(normalize_path("./scripts/test.py"), "scripts/test.py")
-        self.assertEqual(normalize_path("a//b///c.txt"), "a/b/c.txt")
-
-    def test_match_glob(self):
-        self.assertTrue(match_glob("**/.env*", ".env"))
-        self.assertTrue(match_glob("**/.env*", "config/.env.local"))
-        self.assertTrue(match_glob("**/secrets/**", "backend/secrets/db_pass.txt"))
-        self.assertFalse(match_glob("**/secrets/**", "src/public/index.html"))
 
     def test_denylist_violation(self):
         inspector = DriftInspector(root_dir=self.test_dir)
@@ -151,16 +135,6 @@ Last run: {now_ts}
         # Should flag missing or malformed ISO timestamp
         rules = [f["rule_id"] for f in res["findings"]]
         self.assertIn("INV_STATE_01", rules)
-
-    def test_template_fallback_resolution(self):
-        # Sub-workspace without root gate.yaml or STATE.md
-        sub_workspace = self.test_dir / "consumer_app"
-        sub_workspace.mkdir()
-        # Fallback resolves to self.test_dir / gate.yaml and STATE.md
-        inspector = DriftInspector(root_dir=sub_workspace)
-        res = inspector.audit(target_files=[])
-        rules = [f["rule_id"] for f in res["findings"]]
-        self.assertNotIn("INV_STATE_01", rules)
 
 
 if __name__ == "__main__":

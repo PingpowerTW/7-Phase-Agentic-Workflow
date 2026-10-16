@@ -110,8 +110,11 @@ denylist:
         found = check_regex_secrets(code_generic)
         self.assertTrue(len(found) > 0)
 
-        # Clean code passes
-        clean_code = 'function calculateTotal(price, qty) { return price * qty; }'
+        # Clean code and words ending with 'sk-' (e.g. task-scheduler) pass without false positive
+        clean_code = (
+            "function calculateTotal(price, qty) { return price * qty; }\n"
+            "// Anchor: #6-swc-ast-engine--llmcompiler-parallel-dag-task-scheduler-integration"
+        )
         found = check_regex_secrets(clean_code)
         self.assertEqual(len(found), 0)
 
@@ -126,22 +129,76 @@ denylist:
         exit_code = run_guard(code, label="Test Secret")
         self.assertEqual(exit_code, 1)
 
-    def test_run_guard_overengineering_block(self):
+    def test_run_guard_overengineering_and_handwired_relu(self):
         from unittest.mock import patch
-        with patch("local_guard.query_system_one") as mock_q:
-            mock_q.return_value = (
-                {
-                    "has_test_seam": {"noul": 0.05},
-                    "ponytail_ladder": {"choice": "7_mvp", "confidence": 0.95},
-                    "overengineering_score": {"score": 4.6}
-                },
-                "MockModel"
-            )
-            code = "class AbstractProxyFactoryBean:\n    pass\n"
-            exit_code = run_guard(code, label="Test Overengineering")
-            self.assertEqual(exit_code, 1)
+        from local_guard import handwired_system_one, tune_handwired_weights
+
+        # 1. Native Handwired ReLU blocks enterprise factory bloat & test seams with zero mocks
+        bloated_code = (
+            "class AbstractProxyFactoryBean:\n"
+            "    pass\n"
+            "class SingletonServiceManager:\n"
+            "    pass\n"
+        )
+        self.assertEqual(run_guard(bloated_code, label="Handwired Overengineering"), 1)
+
+        seam_code = "def set_mock_for_test(client):\n    return client\n"
+        self.assertEqual(run_guard(seam_code, label="Handwired Seam"), 1)
+
+        # 2. Concise one-liner maps to 6_oneliner on the Ponytail ladder
+        ans = handwired_system_one("x = sum( items )\n")
+        self.assertEqual(ans["ponytail_ladder"]["choice"], "6_oneliner")
+
+        # 3. 'Learned Gallery' Differentiable Weight Unfreezing reduces loss toward human feedback & survives corrupt JSON
+        with patch("pathlib.Path.cwd", return_value=self.test_dir):
+            (self.test_dir / ".agent").mkdir(parents=True, exist_ok=True)
+            (self.test_dir / ".agent" / "handwired_weights.json").write_text('{"w_seam": [1,2,3,4,5,6]}', encoding="utf-8")
+            before = handwired_system_one(bloated_code)["overengineering_score"]["score"]
+            tune_handwired_weights(bloated_code, target_seam=0.0, target_bloat=2.0, lr=0.15)
+            after = handwired_system_one(bloated_code)["overengineering_score"]["score"]
+            self.assertLess(after, before)
+
+    def test_decision_regression_guard(self):
+        import json
+        from unittest.mock import patch
+        agent_dir = self.test_dir / ".agent"
+        agent_dir.mkdir(parents=True, exist_ok=True)
+        snap = agent_dir / "SNAPSHOT.jsonl"
+        snap.write_text(
+            json.dumps({
+                "type": "decision",
+                "title": "Keep defaultRetryMax at 4",
+                "decision": "Ten retries with backoff can block Do() for over an hour.",
+                "touches": ["src/client.py#defaultRetryMax"],
+                "ruled_out": ["defaultRetryMax = 10", "retries = 10"],
+            }) + "\n",
+            encoding="utf-8",
+        )
+        bad_diff = (
+            "--- a/src/client.py\n"
+            "+++ b/src/client.py\n"
+            "@@ -10,1 +10,1 @@\n"
+            "-defaultRetryMax = 4\n"
+            "+defaultRetryMax = 10\n"
+        )
+        fix_diff = (
+            "--- a/src/client.py\n"
+            "+++ b/src/client.py\n"
+            "@@ -10,1 +10,1 @@\n"
+            "-defaultRetryMax = 10\n"
+            "+defaultRetryMax = 4\n"
+            "+defaultRetryMax = 100\n"
+        )
+        with patch("pathlib.Path.cwd", return_value=self.test_dir):
+            # Re-introducing a ruled-out value on an anchored file blocks via run_guard
+            self.assertEqual(run_guard(bad_diff, changed_files=["src/client.py"], label="Decision Regression"), 1)
+            # Removing a ruled-out value (-defaultRetryMax = 10) or prefix-colliding token (100 vs 10) must NOT false-positive block
+            self.assertEqual(run_guard(fix_diff, changed_files=["src/client.py"], label="Decision Fix"), 0)
+            # Unrelated file does not trigger the file-scoped decision
+            self.assertEqual(run_guard(bad_diff, changed_files=["src/other.py"], label="Other File"), 0)
 
 
 if __name__ == "__main__":
     unittest.main()
+
 

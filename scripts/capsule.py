@@ -100,7 +100,7 @@ def generate_capsule(phase: str = "Phase 4 Implement") -> str:
         f"- Repository: `{repo_name}` at `{REPO_ROOT}`\n"
         f"- Python Runtime: `{py_version}` ({sys.platform})\n"
         f"- Active Git Branch: `{branch}` (Commit: `{head_hash}`)\n"
-        f"- Prompt Matrix: 15 Prompts across 5 stacks (Fullstack, Laravel, Node.js-TS, Python, React-TS)"
+        f"- Prompt Matrix: 16 Prompts across 5 stacks (Fullstack, Laravel, Node.js-TS, Python, React-TS)"
     )
 
     # 6. Current Working State

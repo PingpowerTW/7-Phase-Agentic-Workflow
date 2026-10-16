@@ -85,22 +85,36 @@ def match_glob(pattern: str, file_path: str) -> bool:
     return False
 
 
+def find_gate_file(custom_root: Optional[Path] = None) -> Optional[Path]:
+    """Multi-level fallback resolution for gate.yaml configuration."""
+    root = custom_root or REPO_ROOT
+    candidates = [
+        root / "gate.yaml",
+        Path.cwd() / "gate.yaml",
+        root / "templates" / "loop-engineering" / "gate.yaml",
+        REPO_ROOT / "templates" / "loop-engineering" / "gate.yaml",
+    ]
+    for c in candidates:
+        if c.is_file():
+            return c
+    return None
+
+
 def parse_gate_yaml(gate_path: Path) -> Dict[str, Any]:
     """
     Lightweight, robust YAML parser for gate.yaml without PyYAML dependency.
-    Safely parses version, maxFiles, denylist, and autoMergeAllowlist.
+    Safely parses version, maxFiles, denylist, and autoMergeAllowlist (stripping inline comments).
     """
     if not gate_path.exists():
-        # Fallback to project root gate.yaml if template not directly found
-        alt_path = REPO_ROOT / "gate.yaml"
-        if alt_path.exists():
-            gate_path = alt_path
+        found = find_gate_file(gate_path.parent)
+        if found:
+            gate_path = found
         else:
             raise FileNotFoundError(f"gate.yaml not found at {gate_path}")
 
     content = gate_path.read_text(encoding="utf-8", errors="replace")
 
-    config = {
+    config: Dict[str, Any] = {
         "version": 1,
         "maxFiles": 8,
         "denylist": [],
@@ -108,18 +122,20 @@ def parse_gate_yaml(gate_path: Path) -> Dict[str, Any]:
     }
 
     current_section = None
-    for line in content.splitlines():
-        trimmed = line.strip()
-        if not trimmed or trimmed.startswith("#"):
+    for raw_line in content.splitlines():
+        trimmed = raw_line.split("#")[0].strip()
+        if not trimmed:
             continue
 
         # Top-level keys
         if trimmed.startswith("version:"):
+            current_section = None
             try:
                 config["version"] = int(trimmed.split(":", 1)[1].strip())
             except ValueError:
                 pass
         elif trimmed.startswith("maxFiles:"):
+            current_section = None
             try:
                 config["maxFiles"] = int(trimmed.split(":", 1)[1].strip())
             except ValueError:
@@ -128,10 +144,12 @@ def parse_gate_yaml(gate_path: Path) -> Dict[str, Any]:
             current_section = "denylist"
         elif trimmed.startswith("autoMergeAllowlist:"):
             current_section = "autoMergeAllowlist"
-        elif trimmed.startswith("- ") and current_section in config:
-            val = trimmed[2:].strip().strip("\"'").strip()
+        elif trimmed.startswith("-") and current_section in config:
+            val = trimmed.lstrip("- ").strip().strip("\"'").strip()
             if val:
                 config[current_section].append(val)
+        elif not trimmed.startswith("-"):
+            current_section = None
 
     return config
 
@@ -153,11 +171,7 @@ class LoopGateEnforcer:
         """
         violations = []
 
-        # Check 1: Max files threshold
-        if len(changed_paths) > self.max_files:
-            return False, [], f"Exceeded maximum file threshold ({len(changed_paths)} > {self.max_files})"
-
-        # Check 2: Denylist matching with cross-platform normalization
+        # Check 1: Denylist matching with cross-platform normalization (applies to ALL files)
         for path in changed_paths:
             norm_p = normalize_path(path)
             for pat in self.denylist:
@@ -167,6 +181,14 @@ class LoopGateEnforcer:
 
         if violations:
             return False, violations, f"Path Denylist triggered: {len(violations)} restricted file(s) detected."
+
+        # Check 2: Max files threshold (autoMergeAllowlist docs/markdown do not count toward code limit)
+        code_files = [
+            p for p in changed_paths
+            if not any(match_glob(pat, normalize_path(p)) for pat in self.allowlist)
+        ]
+        if len(code_files) > self.max_files:
+            return False, [], f"Exceeded maximum file threshold ({len(code_files)} > {self.max_files})"
 
         return True, [], "All physical gates cleared."
 
@@ -203,6 +225,11 @@ def run_tests() -> bool:
     fake_files = [f"src/module_{i}.py" for i in range(10)]
     ok4, v4, r4 = enforcer.check_paths(fake_files)
     assert not ok4 and "threshold" in r4, f"Failed to block file count overflow: {r4}"
+
+    # Adversarial Test 4b: autoMergeAllowlist (.md / docs/**) excluded from maxFiles count
+    mixed_files = [f"src/module_{i}.py" for i in range(6)] + [f"docs/doc_{i}.md" for i in range(5)]
+    ok4b, v4b, r4b = enforcer.check_paths(mixed_files)
+    assert ok4b and len(v4b) == 0, f"Allowlist .md files should not trigger maxFiles overflow: {r4b}"
 
     # Adversarial Test 5: Clean safe changes
     safe_files = ["src/app.py", "src/components/Button.tsx", "tests/test_app.py"]

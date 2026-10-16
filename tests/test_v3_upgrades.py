@@ -37,14 +37,13 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
             "    protected $guarded = [];\n"
             "}\n"
         )
-        if hasattr(local_guard, "check_laravel_php_guard"):
-            blocked, reasons = local_guard.check_laravel_php_guard(bad_model, None)
-            self.assertTrue(blocked, "Should block bad Laravel 13 model")
-            joined = "\n".join(reasons)
-            self.assertIn("INV_PHP_01", joined)
-            self.assertIn("INV_LARAVEL_01", joined)
-            self.assertIn("INV_LARAVEL_02", joined)
-            self.assertIn("INV_LARAVEL_04", joined)
+        blocked, reasons = local_guard.check_laravel_php_guard(bad_model, None)
+        self.assertTrue(blocked, "Should block bad Laravel 13 model")
+        joined = "\n".join(reasons)
+        self.assertIn("INV_PHP_01", joined)
+        self.assertIn("INV_LARAVEL_01", joined)
+        self.assertIn("INV_LARAVEL_02", joined)
+        self.assertIn("INV_LARAVEL_04", joined)
 
     def test_laravel13_clean_model_passes(self):
         """A compliant PHP 8.4 / Laravel 13 model must pass with 0 violations."""
@@ -60,9 +59,8 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
             "    }\n"
             "}\n"
         )
-        if hasattr(local_guard, "check_laravel_php_guard"):
-            blocked, reasons = local_guard.check_laravel_php_guard(clean_model, None)
-            self.assertFalse(blocked, f"Clean model should pass, but got: {reasons}")
+        blocked, reasons = local_guard.check_laravel_php_guard(clean_model, None)
+        self.assertFalse(blocked, f"Clean model should pass, but got: {reasons}")
 
     def test_ast_guard_blocks_ts_any_and_unsafe_gsap(self):
         """INV_TS_01 & INV_REACT_02 must be caught by ast_guard.js."""
@@ -134,12 +132,45 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
             self.assertTrue(any("PATCH MISMATCH" in e for e in errs))
             # Text remains unchanged
             self.assertIn("hello universe", target.read_text(encoding="utf-8"))
+            # 4. Test unfenced ### PATCH: block (as documented in teamwork/agy-studio SKILL.md)
+            unfenced_patch = (
+                "### PATCH: src/hello.py\n"
+                "<<<<<<< SEARCH\n"
+                "    return 'hello universe'\n"
+                "=======\n"
+                "    return 'hello unfenced'\n"
+                ">>>>>>> REPLACE\n"
+            )
+            ok, staged, errs = stage_runner.extract_and_stage(unfenced_patch, clean=False)
+            self.assertTrue(ok)
+            self.assertIn("hello unfenced", target.read_text(encoding="utf-8"))
+
+            # 5. Test staged .php file is caught by run_step25_sieve
+            bad_php = target.parent / "BadController.php"
+            bad_php.write_text("<?php\n$x = env('APP_KEY');\n", encoding="utf-8")
+            sieve_ok, sieve_errs = stage_runner.run_step25_sieve()
+            self.assertFalse(sieve_ok)
+            self.assertTrue(any("INV_PHP_01" in v for v in sieve_errs))
+
+            # 6. Test partial truncation (2 declared ### FILE: headers, 2nd missing closing ```) fails closed
+            truncated_multi = (
+                "### FILE: src/ok.py\n"
+                "```python\n"
+                "x = 1\n"
+                "```\n"
+                "### FILE: src/truncated.py\n"
+                "```python\n"
+                "y = 2\n"
+            )
+            ok_trunc, _, errs_trunc = stage_runner.extract_and_stage(truncated_multi, clean=False)
+            self.assertFalse(ok_trunc)
+            self.assertTrue(any("STAGE ERROR" in e for e in errs_trunc))
         finally:
             stage_runner.STAGING_DIR = old_staging
             shutil.rmtree(temp_dir, ignore_errors=True)
 
     def test_stage_runner_path_traversal_blocked(self):
-        """stage_runner.py must strictly block .. path traversal."""
+        """stage_runner.py must strictly block .. path traversal and fail closed."""
         traversal_md = (
             "### FILE: ../../../etc/evil.sh\n"
             "```bash\n"
@@ -147,6 +178,7 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
             "```\n"
         )
         ok, staged, errs = stage_runner.extract_and_stage(traversal_md, clean=False)
+        self.assertFalse(ok)
         self.assertEqual(len(staged), 0)
 
 

@@ -34,46 +34,12 @@ if sys.platform == "win32":
     except AttributeError:
         pass
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPTS_DIR.parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
 
-
-def normalize_path(path_str: str) -> str:
-    """Normalize file path to POSIX forward-slashes and clean traversal segments."""
-    cleaned = path_str.replace("\\", "/").strip()
-    if cleaned.startswith("./"):
-        cleaned = cleaned[2:]
-    return re.sub(r"/+", "/", cleaned)
-
-
-def match_glob(pattern: str, file_path: str) -> bool:
-    """Glob matching supporting recursive '**' wildcard."""
-    norm_pat = normalize_path(pattern)
-    norm_path = normalize_path(file_path)
-
-    if norm_pat == norm_path:
-        return True
-
-    if norm_pat.startswith("**/"):
-        sub_pat = norm_pat[3:]
-        if fnmatch.fnmatch(norm_path, norm_pat) or fnmatch.fnmatch(norm_path, sub_pat):
-            return True
-        base_name = norm_path.split("/")[-1]
-        if fnmatch.fnmatch(base_name, sub_pat):
-            return True
-        if sub_pat.endswith("/**"):
-            sub_prefix = sub_pat[:-3]
-            if norm_path.startswith(sub_prefix + "/") or norm_path == sub_prefix:
-                return True
-
-    if fnmatch.fnmatch(norm_path, norm_pat):
-        return True
-
-    if norm_pat.endswith("/**"):
-        prefix = norm_pat[:-3]
-        if norm_path.startswith(prefix + "/") or norm_path == prefix:
-            return True
-
-    return False
+from loop_gate import normalize_path, match_glob  # noqa: E402
 
 
 def parse_simple_yaml(file_path: Path) -> Dict[str, Any]:
@@ -114,10 +80,10 @@ def parse_simple_yaml(file_path: Path) -> Dict[str, Any]:
 
 
 def get_git_changed_files(repo_root: Path) -> List[str]:
-    """Retrieve modified, staged, or untracked files via git status."""
+    """Retrieve modified, staged, or untracked files via git status (excluding submodules/dirs)."""
     try:
         res = subprocess.run(
-            ["git", "status", "--porcelain"],
+            ["git", "status", "--porcelain", "-uall", "--ignore-submodules"],
             cwd=repo_root,
             capture_output=True,
             text=True,
@@ -126,9 +92,11 @@ def get_git_changed_files(repo_root: Path) -> List[str]:
         changed = []
         for line in res.stdout.splitlines():
             if len(line) > 3:
-                fpath = line[3:].strip()
+                fpath = line[3:].strip().strip('"')
                 if " -> " in fpath:
-                    fpath = fpath.split(" -> ")[1].strip()
+                    fpath = fpath.split(" -> ")[1].strip().strip('"')
+                if (repo_root / fpath).is_dir():
+                    continue
                 changed.append(normalize_path(fpath))
         return changed
     except Exception:

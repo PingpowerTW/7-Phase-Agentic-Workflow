@@ -29,9 +29,9 @@ FILE_BLOCK_RE = re.compile(
     re.DOTALL
 )
 
-# Mode 2: Surgical patch block (### PATCH: path)
+# Mode 2: Surgical patch block (### PATCH: path) — supports both fenced (```) and unfenced SEARCH/REPLACE blocks
 PATCH_BLOCK_RE = re.compile(
-    r"###\s+PATCH:\s+([^\r\n]+)\r?\n+```[^\r\n]*\r?\n(.*?)\r?\n```",
+    r"###\s+PATCH:\s+([^\r\n]+)\r?\n+(.*?)(?=\r?\n###\s+(?:FILE|PATCH):|\Z)",
     re.DOTALL
 )
 
@@ -90,9 +90,18 @@ def extract_and_stage(markdown_text: str, clean: bool = False) -> Tuple[bool, Li
     patch_errors: List[str] = []
 
     # 1. Process full FILE blocks
-    for match in FILE_BLOCK_RE.finditer(markdown_text):
+    file_matches = list(FILE_BLOCK_RE.finditer(markdown_text))
+    declared_file_headers = re.findall(r"^\s*###\s+FILE:\s+([^\r\n]+)", markdown_text, re.MULTILINE)
+    if len(file_matches) < len(declared_file_headers):
+        patch_errors.append(
+            f"[STAGE ERROR] 宣告了 {len(declared_file_headers)} 個 ### FILE: 標記，"
+            f"但僅成功解析 {len(file_matches)} 個完整代碼區塊（可能有未閉合的 ``` 圍欄或輸出截斷）。"
+        )
+
+    for match in file_matches:
         norm_rel = _safe_rel_path(match.group(1))
         if not norm_rel:
+            patch_errors.append(f"[STAGE BLOCK] 非法路徑穿越已攔截: {match.group(1).strip()}")
             continue
         dest = STAGING_DIR / norm_rel
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -100,10 +109,11 @@ def extract_and_stage(markdown_text: str, clean: bool = False) -> Tuple[bool, Li
         if norm_rel not in staged_files:
             staged_files.append(norm_rel)
 
-    # 2. Process surgical PATCH blocks
+    # 2. Process surgical PATCH blocks (fenced or unfenced)
     for match in PATCH_BLOCK_RE.finditer(markdown_text):
         norm_rel = _safe_rel_path(match.group(1))
         if not norm_rel:
+            patch_errors.append(f"[STAGE BLOCK] 非法路徑穿越已攔截: {match.group(1).strip()}")
             continue
 
         staged_target = STAGING_DIR / norm_rel
@@ -126,6 +136,10 @@ def extract_and_stage(markdown_text: str, clean: bool = False) -> Tuple[bool, Li
         staged_target.write_text(new_text if new_text.endswith("\n") else new_text + "\n", encoding="utf-8")
         if norm_rel not in staged_files:
             staged_files.append(norm_rel)
+
+    # Fail-Closed: if input declared ### FILE: or ### PATCH: headers but 0 files were staged, report error
+    if not patch_errors and not staged_files and re.search(r"###\s+(?:FILE|PATCH):", markdown_text):
+        patch_errors.append("[STAGE ERROR] 偵測到 ### FILE:/PATCH: 標記，但未擷取到有效代碼區塊（請檢查 ``` 圍欄格式）。")
 
     if patch_errors:
         for pe in patch_errors:
@@ -164,8 +178,8 @@ def run_step25_sieve() -> Tuple[bool, List[str]]:
         for s in secrets:
             errors.append(f"硬編碼憑證攔截: {s}")
 
-        # Check PHP 8.4 / Laravel 13 guard
-        php_blocked, php_violations = local_guard.check_laravel_php_guard(combined_code, rel_paths)
+        # Check PHP 8.4 / Laravel 13 guard on staged absolute paths
+        php_blocked, php_violations = local_guard.check_laravel_php_guard(combined_code, abs_paths)
         if php_blocked:
             errors.extend(php_violations)
     except Exception as ex:

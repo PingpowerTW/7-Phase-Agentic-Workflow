@@ -189,7 +189,63 @@ class UserService {}
         self.assertEqual(ranks, {})
         self.assertEqual(g.render_repo_map({}, 100), "")
 
+    def test_innermost_symbol_diff_blast_and_test_signal(self):
+        py_file = self.test_dir / "service.py"
+        py_file.write_text(
+            "class OrderEngine:\n"
+            "    def calc_tax(self, amount):\n"
+            "        return amount * 0.05\n"
+            "\n"
+            "    def cancel_order(self, oid):\n"
+            "        return True\n",
+            encoding="utf-8",
+        )
+        test_file = self.test_dir / "test_order.py"
+        test_file.write_text(
+            "import service\n"
+            "def test_tax():\n"
+            "    e = service.OrderEngine()\n"
+            "    return e.calc_tax(100)\n",
+            encoding="utf-8",
+        )
+        test_cancel = self.test_dir / "test_cancel.py"
+        test_cancel.write_text(
+            "import service\n"
+            "def test_cancel():\n"
+            "    e = service.OrderEngine()\n"
+            "    return e.cancel_order(1)\n",
+            encoding="utf-8",
+        )
+        scanner = CodeAstScanner(self.test_dir, self.graph)
+        scanner.parse_python_file(py_file, "service.py")
+        scanner.parse_python_file(test_file, "test_order.py")
+        scanner.parse_python_file(test_cancel, "test_cancel.py")
+
+        diff_stale = (
+            "--- a/service.py\n"
+            "+++ b/service.py\n"
+            "@@ -2,2 +2,2 @@\n"
+            "     def calc_tax(self, amount):\n"
+            "-        return amount * 0.05\n"
+            "+        return amount * 0.08\n"
+        )
+        res = self.graph.compute_diff_blast_radius(diff_stale)
+        self.assertEqual(res["seeds"], ["fn:service.py::calc_tax"])
+        self.assertEqual(res["test_signal"], "stale")
+        self.assertEqual(res["impacted_tests"], ["test_order.py"])
+
+        diff_changed = diff_stale + (
+            "--- a/test_order.py\n"
+            "+++ b/test_order.py\n"
+            "@@ -4,1 +4,1 @@\n"
+            "-    return e.calc_tax(100)\n"
+            "+    return e.calc_tax(200)\n"
+        )
+        res2 = self.graph.compute_diff_blast_radius(diff_changed)
+        self.assertEqual(res2["test_signal"], "changed")
+
 
 if __name__ == "__main__":
     unittest.main()
+
 

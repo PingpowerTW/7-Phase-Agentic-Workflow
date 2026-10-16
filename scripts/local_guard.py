@@ -10,10 +10,11 @@ import os
 import re
 import json
 import time
-import fnmatch
+import socket
 import subprocess
 import urllib.request
 import urllib.error
+from urllib.parse import urlparse
 from pathlib import Path
 from typing import Dict, Any, List, Optional, Tuple
 
@@ -23,7 +24,12 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS_DIR = Path(__file__).resolve().parent
+REPO_ROOT = SCRIPTS_DIR.parent
+if str(SCRIPTS_DIR) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS_DIR))
+
+from loop_gate import normalize_path, match_glob, find_gate_file, parse_gate_yaml  # noqa: E402
 
 # 插拔式設定：可隨時透過環境變數無痛替換模型與服務端點
 DECISION_API_URL = os.environ.get(
@@ -32,6 +38,7 @@ DECISION_API_URL = os.environ.get(
 )
 DECISION_MODEL = os.environ.get("DECISION_MODEL", "laya:multilingual")
 TIMEOUT_SEC = float(os.environ.get("DECISION_TIMEOUT", os.environ.get("OLLAYA_TIMEOUT", "10.0")))
+_LOCAL_ENDPOINT_CACHE: Dict[str, bool] = {}
 
 # ANSI 顏色
 RED = "\033[91m"
@@ -44,74 +51,11 @@ RESET = "\033[0m"
 # 常見硬編碼金鑰的正則特徵 (Level 0 物理阻斷)
 SECRET_PATTERNS = [
     (r"(?:api[_-]?key|secret|token|password|passwd|auth)[\s:=]+['\"][A-Za-z0-9_\-\.]{16,}['\"]", "疑似硬編碼 API 金鑰/密鑰"),
-    (r"sk-[a-zA-Z0-9_\-]{20,}", "OpenAI / 服務金鑰 (sk-...)"),
+    (r"(?<![a-zA-Z0-9])sk-[a-zA-Z0-9_\-]{20,}", "OpenAI / 服務金鑰 (sk-...)"),
     (r"ghp_[a-zA-Z0-9]{36,}", "GitHub Personal Access Token"),
     (r"AIza[0-9A-Za-z-_]{35}", "Google API Key"),
     (r"AKIA[0-9A-Z]{16}", "AWS Access Key ID"),
 ]
-
-
-def normalize_path(path_str: str) -> str:
-    """正規化路徑為 POSIX 正斜線並清理開頭 segment"""
-    cleaned = path_str.replace("\\", "/").strip()
-    if cleaned.startswith("./"):
-        cleaned = cleaned[2:]
-    cleaned = re.sub(r"/+", "/", cleaned)
-    return cleaned
-
-
-def match_glob(pattern: str, file_path: str) -> bool:
-    """
-    高強健度 Glob 匹配，支援 '**' 遞迴萬用字元與任意前綴路徑
-    """
-    norm_pat = normalize_path(pattern)
-    norm_path = normalize_path(file_path)
-
-    # 1. 直接相等
-    if norm_pat == norm_path:
-        return True
-
-    # 2. 若規則以 **/ 開頭，去除前綴比對主檔名或任意子路徑
-    if norm_pat.startswith("**/"):
-        sub_pat = norm_pat[3:]
-        # 比對全路徑或子路徑
-        if fnmatch.fnmatch(norm_path, norm_pat) or fnmatch.fnmatch(norm_path, sub_pat):
-            return True
-        # 比對純檔名 (basename)
-        base_name = norm_path.split("/")[-1]
-        if fnmatch.fnmatch(base_name, sub_pat):
-            return True
-        # 若 sub_pat 同時以 /** 結尾 (如 **/secrets/** -> secrets/**)
-        if sub_pat.endswith("/**"):
-            sub_prefix = sub_pat[:-3]
-            if norm_path.startswith(sub_prefix + "/") or norm_path == sub_prefix:
-                return True
-
-    # 3. 標準 fnmatch 匹配
-    if fnmatch.fnmatch(norm_path, norm_pat):
-        return True
-
-    # 4. 若規則以 /** 結尾，匹配該目錄及其所有子檔案
-    if norm_pat.endswith("/**"):
-        prefix = norm_pat[:-3]
-        if norm_path.startswith(prefix + "/") or norm_path == prefix:
-            return True
-
-    return False
-
-
-def find_gate_file(custom_root: Optional[Path] = None) -> Optional[Path]:
-    """多層級回退解析 gate.yaml 物理門禁配置"""
-    root = custom_root or REPO_ROOT
-    candidates = [
-        root / "gate.yaml",
-        Path.cwd() / "gate.yaml",
-        root / "templates" / "loop-engineering" / "gate.yaml",
-    ]
-    for c in candidates:
-        if c.is_file():
-            return c
-    return None
 
 
 class GateResult(tuple):
@@ -129,44 +73,12 @@ class GateResult(tuple):
 
 
 def parse_gate_yaml_simple(gate_file: Path) -> GateResult:
-    """輕量純標準庫 YAML 解析器，支援行內註解過濾與 autoMergeAllowlist"""
-    denylist = []
-    max_files = 8
-    allowlist = []
+    """複用 loop_gate.parse_gate_yaml 唯一真實來源並回傳向後相容之 GateResult"""
     try:
-        lines = gate_file.read_text(encoding="utf-8", errors="replace").splitlines()
-        current_section = None
-        for raw_line in lines:
-            line = raw_line.split("#")[0].strip()
-            if not line:
-                continue
-
-            if line.startswith("denylist:"):
-                current_section = "denylist"
-                continue
-            elif line.startswith("autoMergeAllowlist:"):
-                current_section = "autoMergeAllowlist"
-                continue
-            elif line.startswith("maxFiles:"):
-                current_section = None
-                try:
-                    max_files = int(line.split(":")[1].strip())
-                except ValueError:
-                    pass
-                continue
-            elif not line.startswith("-"):
-                current_section = None
-
-            if line.startswith("-"):
-                val = line.lstrip("- ").strip().strip('"').strip("'")
-                if val:
-                    if current_section == "denylist":
-                        denylist.append(val)
-                    elif current_section == "autoMergeAllowlist":
-                        allowlist.append(val)
+        cfg = parse_gate_yaml(gate_file)
+        return GateResult(cfg.get("denylist", []), cfg.get("maxFiles", 8), cfg.get("autoMergeAllowlist", []))
     except Exception:
-        pass
-    return GateResult(denylist, max_files, allowlist)
+        return GateResult([], 8, [])
 
 
 def check_regex_secrets(text: str) -> List[str]:
@@ -228,7 +140,7 @@ def check_laravel_php_guard(code_content: str, changed_files: Optional[List[str]
             p = Path(pf) if Path(pf).is_absolute() else (REPO_ROOT / pf)
             if p.is_file():
                 targets.append((normalize_path(pf), p.read_text(encoding="utf-8", errors="replace")))
-    elif code_content.strip() and ("<?php" in code_content or "namespace App\\" in code_content):
+    elif not changed_files and code_content.strip() and ("<?php" in code_content or "namespace App\\" in code_content):
         targets.append(("snippet.php", code_content))
 
     if not targets:
@@ -342,14 +254,284 @@ def check_gate_yaml(changed_files: List[str], repo_root: Optional[Path] = None) 
     return (len(violations) > 0), violations
 
 
+def check_decision_regression(
+    code_content: str,
+    changed_files: Optional[List[str]] = None,
+) -> Tuple[bool, List[str]]:
+    """
+    歷史決策防翻案門禁 (borrowed from Trail-Code local-check.ts):
+    掃描 .agent/SNAPSHOT.jsonl 中帶有 `ruled_out` 與 `touches`/`files` 之 decision 快照，
+    若當前變更觸及錨定檔案且新增行重現曾被排除的作法/常數，立即攔截並引用原決策理由。
+    """
+    if not code_content.strip():
+        return False, []
+
+    snap_file = next(
+        (
+            p for base in (Path.cwd(), REPO_ROOT)
+            for p in (base / ".agent" / "SNAPSHOT.jsonl", base / ".agents" / "SNAPSHOT.jsonl")
+            if p.is_file()
+        ),
+        None,
+    )
+    if not snap_file:
+        return False, []
+
+    is_diff = any(line.startswith(("@@ ", "+++ ")) for line in code_content.splitlines())
+    if is_diff:
+        added_lines = [
+            line[1:] for line in code_content.splitlines()
+            if line.startswith("+") and not line.startswith("+++")
+        ]
+    else:
+        added_lines = code_content.splitlines()
+
+    added_blob = "\n".join(added_lines).lower()
+    if not added_blob.strip():
+        return False, []
+
+    norm_changed = [normalize_path(f) for f in (changed_files or []) if f]
+    violations: List[str] = []
+
+    for raw in snap_file.read_text(encoding="utf-8", errors="replace").splitlines():
+        raw = raw.strip()
+        if not raw:
+            continue
+        try:
+            entry = json.loads(raw)
+        except Exception:
+            continue
+        if not isinstance(entry, dict) or entry.get("type") != "decision":
+            continue
+
+        ruled_out = entry.get("ruled_out") or []
+        if isinstance(ruled_out, str):
+            ruled_out = [ruled_out]
+        if not ruled_out:
+            continue
+
+        touches = entry.get("touches") or entry.get("files") or []
+        if isinstance(touches, str):
+            touches = [touches]
+
+        if touches:
+            if not norm_changed:
+                continue
+            touch_files = [normalize_path(t.split("#")[0]) for t in touches if t]
+            file_hit = any(
+                cf == tf or cf.endswith("/" + tf) or tf.endswith("/" + cf)
+                for cf in norm_changed
+                for tf in touch_files
+            )
+            if not file_hit:
+                continue
+
+        title = entry.get("title") or entry.get("summary") or "歷史技術決策"
+        reason = entry.get("decision") or ""
+        for item in ruled_out:
+            pat = str(item).strip()
+            if pat and re.search(rf"(?<![a-z0-9_]){re.escape(pat.lower())}(?![a-z0-9_])", added_blob):
+                violations.append(
+                    f"[INV_DECISION_01] 違反歷史決策《{title}》: 偵測到曾被排除的作法/數值 `{pat}` — {reason}"
+                )
+
+    return (len(violations) > 0), violations
+
+
+def _is_local_endpoint_alive(api_url: str) -> bool:
+    """50ms 本地 Loopback TCP 快速探活，消除 Windows 離線 2000ms SYN 重試延遲"""
+    try:
+        parsed = urlparse(api_url)
+        host = parsed.hostname or ""
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        if host not in ("127.0.0.1", "localhost", "::1"):
+            return True
+        cache_key = f"{host}:{port}"
+        if cache_key in _LOCAL_ENDPOINT_CACHE:
+            return _LOCAL_ENDPOINT_CACHE[cache_key]
+        with socket.create_connection((host, port), timeout=0.05):
+            _LOCAL_ENDPOINT_CACHE[cache_key] = True
+            return True
+    except (OSError, ValueError):
+        if "cache_key" in locals():
+            _LOCAL_ENDPOINT_CACHE[cache_key] = False
+        return False
+
+
+# Handwired Zero-Training ReLU Network Default Compiled Weights (6 features -> seam & bloat)
+# Features x = [seam_backdoor, enterprise_bloat, wrapper_indirection, stdlib_reinvention, oneliner_concise, loc_scale]
+_DEFAULT_HANDWIRED_WEIGHTS: Dict[str, Any] = {
+    "w_seam": [0.78, 0.04, 0.05, 0.0, -0.01, 0.02],
+    "b_seam": 0.01,
+    "w_bloat": [0.25, 0.48, 0.35, 0.55, -0.15, 0.20],
+    "b_bloat": 0.05,
+}
+
+
+def _relu(v: float) -> float:
+    return v if v > 0.0 else 0.0
+
+
+def _ramp(v: float, low: float, high: float) -> float:
+    """Handwired step-gate primitive: relu(v - low) - relu(v - high)."""
+    return _relu(v - low) - _relu(v - high)
+
+
+def _handwired_weights_path() -> Optional[Path]:
+    for base in (Path.cwd(), REPO_ROOT):
+        for sub in (".agent", ".agents"):
+            p = base / sub / "handwired_weights.json"
+            if p.is_file():
+                return p
+    return None
+
+
+def _load_handwired_weights() -> Dict[str, Any]:
+    p = _handwired_weights_path()
+    if p:
+        try:
+            data = json.loads(p.read_text(encoding="utf-8"))
+            if (
+                isinstance(data, dict)
+                and isinstance(data.get("w_seam"), list) and len(data["w_seam"]) == 6
+                and isinstance(data.get("w_bloat"), list) and len(data["w_bloat"]) == 6
+                and isinstance(data.get("b_seam"), (int, float))
+                and isinstance(data.get("b_bloat"), (int, float))
+            ):
+                return {
+                    "w_seam": [float(v) for v in data["w_seam"]],
+                    "b_seam": float(data["b_seam"]),
+                    "w_bloat": [float(v) for v in data["w_bloat"]],
+                    "b_bloat": float(data["b_bloat"]),
+                }
+        except Exception:
+            pass
+    return {
+        "w_seam": list(_DEFAULT_HANDWIRED_WEIGHTS["w_seam"]),
+        "b_seam": float(_DEFAULT_HANDWIRED_WEIGHTS["b_seam"]),
+        "w_bloat": list(_DEFAULT_HANDWIRED_WEIGHTS["w_bloat"]),
+        "b_bloat": float(_DEFAULT_HANDWIRED_WEIGHTS["b_bloat"]),
+    }
+
+
+def _extract_handwired_features(state_text: str) -> List[float]:
+    """Extract 6 deterministic code features from production added lines."""
+    is_diff = any(line.startswith(("@@ ", "+++ ")) for line in state_text.splitlines())
+    prod_lines: List[str] = []
+    if is_diff:
+        curr_is_test_or_guard = False
+        for raw in state_text.splitlines():
+            if raw.startswith("+++ "):
+                fname = raw[4:].lower()
+                curr_is_test_or_guard = ("test" in fname) or ("local_guard.py" in fname) or ("ast_guard.js" in fname)
+            elif raw.startswith("+") and not raw.startswith("+++") and not curr_is_test_or_guard:
+                stripped = raw[1:].strip()
+                if stripped and not stripped.startswith(("#", "//", '"""', "'''", "*")):
+                    prod_lines.append(stripped)
+    else:
+        for raw in state_text.splitlines():
+            stripped = raw.strip()
+            if stripped and not stripped.startswith(("#", "//", '"""', "'''", "*")):
+                prod_lines.append(stripped)
+
+    code_blob = "\n".join(prod_lines)
+    seam_hits = len(re.findall(
+        r"\b(?:_for_test|_test_only|__test_hook__|inject_mock|set_mock_for_test)\b"
+        r"|(?:def|function)\s+(?:mock|stub|fake)_[a-zA-Z0-9_]+",
+        code_blob,
+    ))
+    bloat_hits = len(re.findall(
+        r"\b(?:class|interface)\s+\w*(?:FactoryBean|ProxyFactory|Abstract\w*Factory|Singleton\w*Manager|ServiceLocator|BuilderStrategy)\w*",
+        code_blob,
+    ))
+    indirection_hits = max(0, len(re.findall(r"\bclass\s+[A-Z]\w*", code_blob)) - 2)
+    stdlib_hits = len(re.findall(r"\b(?:def|function)\s+(?:bubble_sort|manual_left_pad|custom_deep_clone)\b", code_blob))
+    is_oneliner = 1.0 if (1 <= len(prod_lines) <= 3 and seam_hits == 0 and bloat_hits == 0 and not re.search(r"\bclass\s+", code_blob)) else 0.0
+    loc_scale = min(1.0, len(prod_lines) / 300.0)
+    return [float(seam_hits), float(bloat_hits), float(indirection_hits), float(stdlib_hits), is_oneliner, loc_scale]
+
+
+def handwired_system_one(state_text: str) -> Dict[str, Any]:
+    """
+    Handwired Zero-Training ReLU Scorer:
+    Compiles Ponytail 7-Ladder & Zero-Seam heuristics directly into branchless ReLU algebra
+    (h = ReLU(W*x + b)) with 0 tokens and <0.1ms latency, while keeping weights differentiable.
+    """
+    x = _extract_handwired_features(state_text)
+    w = _load_handwired_weights()
+    z_seam = sum(wi * xi for wi, xi in zip(w["w_seam"], x)) + w["b_seam"]
+    seam_prob = round(min(0.99, _relu(z_seam)), 4)
+
+    z_bloat = sum(wi * xi for wi, xi in zip(w["w_bloat"], x)) + w["b_bloat"]
+    bloat_score = round(1.0 + 4.0 * _ramp(z_bloat, 0.0, 1.0), 2)
+
+    # Branchless ReLU Gate for Ponytail Ladder selection
+    g_yagni = _ramp(bloat_score, 3.8, 4.0) * 5.0          # [0..1] when bloat_score >= 4.0
+    g_stdlib = _ramp(x[3], 0.0, 1.0)                      # [0..1] when stdlib reinvention present
+    g_oneliner = _ramp(x[4] - x[0] - x[1], 0.0, 1.0)      # [0..1] when concise 1-3 line snippet
+    if g_yagni >= 0.9:
+        choice, conf = "1_yagni", min(0.98, 0.85 + 0.03 * x[1])
+    elif g_stdlib >= 0.9:
+        choice, conf = "3_stdlib", 0.90
+    elif g_oneliner >= 0.9:
+        choice, conf = "6_oneliner", 0.92
+    else:
+        choice, conf = "7_mvp", 0.88
+
+    return {
+        "has_test_seam": {"noul": seam_prob},
+        "ponytail_ladder": {"choice": choice, "confidence": round(conf, 2)},
+        "overengineering_score": {"score": bloat_score},
+    }
+
+
+def tune_handwired_weights(
+    state_text: str,
+    target_seam: float,
+    target_bloat: float,
+    lr: float = 0.08,
+) -> Dict[str, Any]:
+    """
+    Handwired 'Learned Gallery' Weight Unfreezing:
+    Applies analytical gradient descent (dL/dW) through the ReLU network to adapt rule weights
+    from human feedback without PyTorch/TensorFlow, persisting to .agent/handwired_weights.json.
+    """
+    x = _extract_handwired_features(state_text)
+    w = _load_handwired_weights()
+
+    z_seam = sum(wi * xi for wi, xi in zip(w["w_seam"], x)) + w["b_seam"]
+    pred_seam = min(0.99, _relu(z_seam))
+    clamped_seam = max(0.0, min(0.99, target_seam))
+    grad_seam = (pred_seam - clamped_seam) * (1.0 if (z_seam > 0.0 or clamped_seam > pred_seam) else 0.1)
+
+    z_bloat = sum(wi * xi for wi, xi in zip(w["w_bloat"], x)) + w["b_bloat"]
+    pred_bloat = 1.0 + 4.0 * _ramp(z_bloat, 0.0, 1.0)
+    clamped_target_bloat = max(1.0, min(5.0, target_bloat))
+    grad_bloat = ((pred_bloat - clamped_target_bloat) / 4.0) * (1.0 if (z_bloat > 0.0 or clamped_target_bloat > pred_bloat) else 0.1)
+
+    w["w_seam"] = [round(wi - lr * grad_seam * xi, 6) for wi, xi in zip(w["w_seam"], x)]
+    w["b_seam"] = round(w["b_seam"] - lr * grad_seam * 0.25, 6)
+    w["w_bloat"] = [round(wi - lr * grad_bloat * xi, 6) for wi, xi in zip(w["w_bloat"], x)]
+    w["b_bloat"] = round(w["b_bloat"] - lr * grad_bloat * 0.25, 6)
+
+    target_dir = Path.cwd() / ".agent"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    out_file = target_dir / "handwired_weights.json"
+    out_file.write_text(json.dumps(w, indent=2), encoding="utf-8")
+    return w
+
+
 def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
     """
     向 System 1 決策端點 (相容 TypeSafe Jev / Ollaya 等開放 /v1/systemone 協議) 發送結構化裁決請求
     依據環境變數動態適配 Provider:
-      - 本地端點: Ollaya / vLLM (預設參考模型: laya:latest)
+      - 本地端點: Ollaya / vLLM (預設參考模型: laya:multilingual)
       - 雲端端點: Jev Cloud / TypeSafe API (可配置 API Key)
-      - 降級引擎: 靜態啟發式規則引擎 (Static Fallback)
+      - 降級引擎: Handwired ReLU 無分支白盒網路 (0-Token, <0.1ms, 支援梯度微調)
     """
+    if not _is_local_endpoint_alive(DECISION_API_URL):
+        return handwired_system_one(state_text), "Handwired ReLU (0-Token)"
+
     # 截取前 500 字元以安全適配中英文多語系在 System 1 模型 512 Token 上下文窗口
     truncated_state = state_text[:500] if len(state_text) > 500 else state_text
 
@@ -413,11 +595,11 @@ def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
         err_body = e.read().decode("utf-8", errors="replace")
         print(f"{YELLOW}⚠️  決策端點回傳 HTTP {e.code}: {err_body}{RESET}", file=sys.stderr)
     except urllib.error.URLError:
-        pass  # 離線時靜默由 Fallback 接管
+        pass  # 離線時靜默由 Handwired ReLU 接管
     except Exception as e:
         print(f"{YELLOW}⚠️  決策端點呼叫異常: {e}{RESET}", file=sys.stderr)
 
-    return None, "Static Rule Engine (Fallback)"
+    return handwired_system_one(state_text), "Handwired ReLU (0-Token)"
 
 
 def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Optional[List[str]] = None) -> int:
@@ -430,6 +612,11 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     
     is_blocked = False
     block_reasons = []
+
+    # 0. 物理阻斷：Git 安全地基檢查 (INV_SAFE_04)
+    if "Git" in label and not is_git_repo():
+        is_blocked = True
+        block_reasons.append("INV_SAFE_04 違規：未檢測到 Git 存檔點，嚴禁在無時光機保護下修改代碼！請先執行 git init。")
 
     # 1. 物理阻斷：gate.yaml 檢查 (Denylist & MaxFiles)
     gate_blocked = False
@@ -458,6 +645,12 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
         is_blocked = True
         block_reasons.extend(php_violations)
 
+    # 2.7 物理阻斷 (Level 0.5)：歷史決策防翻案門禁 (Trail-Code Decision Regression Check)
+    decision_blocked, decision_violations = check_decision_regression(code_content, changed_files)
+    if decision_blocked:
+        is_blocked = True
+        block_reasons.extend(decision_violations)
+
     # 3. 呼叫 System 1 決策引擎 (可插拔式後端)
     t0 = time.perf_counter()
     answers, engine_name = query_system_one(code_content) if code_content.strip() else (None, "Bypassed")
@@ -477,13 +670,11 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
         bloat_score = float(score_obj.get("score", 1.0))
 
         # 判定生產接縫 (Zero Production Seams)
-        # 短程式碼 (< 80 字元) 且完全未出現測試相關關鍵字時，防止小模型無語境誤殺
         TEST_SEAM_KEYWORDS = ["mock", "stub", "fake", "spy", "fixture", "backdoor", "dummy", "test_", "__test"]
         has_seam_hint = any(kw in code_content.lower() for kw in TEST_SEAM_KEYWORDS)
 
         if seam_prob > 0.65:
             if len(code_content.strip()) < 80 and not has_seam_hint:
-                # 視為微弱統計雜訊，不執行硬攔截
                 pass
             else:
                 is_blocked = True
@@ -494,7 +685,6 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
             is_blocked = True
             block_reasons.append(f"過度工程指數過高 ({bloat_score:.1f}/5)，違反 Ponytail 精簡原則")
     else:
-        # Fallback 提示
         ladder_choice = "Static-Rules"
 
     status_header = f"{RED}🛑 BLOCK - 變更遭駁回{RESET}" if is_blocked else f"{GREEN}✅ PASS - 審查通過{RESET}"
@@ -503,7 +693,9 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     print(f"│ 審查狀態: {status_header:<49} │")
     print(f"│ 決策引擎: {CYAN}{engine_name:<25}{RESET} 耗時: {elapsed_ms:6.1f} ms    │")
     print("├─────────────────────────────────────────────────────────────┤")
+    print(f"│  • Git 安全地基 (INV_SAFE_04)  : {format_gate_status(is_git_repo())}                       │")
     print(f"│  • AST 語意門禁 (Level 0.5)      : {format_gate_status(not ast_blocked)}                       │")
+    print(f"│  • 歷史決策防翻案 (Trail Check): {format_gate_status(not decision_blocked)}                       │")
     print(f"│  • 生產接縫機率 (Zero Seams)   : {format_prob(seam_prob) if answers else '⚠️  離線降級放行'}                  │")
     print(f"│  • 硬編碼金鑰風險 (Regex Guard): {format_secret(len(regex_secrets))}                  │")
     print(f"│  • Ponytail 階梯定位           : {CYAN}{ladder_choice:<15}{RESET} (信心: {ladder_conf*100:4.1f}%) │")
@@ -544,19 +736,73 @@ def format_gate_status(is_clean: bool) -> str:
     return f"{RED}🛑 違規攔截{RESET}"
 
 
+def is_git_repo() -> bool:
+    """檢查當前工作區是否受 Git 時光機保護 (INV_SAFE_04)"""
+    try:
+        res = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], capture_output=True, text=True)
+        return res.returncode == 0
+    except Exception:
+        return False
+
+
+def execute_rollback() -> int:
+    """執行 0.05 秒物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05)"""
+    if not is_git_repo():
+        print(f"{RED}❌ [INV_SAFE_04 違規] 未檢測到 Git 倉庫，無法執行物理回滾。{RESET}")
+        return 1
+
+    print(f"\n{YELLOW}{BOLD}⚡ 正在觸發兩振硬熔斷物理回滾 (INV_VERIFY_05)...{RESET}")
+    start = time.perf_counter()
+    try:
+        subprocess.run(["git", "restore", "."], check=True, capture_output=True)
+        subprocess.run(["git", "clean", "-fd"], check=True, capture_output=True)
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        print(f"{GREEN}✅ [秒級硬熔斷成功] 工作區已乾淨復原至安全 Commit 基準點！耗時: {elapsed_ms:.1f} ms{RESET}")
+        print(f"{CYAN}💡 上下文毒化已阻斷，未留任何無效補丁。請重新釐清問題或調整提示詞。{RESET}\n")
+        return 0
+    except Exception as e:
+        print(f"{RED}❌ 回滾失敗: {e}{RESET}")
+        return 1
+
+
+def check_git_status() -> int:
+    """檢驗 Git 安全地基狀態 (INV_SAFE_04)"""
+    if not is_git_repo():
+        print(f"\n{RED}{BOLD}🛑 [INV_SAFE_04 違規] 當前目錄不是 Git 倉庫！{RESET}")
+        print(f"{YELLOW}💡 任何代碼生成或修改前，工作區必須受 Git 時光機保護。")
+        print(f"👉 請立即執行：git init && git add -A && git commit -m 'feat: baseline'{RESET}\n")
+        return 1
+
+    diff, changed = get_git_info()
+    print(f"\n{GREEN}✅ [INV_SAFE_04 合規] Git 時光機正常運作。{RESET}")
+    if changed:
+        print(f"{YELLOW}ℹ️  當前工作區有 {len(changed)} 個未提交變更檔案。{RESET}")
+    else:
+        print(f"{GREEN}ℹ️  工作區完全乾淨，隨時可安全動手。{RESET}\n")
+    return 0
+
+
 def get_git_info() -> Tuple[str, List[str]]:
     """獲取當前工作區未提交的 git diff 與變更檔案清單 (包含已暫存、未暫存與未追蹤檔案)"""
+    if not is_git_repo():
+        return "", []
     try:
-        # 1. 抓取已追蹤變更檔案名稱 (diff against HEAD)
-        name_bytes = subprocess.check_output(["git", "diff", "--name-only", "HEAD"], stderr=subprocess.DEVNULL)
-        changed_files = [f.strip() for f in name_bytes.decode("utf-8", errors="replace").splitlines() if f.strip()]
+        # 1. 抓取已追蹤變更檔案名稱 (diff against HEAD, 排除子模組/目錄)
+        name_bytes = subprocess.check_output(["git", "diff", "--name-only", "--ignore-submodules", "HEAD"], stderr=subprocess.DEVNULL)
+        changed_files = [
+            f.strip() for f in name_bytes.decode("utf-8", errors="replace").splitlines()
+            if f.strip() and not Path(f.strip()).is_dir()
+        ]
 
-        # 2. 抓取未追蹤檔案清單 (Untracked files)
+        # 2. 抓取未追蹤檔案清單 (Untracked files, 排除目錄)
         untracked_bytes = subprocess.check_output(
             ["git", "ls-files", "--others", "--exclude-standard"],
             stderr=subprocess.DEVNULL
         )
-        untracked_files = [f.strip() for f in untracked_bytes.decode("utf-8", errors="replace").splitlines() if f.strip()]
+        untracked_files = [
+            f.strip() for f in untracked_bytes.decode("utf-8", errors="replace").splitlines()
+            if f.strip() and not Path(f.strip()).is_dir()
+        ]
         for uf in untracked_files:
             if uf not in changed_files:
                 changed_files.append(uf)
@@ -587,11 +833,19 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="System 1 Local Guard - 解耦與插拔式高速決策門禁")
     parser.add_argument("--git", action="store_true", help="自動審查當前 git diff 與檔案變更")
+    parser.add_argument("--check-git", action="store_true", help="檢驗 Git 時光機地基狀態 (INV_SAFE_04)")
+    parser.add_argument("--rollback", action="store_true", help="觸發兩振硬熔斷 0.05 秒物理回滾 (INV_VERIFY_05)")
     parser.add_argument("--code", type=str, help="直接傳入要審查的代碼字串")
     parser.add_argument("--file", type=str, help="指定要審查的檔案路徑")
     parser.add_argument("--stdin", action="store_true", help="從標準輸入 (stdin) 讀取內容")
+    parser.add_argument("--tune", type=str, help="解凍微調 Handwired ReLU 權重 (格式: target_seam,target_bloat 如 0.0,2.0)")
 
     args = parser.parse_args()
+
+    if args.check_git:
+        sys.exit(check_git_status())
+    elif args.rollback:
+        sys.exit(execute_rollback())
 
     content = ""
     label = "Direct Input"
@@ -616,4 +870,11 @@ if __name__ == "__main__":
         content, changed_files = get_git_info()
         label = f"Git Diff (Auto, {len(changed_files)} files)"
 
+    if args.tune:
+        parts = [float(x.strip()) for x in args.tune.split(",")]
+        updated = tune_handwired_weights(content, parts[0], parts[1])
+        print(f"{GREEN}✅ [Handwired ReLU] 已解凍並更新權重: {json.dumps(updated)}{RESET}")
+        sys.exit(0)
+
     sys.exit(run_guard(content, label, changed_files))
+

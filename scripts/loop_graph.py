@@ -38,16 +38,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # Directories to ignore during scanning
 IGNORED_DIRS = {
     ".git", ".venv", "venv", "node_modules", "__pycache__", ".agent",
-    ".agents", "dist", "build", ".gemini", "skills_backup"
+    ".agents", "dist", "build", ".gemini", "skills_backup", ".studio",
+    "7-Phase-Agentic-Workflow", "ECC", "selfcompact_repo", "loop-engineering",
+    "stock", "stock-autoresearch"
 }
 
-
-def normalize_path(path_str: str) -> str:
-    """Normalize file path to POSIX forward-slashes."""
-    cleaned = path_str.replace("\\", "/").strip()
-    if cleaned.startswith("./"):
-        cleaned = cleaned[2:]
-    return re.sub(r"/+", "/", cleaned)
+try:
+    from loop_gate import normalize_path
+except ImportError:
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from loop_gate import normalize_path
 
 
 class ArchitectureGraph:
@@ -228,37 +228,35 @@ class ArchitectureGraph:
 
         return best_text
 
-    def compute_blast_radius(self, target_query: str) -> Dict[str, Any]:
-        """
-        Perform BFS traversal backwards along incoming edges (who depends on target?)
-        to determine blast radius of changes.
-        """
-        # Find matching node IDs (query by ID, label, or file path)
-        norm_query = normalize_path(target_query).lower()
-        matched_node_ids = [
-            nid for nid, data in self.nodes.items()
-            if norm_query in nid.lower() or norm_query in data.get("file", "").lower() or norm_query == data["label"].lower()
-        ]
-
-        matched_query_ids = matched_node_ids
-        if not matched_query_ids:
-            return {"target": target_query, "matched_nodes": [], "blast_radius_count": 0, "dependents": []}
-
-        visited = set()
-        queue = collections.deque(matched_query_ids)
-        for nid in matched_query_ids:
-            visited.add(nid)
-
-        direct_dependents = set()
-        transitive_dependents = set()
-        depth_map = {nid: 0 for nid in matched_query_ids}
+    def _bfs_dependents(self, seed_ids: List[str]) -> Dict[str, Any]:
+        """BFS backwards along incoming edges (including unqualified fn:<label> call edges)."""
+        visited = set(seed_ids)
+        queue = collections.deque(seed_ids)
+        direct_dependents: Set[str] = set()
+        transitive_dependents: Set[str] = set()
+        depth_map = {nid: 0 for nid in seed_ids}
 
         while queue:
             curr = queue.popleft()
             curr_depth = depth_map[curr]
+            incoming = set(self.adj_in[curr])
+            if curr in self.nodes and self.nodes[curr].get("type") in ("function", "class", "test"):
+                lbl = self.nodes[curr].get("label", "")
+                if lbl:
+                    incoming |= self.adj_in.get(f"fn:{lbl}", set())
+                    if "." in lbl:
+                        incoming |= self.adj_in.get(f"fn:{lbl.split('.')[-1]}", set())
 
-            # Find who depends on curr (incoming edges to curr)
-            for parent in self.adj_in[curr]:
+            for parent in incoming:
+                # Do not walk backwards along `mod -> fn/cls` ('defines' containment edges),
+                # otherwise editing one method leaks into its module node and flags every importer.
+                if curr.startswith(("fn:", "cls:")) and parent.startswith("mod:"):
+                    for pol in self.adj_in.get(parent, set()):
+                        if pol.startswith("policy:") and pol not in visited:
+                            visited.add(pol)
+                            depth_map[pol] = curr_depth + 1
+                            direct_dependents.add(pol)
+                    continue
                 if parent not in visited:
                     visited.add(parent)
                     depth_map[parent] = curr_depth + 1
@@ -279,27 +277,161 @@ class ArchitectureGraph:
             for nid in (direct_dependents | transitive_dependents)
             if nid in self.nodes
         ]
-
-        impacted_tests = [
+        impacted_tests = list({
             n["file"] for n in all_affected_nodes
             if n["type"] == "test" or "test" in n["file"].lower()
-        ]
-
-        governing_policies = [
+        })
+        governing_policies = list({
             n["label"] for n in all_affected_nodes
             if n["type"] == "policy"
-        ]
-
+        })
         return {
-            "target": target_query,
-            "matched_nodes": matched_query_ids,
             "direct_count": len(direct_dependents),
             "transitive_count": len(transitive_dependents),
             "total_blast_radius": len(all_affected_nodes),
-            "impacted_tests": list(set(impacted_tests)),
-            "governing_policies": list(set(governing_policies)),
-            "dependents": all_affected_nodes
+            "impacted_tests": impacted_tests,
+            "governing_policies": governing_policies,
+            "dependents": all_affected_nodes,
         }
+
+    def compute_blast_radius(self, target_query: str) -> Dict[str, Any]:
+        """
+        Perform BFS traversal backwards along incoming edges (who depends on target?)
+        to determine blast radius of changes.
+        """
+        norm_query = normalize_path(target_query).lower()
+        matched_query_ids = [
+            nid for nid, data in self.nodes.items()
+            if norm_query in nid.lower() or norm_query in data.get("file", "").lower() or norm_query == data["label"].lower()
+        ]
+        if not matched_query_ids:
+            return {"target": target_query, "matched_nodes": [], "blast_radius_count": 0, "dependents": []}
+
+        bfs = self._bfs_dependents(matched_query_ids)
+        return {
+            "target": target_query,
+            "matched_nodes": matched_query_ids,
+            **bfs,
+        }
+
+    def seeds_for_file(self, file_path: str, ranges: List[Tuple[int, int]]) -> List[str]:
+        """
+        Innermost-symbol seeding (inspired by Trail-Code blast.ts):
+        Given modified line ranges in `file_path`, return only the innermost symbols
+        whose spans overlap the edit (dropping outer classes when a method is edited).
+        Falls back to module node if edit is outside all symbols.
+        """
+        norm_file = normalize_path(file_path)
+        symbols = [
+            data for data in self.nodes.values()
+            if data.get("file") == norm_file
+            and data.get("type") in ("function", "class", "test")
+            and isinstance(data.get("start_line"), int)
+            and isinstance(data.get("end_line"), int)
+        ]
+        overlapping = [
+            s for s in symbols
+            if any(s["start_line"] <= r_end and s["end_line"] >= r_start for r_start, r_end in ranges)
+        ]
+        hit_ids = [
+            s["id"] for s in overlapping
+            if not any(
+                o["id"] != s["id"]
+                and o["start_line"] >= s["start_line"]
+                and o["end_line"] <= s["end_line"]
+                and (o["start_line"] > s["start_line"] or o["end_line"] < s["end_line"])
+                for o in overlapping
+            )
+        ]
+        if not hit_ids and f"mod:{norm_file}" in self.nodes:
+            hit_ids.append(f"mod:{norm_file}")
+        return hit_ids
+
+    def compute_diff_blast_radius(self, diff_text: str) -> Dict[str, Any]:
+        """
+        Compute symbol-precise blast radius and TestSignal ('changed' | 'stale' | 'none' | 'na')
+        directly from a unified git diff.
+        """
+        changed_map = parse_diff_ranges(diff_text)
+        changed_files = list(changed_map.keys())
+        seeds: List[str] = []
+        for fpath, line_ranges in changed_map.items():
+            for sid in self.seeds_for_file(fpath, line_ranges):
+                if sid not in seeds:
+                    seeds.append(sid)
+
+        bfs = self._bfs_dependents(seeds) if seeds else {
+            "direct_count": 0, "transitive_count": 0, "total_blast_radius": 0,
+            "impacted_tests": [], "governing_policies": [], "dependents": []
+        }
+
+        changed_test_files = [
+            f for f in changed_files
+            if "test" in f.lower() or self.nodes.get(f"mod:{f}", {}).get("type") == "test"
+        ]
+        behavioral_seeds = [
+            sid for sid in seeds
+            if self.nodes.get(sid, {}).get("type") in ("function", "class")
+        ]
+
+        if changed_test_files:
+            test_signal = "changed"
+        elif bfs["impacted_tests"]:
+            test_signal = "stale"
+        elif behavioral_seeds:
+            test_signal = "none"
+        else:
+            test_signal = "na"
+
+        return {
+            "changed_files": changed_files,
+            "seeds": seeds,
+            "seed_labels": [self.nodes[s]["label"] for s in seeds if s in self.nodes],
+            "test_signal": test_signal,
+            "changed_test_files": changed_test_files,
+            **bfs,
+        }
+
+
+def parse_diff_ranges(diff_text: str) -> Dict[str, List[Tuple[int, int]]]:
+    """Parse unified diff into {normalized_file_path: [(start_line, end_line), ...]} of actual modified lines."""
+    ranges: Dict[str, List[Tuple[int, int]]] = collections.defaultdict(list)
+    curr_file: Optional[str] = None
+    new_line = 0
+    in_hunk = False
+
+    for raw_line in diff_text.splitlines():
+        if raw_line.startswith("+++ "):
+            target = raw_line[4:].split("\t")[0].strip()
+            if target == "/dev/null":
+                curr_file = None
+            else:
+                if target.startswith("b/"):
+                    target = target[2:]
+                curr_file = normalize_path(target)
+            in_hunk = False
+        elif raw_line.startswith("@@ ") and curr_file:
+            m = re.match(r"^@@ -\d+(?:,\d+)? \+(\d+)(?:,(\d+))? @@", raw_line)
+            if m:
+                new_line = int(m.group(1))
+                new_len = int(m.group(2)) if m.group(2) is not None else 1
+                in_hunk = True
+                if new_len == 0:
+                    ranges[curr_file].append((max(1, new_line), max(1, new_line)))
+        elif in_hunk and curr_file:
+            if raw_line.startswith("+"):
+                ranges[curr_file].append((new_line, new_line))
+                new_line += 1
+            elif raw_line.startswith("-"):
+                ranges[curr_file].append((max(1, new_line - 1), max(1, new_line)))
+            elif raw_line.startswith(" "):
+                new_line += 1
+            elif raw_line.startswith("\\"):
+                pass
+            else:
+                in_hunk = False
+
+    return dict(ranges)
 
 
 class CodeAstScanner:
@@ -311,6 +443,7 @@ class CodeAstScanner:
 
     def scan_repository(self):
         """Walk repo and parse code files, policies, and tests."""
+        js_files: List[Tuple[Path, str]] = []
         for dirpath, dirnames, filenames in os.walk(self.root):
             # Filter out ignored directories
             dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS and not d.startswith(".")]
@@ -322,10 +455,47 @@ class CodeAstScanner:
                 if fname.endswith(".py"):
                     self.parse_python_file(full_path, rel_path)
                 elif fname.endswith((".js", ".ts", ".mjs")):
-                    self.parse_js_file(full_path, rel_path)
+                    js_files.append((full_path, rel_path))
+
+        if js_files:
+            self.parse_js_files_batch(js_files)
 
         # Parse system policies
         self.parse_system_policies()
+
+    def parse_js_files_batch(self, js_files: List[Tuple[Path, str]]):
+        """Batch-extract AST from all JS/TS files in a single Node process."""
+        swc_script = REPO_ROOT / "scripts" / "swc_extractor.js"
+        if swc_script.exists() and js_files:
+            try:
+                payload = json.dumps([str(fp) for fp, _ in js_files])
+                proc = subprocess.run(
+                    ["node", str(swc_script), "--batch"],
+                    input=payload,
+                    capture_output=True,
+                    text=True,
+                    encoding="utf-8",
+                    timeout=20
+                )
+                if proc.returncode == 0:
+                    results = json.loads(proc.stdout)
+                    if isinstance(results, list):
+                        by_path = {
+                            normalize_path(str(r.get("file", ""))): r
+                            for r in results if isinstance(r, dict)
+                        }
+                        for full_path, rel_path in js_files:
+                            data = by_path.get(normalize_path(str(full_path)))
+                            if data and not data.get("error"):
+                                self._integrate_swc_results(data, rel_path)
+                            else:
+                                self._parse_js_lexical_fallback(full_path, rel_path)
+                        return
+            except Exception:
+                pass
+
+        for full_path, rel_path in js_files:
+            self._parse_js_lexical_fallback(full_path, rel_path)
 
     def parse_python_file(self, full_path: Path, rel_path: str):
         """Use Python's built-in AST parser to extract symbols and dependencies."""
@@ -353,14 +523,28 @@ class CodeAstScanner:
             # 2. Classes
             elif isinstance(node, ast.ClassDef):
                 cls_id = f"cls:{rel_path}::{node.name}"
-                self.graph.add_node(cls_id, label=node.name, node_type="class", file_path=rel_path)
+                self.graph.add_node(
+                    cls_id,
+                    label=node.name,
+                    node_type="class",
+                    file_path=rel_path,
+                    start_line=node.lineno,
+                    end_line=getattr(node, "end_lineno", node.lineno),
+                )
                 self.graph.add_edge(mod_id, cls_id, relation="defines")
 
             # 3. Functions
-            elif isinstance(node, ast.FunctionDef):
+            elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 func_id = f"fn:{rel_path}::{node.name}"
                 fn_type = "test" if node.name.startswith("test_") or is_test else "function"
-                self.graph.add_node(func_id, label=node.name, node_type=fn_type, file_path=rel_path)
+                self.graph.add_node(
+                    func_id,
+                    label=node.name,
+                    node_type=fn_type,
+                    file_path=rel_path,
+                    start_line=node.lineno,
+                    end_line=getattr(node, "end_lineno", node.lineno),
+                )
                 self.graph.add_edge(mod_id, func_id, relation="defines")
 
                 # Function calls inside function
@@ -420,14 +604,16 @@ class CodeAstScanner:
         for d in data.get("definitions", []):
             name = d.get("name")
             dtype = d.get("type")
+            s_line = d.get("line")
+            e_line = d.get("endLine", s_line)
             if dtype == "class":
                 cid = f"cls:{rel_path}::{name}"
-                self.graph.add_node(cid, label=name, node_type="class", file_path=rel_path)
+                self.graph.add_node(cid, label=name, node_type="class", file_path=rel_path, start_line=s_line, end_line=e_line)
                 self.graph.add_edge(mod_id, cid, relation="defines")
             else:
                 fid = f"fn:{rel_path}::{name}"
                 fn_type = "test" if "test" in name.lower() or is_test else "function"
-                self.graph.add_node(fid, label=name, node_type=fn_type, file_path=rel_path)
+                self.graph.add_node(fid, label=name, node_type=fn_type, file_path=rel_path, start_line=s_line, end_line=e_line)
                 self.graph.add_edge(mod_id, fid, relation="defines")
 
         for c in data.get("calls", []):
@@ -956,6 +1142,7 @@ def main():
     parser = argparse.ArgumentParser(description="Loop Graph: Deterministic Architecture Knowledge Graph Engine")
     parser.add_argument("--scan", action="store_true", help="Scan repository and output graph artifacts")
     parser.add_argument("--impact", type=str, help="Calculate blast radius and impacted dependents for a file/function")
+    parser.add_argument("--diff-impact", action="store_true", help="Calculate innermost-symbol blast radius & TestSignal from git diff HEAD")
     parser.add_argument("--god-nodes", action="store_true", help="Display top God Nodes (central hubs)")
     parser.add_argument("--map", action="store_true", help="Output token-budgeted repo map (personalized PageRank)")
     parser.add_argument("--focus", action="append", default=[], help="Focus file(s) for personalized ranking; repeatable")
@@ -971,6 +1158,25 @@ def main():
     scanner.scan_repository()
 
     out_dir = root_dir / args.out_dir
+
+    if args.diff_impact:
+        try:
+            diff_text = subprocess.check_output(
+                ["git", "diff", "HEAD"], cwd=str(root_dir), text=True, encoding="utf-8", errors="replace"
+            )
+        except Exception:
+            diff_text = ""
+        res = graph.compute_diff_blast_radius(diff_text)
+        print("=" * 64)
+        print(f"🎯 DIFF BLAST RADIUS (Innermost Symbols) | TestSignal: [{res['test_signal'].upper()}]")
+        print(f"Seeds ({len(res['seeds'])}): {', '.join(res['seed_labels']) or 'None'}")
+        print(f"Direct Dependents: {res['direct_count']} | Transitive: {res['transitive_count']} | Total Blast: {res['total_blast_radius']}")
+        print("=" * 64)
+        if res["impacted_tests"]:
+            print(f"🧪 Impacted Tests ({res['test_signal']}):")
+            for t in res["impacted_tests"]:
+                print(f"  - {t}")
+        return
 
     if args.impact:
         res = graph.compute_blast_radius(args.impact)

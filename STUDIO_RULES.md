@@ -74,3 +74,22 @@
 - **Level 1 (System 1 Fast Classifier)**：`scripts/system_one.py`。非自回歸快初篩（Noul / Choice / Score），延遲 <5ms，Token 消耗 $0。
 - **Level 2 (System 2 Deep Reasoning & Worker)**：交由 Frontier LLM 遵循 Phase 0-6 與 `/teamwork` / `/agy-studio` 規範產出實質代碼。
 - **Level 3 (Loop Verifier & State Spine Sync)**：獨立 Checker 跑真實 test suite (`verify_all.py`)，驗證通過後原子合流至正式工作區並同步 `STATE.md`。
+
+---
+
+## 5. 🌲 NCM 概念樹對齊通訊協定 (Concept Tree Alignment Protocol, CTAP)
+
+為根絕多代理人（Multi-Agent）協作中的廣播風暴與雙倍 Token 稅，全面落實 Next-Concept Modeling (NCM) 由粗到細與節點收斂原則：
+
+1. **Step 1.5 概念樹錨定 (Level 0 Concept Tree Anchor, CTA)**：
+   - 進入實作前，主代理人或 Explorer 必須產出標準 YAML 概念樹（預算 < 120 Tokens），包含：`domain`、`invariants`、`entities`、`contracts`。
+   - 概念樹是全體 Agent 的「唯一真理骨架（Single Source of Truth）」，禁止在跨 Agent 通訊中塞入長篇對話散文。
+2. **節點收斂視角 (Node-Scoped Context Injection)**：
+   - **DB Architect**：僅訂閱 `entities` 與 `invariants` 分支，杜絕無關的前端樣式文字。
+   - **Backend Lead**：僅訂閱 `contracts` 與 `invariants` 分支，專注於 API 路由與業務驗證。
+   - **Frontend Master**：僅訂閱 `contracts.ui_types` 與介面契約，專注於組件與互動狀態。
+   - **成效**：消除 70% 跨代理人無效 Context 廣播。
+3. **雙模外科手術式交付 (Dual-Mode Surgical Patch)**：
+   - Worker 交付一律採用 `### PATCH: <path>`（局部替換）或 `### FILE: <path>`（新建整檔），禁止整檔重抄。
+4. **概念樹驗收對齊 (Concept-Tree Driven Verification)**：
+   - Reviewer / Critic / Auditor 審查時，直接以 Level 0 概念樹作為不變量契約檢驗，未滿足 contracts 或違反 invariants 者直接一票否決。
