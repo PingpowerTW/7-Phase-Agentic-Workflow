@@ -132,4 +132,3 @@ async function handleToolCall(toolName: string, args: Record<string, any>, sessi
 若本機 Docker 或 `:8080` 網關未啟動：
 - 系統自動捕獲 `ECONNREFUSED` / 網關超時，無縫降級為 **Soft Guard（提示詞護欄 + 本地 Hooks 門禁）**。
 - 不阻斷正常開發流程，並於對話中標記 `[⚠️ DROS Gateway Offline — Fallback to Soft Guard]` 提示開發者。
-
