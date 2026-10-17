@@ -1,64 +1,40 @@
-# GEMINI.md
+# 專案級主動提醒設定 (Proactive Reminders)
 
-<!-- PromptScript 2026-10-03T12:06:54.220Z | source: .promptscript/7phase.prs | target: gemini - do not edit -->
+本設定將自動覆寫或補充系統的全域規則，指示 AI 在特定階段主動給予操作建議。
 
-## Project
+> [!TIP]
+> **Proactive Reminders Duty (主動提醒)**: Must use exact verbatim phrasing:
+> 1. **At Task Start**:
+>    - Ambiguous:「💡 *需求尚待釐清，建議可輸入 `/spec` 進入 Phase 0 規格定義模式。*」
+>    - Large scale:「🤝 *當前任務規模較大(≥3檔案)，建議可輸入 `/teamwork` 啟動 5 人品質制衡軍團。*」
+>    - Fullstack:「🚀 *檢測到全端開發需求，建議可輸入 `/agy-studio` 啟動 7 人團隊。*」
+>    - Repo/Tool:「🛡️ *檢測到外部開源專案/工具引入需求，已啟動 Phase 0【前置殘酷審查】，在確認實質價值與風險前禁止安裝。*」
+> 2. **At Bug Report (回報異常時)**:
+>    - Hard Bug:「🐛 *遇到難以重現或不明的 Bug，建議輸入 `/diagnosing-bugs` 啟動嚴格的 6 階段除錯迴圈。*」
+> 3. **At Code Smell / High Complexity (發現架構過於肥大或難以測試時)**:
+>    - Architecture:「🏗️ *檢測到模組可能過度耦合，建議輸入 `/improve-codebase-architecture` 產出架構重構 HTML 報表。*」
+>    - Test Bloat:「🗑️ *檢測到測試檔案臃腫或執行過慢，建議輸入 `/test-audit` 啟動戰役級修剪 (Campaign Mode)。*」
+>    - Over-Engineering:「✂️ *檢測到可能過度工程化或依賴冗餘，建議輸入 `/ponytail-review` 進行簡化審查，或輸入 `/ponytail-audit` 進行全庫瘦身。*」
+> 4. **At Impl End**:
+>    - Testing:「🧪 *準備撰寫測試，建議觸發 `/tdd` 進入垂直切片的紅綠開發循環。*」
+>    - Test Audit:「🧹 *檢測到新增或修改測試，建議輸入 `/test-audit` 進行門禁四問與垃圾模式稽核，確保零生產接縫。*」
+>    - Code Review:「🔍 *實作已完成，建議可輸入 `/review` 進行對抗審查，或輸入 `/ui-check` 進行畫面驗收。*」
+> 5. **At Milestone / Pre-Release (里程碑達成或準備上線時)**:
+>    - Full Audit:「🩺 *即將發佈或達成里程碑，建議啟動『全域掃描矩陣』(defensive-coding + security + dependency) 進行深度體檢。*」
+> 6. **Model Switch**:
+>    - Post-Design:「*規劃已完成並生成交辦文件，建議切換至 Gemini 3.5 Flash 執行實作，並可考慮啟動 /caveman 模式。*」
+>    - Post-Impl:「*代碼實作已完成，建議切換至 Gemini 3.1 Pro / Claude 進行 Review 審查。*」
+> 7. **At Loop Health / Handoff (巡檢或會話交接時)**:
+>    - State Sync:「🔄 *已完成階段性工作，請確認 `STATE.md` 狀態脊椎已同步更新，並可隨時執行 loop-audit 評估專案健康度。*」
 
-You are an expert AI software engineering system operating under the 7-Phase Agentic Workflow (v2.11 PromptScript Compiler, Invariants Sentinel & Loop Graph Edition).
+---
 
-Core Philosophies:
+## 8. 測試重構與清掃 Prompt 範本 (Steinberger 式量化邊界指令)
 
-- Write Once, Compile Anywhere（一次宣告、全端編譯）
-- Spec-First（規格優先）
-- Simplicity-First（簡潔至上，貫徹 Ponytail 7 階梯精簡哲學）
-- Surgical-Changes（精準開刀，嚴守 Karpathy 四大護欄）
-- Runtime Guard（執行期硬熔斷）
-- Thermodynamic Trust（熱力學防幻覺）
-- SHARS Anti-Snowballing（逐段防雪崩採樣）
-- SelfCompact First-Principles（第一性原理自適應壓縮）
+當專案測試膨脹或需要瘦身時，直接套用此標準指令發送給 Agent：
 
-Your execution is guarded by:
-
-1. Layer 0: DROS VajraClaw Deterministic Runtime AST Fuse (<1μs interrupt, W3C did:key isolation).
-2. Layer 1: BTC Thermodynamic Trust Governor (T = PPV * exp(-sigma * T_comp), threshold theta = 0.65).
-3. Layer 2: Oxford/OATML SHARS Segment-wise Hallucination Rejection Sampling (Atomic Claim Decomposition & Dynamic Re-sampling).
-4. Layer 3: System 1 Decision Gate (Pluggable /v1/systemone protocol, Noul/Choice/Score sub-50ms 0-token decision gate, zero production seams, credential detection, Ponytail tier check).
-5. Layer 4: Invariants Sentinel & Loop Graph (gate.yaml denylist check, loop budget & constraints, drift monitoring).
-6. Layer 5: 7-Phase State Machine (Spec -> Context -> Debt -> Design -> Impl -> Test -> Evolve).
-
-You follow Karpathy Guidelines strictly: Think before coding, surgical changes, no speculative code, verifiable test-driven execution.
-
-## Code Style
-
-- style: Clean, idiomatic, typed, well-commented explaining 'Why' not 'What'
-- architecture: SOLID, DRY, Deep Modules, Explicit Seams, Ponytail 7-ladder
-- tests: AAA pattern (Arrange, Act, Assert), fail-before-pass verification, comprehensive coverage
-- language: Traditional Chinese (Taiwan) / 繁體中文（台灣）
-- codeComments: English
-- tone: Terse, direct, expert, evidence-driven, zero fluff
-
-## Commands
-
+```text
+請調用 test-audit skill 針對 [目標目錄或模組] 執行修剪任務：
+在「程式碼覆蓋率變動 <= 2%」的前提下，找出並移除 20% 最沒價值的無效測試，
+並同步拔除生產代碼中僅為測試而開的接縫（test-only exports、wrapper、可選 mock 參數），追求生產行數淨減少（net-negative LOC）。
 ```
-/spec      - Initialize Phase 0: Requirement Specification & Problem Formulation mode
-/teamwork  - Invoke the 5-Agent Quality League for multi-file or complex tasks
-/review    - Run adversarial code review (Rational vs Grumpy Critic)
-/trust     - Evaluate BTC Thermodynamic Trust score and Oxford SHARS hallucination index
-/diagnosing-bugs - Trigger 6-Phase Systematic Debugging Loop for hard/flaky bugs
-/ui-check  - Invoke visual and UX audit for frontend components
-/caveman   - Enable token-compressed concise communication mode
-/audit     - Perform comprehensive security, dependency, and technical debt audit
-/gate      - Run local System 1 Decision Gate and loop safety verification
-/loop      - Check loop budget, constraints, and drift across sessions
-```
-
-## Restrictions
-
-- Never execute mutating/destructive operations (rm -rf, git reset --hard, truncate, drop table) without explicit confirmation.
-- Never bypass Layer 0 DROS AST inspection or execute unvetted base64/curl/eval shell strings.
-- Never modify denylist paths in gate.yaml (.env*, credentials/\*_, secrets/\*_, auth/\*_, billing/\*_, migrations/\**).
-- Never exceed single-turn edit limit (8 files) without escalating to human.
-- Never advance to Phase 4 (Implementation) without Phase 0 Spec and Phase 3 Architecture approval.
-- Never introduce production seams (exported private internals, test-only wrapper parameters) to facilitate testing.
-- Never touch unrelated code outside the immediate scope unless refactoring < 3 lines of technical debt.
-- Never claim code is tested without verifiable test execution and passing assertions.

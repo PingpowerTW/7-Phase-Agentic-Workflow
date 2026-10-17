@@ -93,3 +93,12 @@
    - Worker 交付一律採用 `### PATCH: <path>`（局部替換）或 `### FILE: <path>`（新建整檔），禁止整檔重抄。
 4. **概念樹驗收對齊 (Concept-Tree Driven Verification)**：
    - Reviewer / Critic / Auditor 審查時，直接以 Level 0 概念樹作為不變量契約檢驗，未滿足 contracts 或違反 invariants 者直接一票否決。
+
+---
+
+## 6. 🛡️ 決策修訂、禁止私自降級與高定創作紀律 (OpenMontage Governance)
+
+1. **Append-Only 決策修訂折疊 (`Re-log Changed Decisions`)**：當中途變更已核准之技術選型時，嚴禁原地竄改歷史或更改 `subject`；必須以相同 `(category, subject)` 或 `touches` 錨點追加新 `decision` 快照（自動覆寫舊 `ruled_out`）。
+2. **禁止未授權單方替換 (`No Unilateral Substitutions`)**：核准路徑受阻時，嚴禁私自切換替代套件/模型或靜默降級；必須回報結構化 Blocker（嘗試內容、失敗根因、候選方案與建議）待人類批准。
+3. **Templated vs. Atelier 雙軌模式**：內部工具採 `templated` 組件重用；品牌/落地頁採 `atelier` 高定模式（**只重用底層引擎力學，禁止重用成品視覺組件**，交付前執行 Distinctness 反同質化自檢）。
+

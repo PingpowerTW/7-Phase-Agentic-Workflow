@@ -22,19 +22,29 @@
     description: "Token-Compressed Concise Communication Mode (Saves 65-75% Output Tokens)"
   }
 
-  context-compressor: {
-    path: "./skills/context-compressor"
-    description: "Bi-directional Context Pruning & Inter-Phase Conversation Distillation"
-  }
-
   context-pruner: {
     path: "./skills/context-pruner"
-    description: "Active Context Distillation Engine for Long-Running Engineering Sessions"
+    description: "SelfCompact Active Context Distillation Engine with C1-C2-C3-N1 First-Principles Probes"
   }
 
   auto-snapshot: {
     path: "./skills/auto-snapshot"
-    description: "Local AI Memory Engine with Append-Only SHA-256 Merkle Snapshot Log"
+    description: "Local AI Memory Engine with Append-Only SHA-256 Merkle Snapshot Log & Handoff SOP"
+  }
+
+  code-review: {
+    path: "./skills/code-review"
+    description: "Phase 5 Unified Adversarial Code Review, Security Scan & Architecture Inspection"
+  }
+
+  ponytail: {
+    path: "./skills/ponytail"
+    description: "Lazy Senior Dev 7-Tier Simplicity Ladder, Over-Engineering Review & Debt Tracking"
+  }
+
+  diagnosing-bugs: {
+    path: "./skills/diagnosing-bugs"
+    description: "Systematic 6-Stage Root-Cause Debugging Loop with Bug Severity Tracker"
   }
 
   promptcraft: {
@@ -49,32 +59,12 @@
 
   frontend-taste-v2: {
     path: "./skills/frontend-taste-v2"
-    description: "Anti-Slop Modern UI/UX Design Engine with Hallmark Aesthetic Scorer"
+    description: "Anti-Slop Modern UI/UX Design Engine with On-Demand References (GSAP, Cinematic, Landing, UX Audit)"
   }
 
   ui-designer: {
     path: "./skills/ui-designer"
     description: "Open Design 9-Section Design System & Dual-Track Token Engine"
-  }
-
-  ux-audit: {
-    path: "./skills/ux-audit"
-    description: "Quantitative UX Audit based on Gestalt Laws & Fitts's Law Parameters"
-  }
-
-  gsap-motion: {
-    path: "./skills/gsap-motion"
-    description: "GSAP 3 ScrollTrigger, Timeline Orchestration & React Animation System"
-  }
-
-  cinematic-ui: {
-    path: "./skills/cinematic-ui"
-    description: "Cinematic Visuals, Anamorphic Layouts & Ambient Deep Lighting"
-  }
-
-  landing-page-architect: {
-    path: "./skills/landing-page-architect"
-    description: "High-CRO Landing Page Architecture, AIDA/PAS Models & Conversion Blocks"
   }
 
   teamwork: {

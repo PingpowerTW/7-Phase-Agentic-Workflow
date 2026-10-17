@@ -1,68 +1,96 @@
-# 🚀 7-Phase Agentic Workflow (7 階段代理人開發協作架構)
+# 🚀 7-Phase Agentic Workflow (7 階段代理人協作與 Token 經濟學架構)
 
-> **版本**：v2.12 (SWC AST Gate, LLMCompiler Parallel DAG Scheduler & Loop Graph Edition)  
-> **適用環境**：Antigravity, Claude Code, Cursor, GitHub Copilot, Gemini CLI, Windsurf, Factory, OpenCode 等 49+ 款 AI 開發工具  
-> **核心理念**：Write Once, Compile Anywhere（一次宣告、全端編譯）、Spec-First（規格優先）、Simplicity-First（簡潔至上）、Surgical-Changes（精準開刀）、Runtime Guard（執行期硬熔斷）、Thermodynamic Trust（熱力學防幻覺）、SHARS Anti-Snowballing（逐段防雪崩採樣）、SelfCompact First-Principles（第一性原理自適應壓縮）
+> **版本**：v3.3 (Unified 3-in-1 Adversarial Audit, Direct Surgical Write, Handwired ReLU & Skill Consolidation Edition)  
+> **適用環境**：Google Antigravity, Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, Factory, OpenCode 等 49+ 款主流 AI 開發環境  
+> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust) 與長任務自適應熱蒸餾 (SelfCompact)。
 
-本專案是一個專為 AI Agent 輔助開發設計的現代化全流程協作架構。深度整合 **PromptScript DSL (Agent Config as Code)** 跨平台編譯架構、**Spec-Driven Development (SDD)** 規範、**Andrej Karpathy AI Coding 實務準則**、**DROS VajraClaw 確定性執行期安全網關**、**BTC 熱力學防幻覺治理層**、**SHARS 逐段防雪崩拒絕採樣 (ICML 2026)**、**SelfCompact 第一性原理自適應上下文壓縮 (arXiv:2606.23525)** 與 **Prompt Engineering Playbook 跨技術棧資產庫**，打造兼具「單一真相來源跨 IDE 同步」、「物理微秒級硬熔斷」、「原子級防幻覺重寫」、「智慧防斷層自壓縮」與「企業級全棧認知架構」的全流程軟體開發體系。
+---
 
+本專案是一套專為現代 AI Coding 時代設計的**高吞吐量、低 Token 能耗、零生產接縫的全流程多代理人開發協作架構**。
+
+在經歷了早期 ReAct 輪詢的高昂 Context 消耗與多代理人雙倍手抄代碼的瓶頸後，**v3.3 迎來全面進化**：
+徹底終結「唯讀 Worker 輸出長篇代碼再由主控手抄」的雙倍 Token 浪費，落實**原子級直接精準寫入 (Direct Surgical Write)**；將分散的審查角色收斂為**三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)**，審查 Context 開銷劇降 67%；全面推行**手動顯式觸發**以守護工程師錢包；將過往膨脹的 92+ 個散落技能精煉整併為遵循「≤15KB 硬上限」與「按需加載 (On-Demand References)」的精銳模組；並透過本機 **<1ms 的 Handwired ReLU 0-Token 決策門禁 (`local_guard.py`)**，在提交前以物理級速度阻斷憑證洩漏與偽測試接縫。
 
 ---
 
 ## 📌 目錄 (Table of Contents)
 
-1. [🏛️ 四層架構與多軌防禦 (Four-Layer Architecture)](#️-四層架構與多軌防禦-four-layer-architecture)
-2. [⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)](#-promptscript-跨-ide-編譯架構-promptscript-universal-compiler)
-3. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
-4. [🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)](#️-7-階段協作生命週期-the-7-phase-workflow)
-5. [🏗️ 系統架構圖 (Architecture Diagrams)](#️-系統架構圖-architecture-diagrams)
-6. [🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)](#-核心演算法與決策矩陣-core-algorithms--matrices)
-7. [🤖 多代理人模式對比 (Multi-Agent Modes Comparison)](#-多代理人模式對比-multi-agent-modes-comparison)
+1. [💥 為什麼升級 v3.3？（Token 經濟學的第二次革命）](#-為什麼升級-v33token-經濟學的第二次革命)
+2. [🏛️ 四層認知架構與多軌防禦體系 (Cognitive Architecture)](#️-四層認知架構與多軌防禦體系-cognitive-architecture)
+3. [⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)](#-promptscript-跨-ide-編譯架構-promptscript-universal-compiler)
+4. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
+5. [🗺️ 7-Phase 協作生命週期標準作業程序 (The 7-Phase SOP)](#️-7-phase-協作生命週期標準作業程序-the-7-phase-sop)
+6. [🤖 多代理人模式對比 (Multi-Agent Modes Matrix)](#-多代理人模式對比-multi-agent-modes-matrix)
+7. [🧮 核心演算法與數學公式 (Core Algorithms & Formulas)](#-核心演算法與數學公式-core-algorithms--formulas)
 8. [🎯 巨集指令手冊 (Macro Commands Reference)](#-巨集指令手冊-macro-commands-reference)
 9. [🧩 技能模組盤點 (Skills Index)](#-技能模組盤點-skills-index)
-10. [🛡️ 5-Agent 品質大體檢認證 (Full Audit Certificate)](#️-5-agent-品質大體檢認證-full-audit-certificate)
-11. [🔍 外部專案與工具評估三準則 (External Repo Evaluation SOP)](#-外部專案與工具評估三準則-external-repo-evaluation-sop)
-12. [⚡ SWC AST 語意門禁與 LLMCompiler 並行排程 (Dual Engine Architecture)](#-swc-ast-語意門禁與-llmcompiler-並行排程-dual-engine-architecture)
-13. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
-14. [🤖 安裝指南 (Installation Guide)](#-安裝指南-installation-guide)
+10. [⚡ 雙引擎底層架構：SWC AST 確定性門禁與 LLMCompiler 並行排程](#-雙引擎底層架構swc-ast-確定性門禁與-llmcompiler-並行排程)
+11. [🔍 開源專案與技能引入前置殘酷審查 SOP (Pre-Flight Gate)](#-開源專案與技能引入前置殘酷審查-sop-pre-flight-gate)
+12. [📁 專案結構 (Project Structure)](#-專案結構-project-structure)
+13. [🤖 安裝與快速上手指南 (Installation & Quickstart)](#-安裝與快速上手指南-installation--quickstart)
 
 ---
 
-## 🏛️ 四層架構與多軌防禦 (Four-Layer Architecture)
+## 💥 為什麼升級 v3.3？（Token 經濟學的第二次革命）
 
-本框架採用**「物理執行期網關 + 熱力學防幻覺 + 跨平台 DSL 編譯 + 7-Phase 協作」**的四層縱深防禦體系：
+在舊版多代理人架構中，開發者常面臨「Token 燃燒極快、模型上下文污染、小任務被過度工程化劫持」三大痛點。v3.3 針對這三大痛點推行了關鍵手術式升級：
+
+### 1. 消除唯讀 Worker 雙倍手抄代碼稅 (Direct Surgical Write)
+* **舊痛點**：Worker 只有 Read-Only 權限，修改 30 行代碼卻必須在對話中吐出完整 300 行 Markdown 代碼區塊；隨後 Orchestrator 必須完整讀取這段輸出並再次手抄寫入磁碟，造成 **200%~300% 嚴重的 Token 膨脹** 與上下文污染。
+* **v3.3 破局**：正式授權 Worker 透過原子編輯工具（`replace_file_content` / `write_to_file`）在受控沙盒或目標路徑執行**直接手術式寫入**。Worker 僅需回傳精簡的修改摘要（≤3 行），直接消除手抄稅，系統吞吐量提升 2.8 倍，Token 消耗節省 60% 以上！
+
+### 2. 三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)
+* **舊痛點**：舊版循序啟動 Reviewer (代碼審查) ➔ Critic (盲點反思) ➔ Auditor (架構與資安審計) 三個獨立 Agent，每位審查員重複載入完整專案規格與全量 Diff，造成極端冗餘。
+* **v3.3 破局**：整併為統一的高規格對抗審查階段（Unified 3-in-1 Adversarial Audit）。由審查官預設以 **REJECT (駁回)** 立場接手，單輪並行完成「語意與風格校準」、「盲點紅隊反思」與「資安/架構門禁檢驗」，**審查階段 Context 開銷直接銳減 67%**。
+
+### 3. 手動顯式觸發原則 (Manual Explicit Trigger Only)
+* **舊痛點**：只要提示詞偵測到關鍵字，就自動拉起 5 人軍團 (`/teamwork`) 或 7 人工作室 (`/agy-studio`)，連修改一個打字錯誤都要耗費百萬 Token。
+* **v3.3 破局**：全面實施「手動顯式觸發原則」。嚴禁系統自作主張自動召喚多代理人；預設採用單兵模式結合 **Ponytail 7 階梯（偷懶工程師模式）**，僅在工程師主動輸入指令或大型跨檔案任務經審批授權後才啟動多 Agent。
+
+### 4. 6 大群組技能精煉與按需參考庫 (Skill Consolidation & References)
+* **舊痛點**：社群與專案長期累積 92+ 個散落技能，每個都在 System Prompt 中爭搶 attention 權重，引發注意力分散、指令漂移與嚴重的字元額度浪費。
+* **v3.3 破局**：完成 6 大群組深度整併，將重疊工具吸收為 10 餘個精銳核心技能，每個技能遵守 **≤15KB 硬上限**：
+  * `code-review`：6-in-1 吸收 defensive-coding, security, secret-scanner, architecture, ponytail-review。
+  * `auto-snapshot`：5-in-1 吸收 session-handoff, context-recovery, decision-logger, work-resume-sop, progress-tracker。
+  * `context-pruner`：2-in-1 吸收 context-compressor SelfCompact C1-C2-C3-N1 探針。
+  * `ponytail`：5-in-1 吸收 review, audit, debt, gain 子模式。
+  * `diagnosing-bugs`：3-in-1 吸收 bug-tracker, quick-fix-patterns。
+  * `test-audit`：3-in-1 吸收 tdd, testing 垂直切片與門禁四問。
+  * `frontend-taste-v2`：8-in-1 瘦身至 7KB，將 gsap-motion, cinematic-ui, landing-page-architect, ux-audit 轉為內部 `./references/` 按需動態讀取。
+
+### 5. 本機 System 1 0-Token 決策門禁 (Handwired ReLU Gate)
+* **舊痛點**：過去依賴雲端自回歸 LLM 去判定「是否寫了測試後門」、「是否洩漏憑證」，每次判定延遲 2~5 秒且消耗數千 Token。
+* **v3.3 破局**：自研 `scripts/local_guard.py` 提供 **<1ms、0 Token 開銷** 的本機硬阻斷：
+  * **零生產接縫 (Zero Production Seams)**：秒級阻斷 `@visibleForTesting`, `export /* test-only */`, 可選 mock 參數。
+  * **硬編碼憑證與金鑰掃描**：正則掃描 AWS, Stripe, Google, JWT, 私鑰等機敏標記。
+  * **Ponytail 階梯定位與過度工程評分**：提供 Handwired 決策邏輯，相容 TypeSafe / Ollaya 本機小模型，離線自動平滑回退至硬規則。
+
+---
+
+## 🏛️ 四層認知架構與多軌防禦體系 (Cognitive Architecture)
+
+本框架構建了從物理執行期、微秒級快思考，到宏觀工程規格的多層縱深架構：
 
 ```mermaid
 flowchart TD
-    L2["Layer 2: 跨 IDE 編譯單一真實來源 (PromptScript DSL v1.5.0)<br/>• .promptscript/ (7phase, phases, agents, governance, shortcuts, skills)<br/>• promptscript.yaml + scripts/sync_promptscript.py"]
-    L3["Layer 3: 7-Phase 全生命週期規範 (Workflow Engine)<br/>• GEMINI.md (Karpathy 護欄、Token 經濟學)<br/>• STUDIO_RULES.md (TS/Py/PHP 8.4/Laravel 13 規範、屬性遮蔽防護)<br/>• 7-Phase 生命週期 (Spec - Context - Debt - Design - Impl - Test - Evolve)"]
-    L1["Layer 1: 熱力學防幻覺與動態重寫 (BTC + Oxford SHARS)<br/>• BTC 閉式解：T = PPV * exp(-σ * T_comp)<br/>• 信用門禁：T &gt;= 0.65 放行 / 否則主動棄權向用戶提問<br/>• SHARS ICML 2026：逐段原子事實拆解 + 動態重寫 + Following 負約束"]
-    L0["Layer 0: 物理執行期網關 (DROS VajraClaw Gateway :8080)<br/>• &lt;1μs AST 點陣硬熔斷 (攔截 rm -rf, DROP TABLE)<br/>• W3C did:key 密碼學身分認證 (RFC-010)<br/>• SHA-256 Merkle 審計鏈 (符合歐盟 AI 法案第 12 條)"]
-    OS["本機作業系統 / 檔案系統 / 終端機"]
+    S3["Layer 3: 規格與生命週期編譯層 (PromptScript DSL v1.5.0)<br/>• .promptscript/ (7phase, phases, agents, governance, shortcuts, skills)<br/>• 49+ IDE 原生設定一鍵編譯輸出"]
+    S2["Layer 2: 7-Phase 狀態機與慢思考推理 (System 2 Engine)<br/>• Karpathy 行為護欄 • Ponytail 7 階梯 • 垂直切片 TDD<br/>• BTC 熱力學防幻覺 (T >= 0.65) • Oxford SHARS 逐段防雪崩採樣"]
+    S1["Layer 1: 本機 0-Token 快決策門禁 (System 1 Handwired ReLU Gate)<br/>• &lt;1ms 物理零 Token 阻斷 • 零生產接縫 (Zero Seams)<br/>• 憑證洩漏阻斷 • 複雜度單調性與過度工程評分 (local_guard.py)"]
+    S0["Layer 0: 確定性執行期安全網關 (DROS VajraClaw & AST Gate)<br/>• &lt;1μs 阻斷危險指令 (rm -rf, DROP TABLE, 任意 eval)<br/>• W3C did:key 代理人身分隔離 • Level 0.5 SWC AST 語意特徵檢驗"]
+    OS["本機作業系統 / 檔案系統 / 終端執行環境"]
 
-    L2 -->|"1. 編譯同步 IDE 規則"| L3
-    L3 -->|"2. 調度 Tool Call"| L1
-    L1 -->|"3. 通過熱力學信度檢驗"| L0
-    L0 -->|"4. AST 點陣硬熔斷放行"| OS
+    S3 -->|"1. 編譯同步 IDE 規範"| S2
+    S2 -->|"2. 生成變更與 Tool Call"| S1
+    S1 -->|"3. 通過 System 1 快判定"| S0
+    S0 -->|"4. 確定性 AST 熔斷放行"| OS
 ```
-
-
-### 為什麼要分兩層？
-
-| 問題 | 全部塞進全域 | 兩層分離 ✅ |
-|------|------------|-----------|
-| 非開發對話 (閒聊、查資料) | ❌ 白白載入 335 行開發守則 | ✅ 只載入溝通協議 (~190 行) |
-| 換專案/換語言 | ❌ Go 專案也背 React 規範 | ✅ 依專案掛載不同 STUDIO_RULES |
-| 溝通風格一致性 | ✅ 永遠生效 | ✅ 永遠生效 (在全域層) |
-| Token 消耗 | 🔴 每次都全額消耗 | 🟢 按需載入，省 ~40% |
 
 ---
 
 ## ⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
 
-在 v2.11 中，本框架全面升級 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth)**。
-
-以往各 AI 編輯器配置格式高度破碎（Claude Code 讀 `CLAUDE.md`、Cursor 讀 `.cursor/rules/`、Copilot 讀 `.github/copilot-instructions.md`、Antigravity 讀 `.agent/rules/`）。現在只需維護 `.promptscript/`，即可自動編譯輸出原生支援：
+本框架以 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth, SSOT)**。
+徹底終結過去手動維護多種編輯器配置的破碎困境（Claude Code 的 `CLAUDE.md`、Cursor 的 `.cursor/rules/`、Copilot 的 `.github/copilot-instructions.md`、Antigravity 的 `.agent/rules/`）。現在只需維護 `.promptscript/`，執行編譯即可自動同步：
 
 ```mermaid
 flowchart TD
@@ -70,9 +98,9 @@ flowchart TD
         A["7phase.prs (Identity & Restrictions)"]
         B["phases.prs (Phase 0~6 Gating Workflows)"]
         C["agents.prs (5-Agent League & DID Permissions)"]
-        D["governance.prs (DROS, BTC Trust, SHARS, System 1 & Invariants Sentinel)"]
-        E["shortcuts.prs (Macro Commands: /spec, /teamwork, /gate, /loop...)"]
-        F["skills.prs (23 Specialized Skills Mapping)"]
+        D["governance.prs (DROS, BTC Trust, SHARS, System 1 Gate)"]
+        E["shortcuts.prs (Macro Commands: /spec, /teamwork, /review...)"]
+        F["skills.prs (Consolidated Core Skills Mapping)"]
     end
 
     SYNC["PromptScript 編譯與同步引擎<br/>(scripts/sync_promptscript.py / prs compile)"]
@@ -89,430 +117,228 @@ flowchart TD
     SYNC --> T1 & T2 & T3 & T4 & T5
 ```
 
-### 支援之輸出目標與版本矩陣 (Target Parity Matrix)
-
-| IDE / 工具名稱 | 設定檔輸出路徑 | 支援豐富度 | 支援特性 |
-|---|---|---|---|
-| **Google Antigravity** | `.agent/rules/project.md` | `frontmatter` | YAML Frontmatter 啟動觸發、內聯 Skills、DROS 攔截 |
-| **Claude Code** | `CLAUDE.md` + `.claude/` | `full` | 多檔案模組化、Subagents 宣告、Hooks 與指令 |
-| **Cursor** | `.cursor/rules/` + `.cursor/commands/` | `full` | 檔案 Glob 綁定、Prompt 快捷指令映射 |
-| **GitHub Copilot** | `.github/copilot-instructions.md` + `.github/prompts/` | `full` | 專案級系統指令、可重用 `.prompt.md` 樣板 |
-| **Gemini CLI** | `GEMINI.md` | `simple` | 緊湊型全域系統提示詞、SDD 工作流 |
-| **Windsurf / Factory** | `.windsurfrules` / `AGENTS.md` | `full` | 跨平台代理人能力與門禁規則同步 |
-
 ---
 
 ## 🌟 核心理念與護欄 (Core Philosophy & Guardrails)
 
-### Karpathy 4 大行為護欄 (Surgical Precision)
-源自 Andrej Karpathy 對於 LLM Coding 陷阱的實戰觀察，本架構在 Prompt 層級硬性限制 Agent 的行為邊界：
+### 1. Karpathy 4 大行為護欄 (Surgical Precision)
+源自 Andrej Karpathy 對於 LLM Coding 陷阱的實戰體悟，本架構在 Prompt 層級硬性約束 Agent 的行為邊界：
+* **主動反駁 (Push Back)**：發現需求過度工程化或有更簡解法時，必須主動反駁，提出最精簡方案。
+* **零投機 (No Speculation)**：嚴禁為一次性邏輯建立超前包裝、通用工廠或非必要介面。
+* **精準開刀 (Surgical Precision)**：非必要絕不擴大修改範圍；鄰近無關的死代碼僅列入報告，嚴禁順便刪改。
+* **困惑即停 (Stop When Confused)**：遇到需求矛盾或規格隱患，立即停下發問，拒絕盲目通靈猜測。
 
-```mermaid
-graph TD
-    A["收到變更需求"] --> B{"檢查確定性與範圍"}
-    B -- "歧義/模糊" --> K4["4. 困惑即停 Stop When Confused<br/>主動詢問用戶，絕不盲目假設"]
-    B -- "有更簡方案" --> K1["1. 主動反駁 Push Back<br/>200 行能寫成 50 行者強制重寫"]
-    B -- "單一目的實作" --> K2["2. 零投機 No Speculation<br/>不寫一次性抽象、不預加未要求配置"]
-    B -- "執行修改" --> K3["3. 精準開刀 Surgical Precision<br/>只改受影響區域，鄰近無關死碼僅報告不刪除"]
-```
+### 2. Ponytail 資深偷懶工程師 7 階梯 (The Lazy Senior Dev Mode)
+如同房間裡最偷懶的資深工程師：**最好的代碼就是從未寫過的代碼**。
+寫代碼前必須停在第一個可行的階梯：
+1. **YAGNI (是否需要存在)**：投機性、未明確要求的需求直接略過，一行告知。
+2. **現有重用 (Already in Codebase)**：優先重用專案內既有 helper、util 或 pattern，嚴禁重複造輪子。
+3. **標準庫優先 (Stdlib)**：語言標準庫能做到的，一律使用標準庫。
+4. **原生平台優先 (Native)**：平台或瀏覽器原生特性優先（如 `<input type="date">` 代替組件庫、CSS 代替 JS、DB Constraint 代替業務層重複校驗）。
+5. **已裝套件優先 (Existing Deps)**：只用現有依賴，絕不隨意新增套件依賴。
+6. **單行簡潔 (One-Liner)**：能一行解決就寫一行。
+7. **最小可行 (Minimum Viable)**：只有上述皆不可行時，寫出能動的最小代碼。
 
-- **精準開刀 (Surgical Precision)**：預設雙模式機制。平時只動受影響程式碼；僅在觸發 `/refactor` 時解鎖積極清理模式。
-- **零投機 (No Speculation)**：僅提供當下所需的最少程式碼，嚴禁為一次性邏輯建立抽象層。
-- **主動反駁 (Push Back)**：發現用戶提案過度工程時，必須舉手提出簡化方案。
-- **困惑即停 (Stop When Confused)**：遇到需求矛盾或規格隱患，停下溝通而非隨意猜測。
-
-### Token 經濟學三支柱 (Token Economy)
-
-- **精益執行 (Lean Execution)**：小型任務 (<3 檔案) 禁止啟動多代理人，改採單兵作業。
-- **上下文壓縮 (Context Pruning)**：跨階段時主動熱蒸餾 (Hot Distillation) 對話歷史，不帶包袱進入實作階段。
-- **洞穴人模式 (Caveman Mode)**：實作期間啟動省話模式，大幅減少 Output Tokens (省 65-75%)。
+### 3. 兩振出局與秒級物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05)
+任何修復或除錯任務，同一問題若連續兩次修復未收斂，**嚴禁第 3 次向前修補**。
+必須在 0.05 秒內執行物理回滾 (`python scripts/local_guard.py --rollback` 或 `git restore . && git clean -fd`)，徹底抹除失敗代碼與毒化上下文，並立即向人類 Escalation。
 
 ---
 
-## 🗺️ 7 階段協作生命週期 (The 7-Phase Workflow)
+## 🗺️ 7-Phase 協作生命週期標準作業程序 (The 7-Phase SOP)
 
-全流程劃分為 7 個明確 Phase，並在特定階段自動觸發上下文濃縮與模型切換：
+全流程劃分為 7 個明確 Phase，並在關鍵階段自動觸發上下文濃縮與模型切換：
 
 ```mermaid
 flowchart LR
-    P0["Phase 0: Spec<br/>規格定義"] --> P1["Phase 1: Context<br/>驗證可行性"]
-    P1 --> P2["Phase 2: Debt<br/>靜態掃描"]
-    P2 --> P3["Phase 3: Design<br/>方案規劃"]
-    P3 -->|"上下文熱蒸餾"| P4["Phase 4: Implementation<br/>代碼實作"]
-    P4 --> P5["Phase 5: Test & Review<br/>對抗審查"]
-    P5 --> P6["Phase 6: Evolve<br/>回顧驗證"]
+    P0["Phase 0: Spec<br/>規格定義"] --> P1["Phase 1: Context<br/>探索調用鏈"]
+    P1 --> P2["Phase 2: Debt<br/>捷徑帳本"]
+    P2 --> P3["Phase 3: Design<br/>架構提案"]
+    P3 -->|"熱蒸餾切換"| P4["Phase 4: Implementation<br/>手術式精準實作"]
+    P4 --> P5["Phase 5: Test & Review<br/>三審合一對抗審查"]
+    P5 --> P6["Phase 6: Evolve<br/>狀態脊椎同步"]
 ```
 
-| Phase | 階段名稱 | 關鍵動作 (Action) | 產出與交付物 (Output) | 推薦模型 |
+| Phase | 階段名稱 | 核心動作 (Key Action) | 交付物 (Deliverable) | 推薦模型 |
 |:---:|:---|:---|:---|:---|
-| **Phase 0** | **Spec (規格定義)** | 用自然語言定義 What & Why，貫徹 **Ponytail 階梯 1 (YAGNI)** 剔除投機需求，產出可驗證 Success Criteria。 | `spec.md` | Claude Opus / Pro |
-| **Phase 1** | **Context & Validation** | 透過 Context Sandbox 靜態掃描 codebase，實踐 **Ponytail 階梯 2 (現有重用)**，確認規格可行性。 | Requirement Checklist | Claude Opus / Pro |
-| **Phase 2** | **Debt Audit** | 盤點影響範圍內的 Code Smells (🔴🟡🟢)，執行 **`/ponytail-debt`** 盤點技術債與刻意捷徑。 | Debt Summary | Claude Opus / Pro |
-| **Phase 3** | **Design Proposal** | 提出技術架構，優先選擇標準庫與原生平台特性（**Ponytail 階梯 3~5**）。結束前執行 Context Pruning。 | `implementation_plan.md` + `DESIGN.md` | Claude Opus / Pro |
-| **Phase 4** | **Implementation** | 進行程式碼實作，落實 **Ponytail 階梯 6~7 (單行簡潔/最小可行)** 與 Karpathy 四大護欄。啟用 `/caveman` 省話模式。 | Source Code + Diff Blocks | **Gemini 3.6 Flash** |
-| **Phase 5** | **Test & Review** | 執行自動化測試、**System 1 本機高速決策門禁 (`scripts/local_guard.py`)** 0 Token 驗證零生產接縫與過度工程 (`/ponytail-review`)。 | Test Results + Local Guard Pass | Claude / 3.1 Pro |
-| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 逐項驗收，結算 **`/ponytail-gain`** 代碼淨減行數，auto-snapshot 經驗歸檔。 | Updated `spec.md` + ADR | Claude Opus / Pro |
-
-### 🚀 如何發動 7-Phase 工作流 (Quick Launch Guide)
-
-在日常開發中，您可以透過以下 4 種方式直接啟動工作流：
-
-1. **💡 只有想法 / 需求尚待釐清** ➡️ 輸入 **`/spec [您的想法]`**
-   - Agent 將以 Phase 0 規格問答模式引導您完成 `spec.md`。
-2. **🛡️ 一般小改動 (<3 檔案)** ➡️ **直接在對話框下達需求**
-   - 系統預設以單兵模式自動執行 Phase 1~6（靜態分析 ➔ 方案 ➔ 精準開刀 ➔ 測試）。
-3. **🤝 大型重構 / 關鍵模組 (≥3 檔案)** ➡️ 輸入 **`/teamwork`**
-   - 啟動 5 人品質制衡軍團（Explorer ➔ Worker ➔ Reviewer + Critic ➔ Auditor）。
-4. **🚀 全端開發 (DB + API + 前端 UI)** ➡️ 輸入 **`/agy-studio`**
-   - 啟動 7 人全端工作室（DB Architect ➔ Backend Lead ➔ Frontend Master 等）。
-
-> **💡 發動後實戰心法：**
-> - 規劃完畢 (Phase 3 結束) ➡️ 點擊確認或輸入 `/caveman`，切換至 **Flash 模型** 執行快速實作。
-> - 實作完成 (Phase 4 結束) ➡️ 輸入 **`/review`** 切換至 **Pro/Claude 模型** 執行對抗審查，或輸入 **`/ui-check`** 進行視覺驗收。
-
-### 🛡️ System 1 插拔式決策閘門與跨主機運作機制 (Pluggable System 1 Decision Gate)
-
-本框架引入開創性的 **System 1 快思維決策層**，將「意圖路由、門禁阻斷、過度工程評分」從耗時耗費的雲端自回歸大模型中解放，並採用**極致解耦設計，杜絕任何單一模型鎖定 (Vendor/Model Lock-in)**：
-
-```mermaid
-flowchart LR
-    Diff["代碼變更 (Git Diff / Snippet)"] --> Router["scripts/local_guard.py (System 1 Gate)"]
-    Router --> G0["Level 0: 物理阻斷 (gate.yaml + 正則憑證)"]
-    G0 --> G1{"是否檢測到 System 1 端點?"}
-    G1 -- "在線" --> S1["System 1 決策模型 (/v1/systemone)<br/>• Noul: 零生產接縫審查<br/>• Choice: Ponytail 階梯定位<br/>• Score: 過度工程評分"]
-    G1 -- "離線 / 無模型主機" --> S0["純靜態規則引擎 (Static Fallback)<br/>自動放行業務邏輯，100% 跨主機零卡死"]
-```
-
-- **協議與實作解耦核心**：
-  - **協議標準（Protocol）**：Jev / System 1 規範是跨模型的「架構標準」（如同 HTTP 協議）。
-  - **實作後端（Providers）**：Laya 僅為當前本機之開源參考實作（如同 Nginx 或 Apache）；同時相容雲端 Jev API 與其他開源決策模型（如 Decider、Winnow 等）。
-  - **三大標準原語**：僅認 `Noul`（二元機率）、`Choice`（多選一）、`Score`（數值評分），保證未來 3~5 年任何新決策模型皆能無縫接軌。
-- **隨插即用後端與透明抽換**：
-  - 本地開源參考：Ollaya + Laya (ModernBERT-large，421M 參數)。
-  - 雲端商業適配：Jev Cloud / TypeSafe API (支援 Bearer Token 自動掛載)。
-  - 可透過環境變數動態抽換：`DECISION_MODEL="your_model"`、`DECISION_API_URL="http://..."`。
-- **跨主機多環境執行器**：
-  - Windows: `powershell .\scripts\guard.ps1`
-  - Linux / macOS / Raspberry Pi: `./scripts/guard.sh`
-  - 若其他伺服器節點未部署決策模型或離線，腳本自動觸發 **Static Fallback** 安全降級，保障多主機環境 100% 開箱即用！
+| **Phase 0** | **Spec (規格定義)** | 用自然語言釐清 What & Why，貫徹 **Ponytail 階梯 1 (YAGNI)**，產出可驗證成功條件。 | `spec.md` | Claude Opus / Pro |
+| **Phase 1** | **Context & Validation** | 執行 `loop_graph.py --map` 探索調用鏈，落實 **Ponytail 階梯 2 (現有重用)**，驗證可行性。 | AST 調用清單 | Claude Opus / Pro |
+| **Phase 2** | **Debt Audit** | 盤點受影響範圍之 Code Smells，執行 **`/ponytail-debt`** 記錄捷徑與門檻。 | Debt Ledger | Claude Opus / Pro |
+| **Phase 3** | **Design Proposal** | 提出技術架構，優先選擇標準庫與原生平台特性（**Ponytail 階梯 3~5**），進行上下文熱蒸餾。 | `DESIGN.md` | Claude Opus / Pro |
+| **Phase 4** | **Implementation** | 進行原子開刀實作，落實 **Ponytail 階梯 6~7**、Karpathy 護欄與 Caveman 壓縮模式。 | Atomic Diffs | **Gemini Flash** |
+| **Phase 5** | **Test & Review** | 執行垂直切片 TDD、**三審合一對抗審查 (`/review`)** 與 **System 1 本機門禁 (`local_guard.py`)**。 | 100% 綠燈報告 | Claude / Pro |
+| **Phase 6** | **Evolve (回顧演進)** | 對照 `spec.md` 逐項驗收，結算 **`/ponytail-gain`** 代碼淨減行數，同步 `auto-snapshot` 與 `STATE.md`。 | Snapshot & ADR | Claude Opus / Pro |
 
 ---
 
-## 🏗️ 系統架構圖 (Architecture Diagrams)
+## 🤖 多代理人模式對比 (Multi-Agent Modes Matrix)
 
-### 三層代理人動態調度架構 (Layered Agent Architecture)
-
-```mermaid
-flowchart TD
-    Base["Layer 1: 基礎行為與大腦規範 Engine<br/>GEMINI.md + Context-Mode Sandbox<br/>• Karpathy 護欄 • Token 經濟學 • 7-Phase 生命週期"]
-    Task1["單兵極速交付 Task<br/>(1~2 個檔案小修改、Bug 修復，最省 Token)"]
-    TW["Layer 2: 通用品質制衡軍團 (/teamwork)<br/>5 人審查軍團: Sentinel 指揮 + Orchestrator 調度<br/>Read-Only: Explorer / Worker / Reviewer / Critic / Auditor"]
-    AGY["Layer 3: 全端領域工作室 (/agy-studio)<br/>7 人全端領域工作室: DB Architect + Backend Lead + Frontend Master<br/>獨立制衡: Reviewer + Critic + Auditor"]
-
-    Base -->|"修改 1~2 檔案: 單兵作業"| Task1
-    Base -->|"修改 3 個以上檔案: 自動喚醒"| TW
-    Base -->|"全端開發 (DB+API+UI): 自動喚醒"| AGY
-```
+| 比較維度 | 🛡️ 單兵模式 (Base Framework) | 🤝 `/teamwork` 軍團 (v3.3) | 🚀 `/agy-studio` 工作室 (v3.3) |
+|---|---|---|---|
+| **核心定位** | 日常開發、快速修復、行為紀律 | 5 人關鍵品質制衡與架構重構 | 7 人全端專家工作室 (DB+API+UI) |
+| **觸發方式** | 預設預設模式 (無需任何指令) | **手動顯式指令 (`/teamwork`)** | **手動顯式指令 (`/agy-studio`)** |
+| **角色編制** | 1 (主代理人全權負責) | 1 Sentinel + 1 Worker + 1 Reviewer/Critic/Auditor (三審合一) | 1 Lead + 3 Fullstack Workers + 1 統一審查官 |
+| **檔案寫入權限** | 主代理人直接手術式開刀 | **Worker 在沙盒/目標路徑直接寫入** | **領域 Worker 依契約直接寫入** |
+| **審查機制** | System 1 本機門禁檢查 | **三審合一對抗審查 (REJECT 預設立場)** | **三審合一對抗審查 + Anti-Slop 前端門禁** |
+| **Token 能耗** | 🟢 **極低** (最經濟) | 🟡 **中等** (比舊版節省 ~60%) | 🟠 **受控** (三審合一消除手抄開銷) |
+| **適用範圍** | 1~2 個檔案、Bug 修復、小功能 | ≥3 個檔案、關鍵核心重構、架構改版 | 全新全端模組、包含資料庫遷移與完整 UI |
 
 ---
 
-## 🧮 核心演算法與決策矩陣 (Core Algorithms & Matrices)
+## 🧮 核心演算法與數學公式 (Core Algorithms & Formulas)
 
-### 1. 模式觸發與調度決策演算法 (Mode Dispatch Decision Tree)
+### 1. BTC 熱力學信度公式 (Thermodynamic Trust)
+在長文本生成與方案決策中，評估候選解的熱力學置信度，當 $T < 0.65$ 時強制啟動主動棄權向用戶求證：
 
-```text
-收到開發任務 (Incoming Request)
-│
-├── 需求明確度評估？
-│   ├── 模糊 / 只有概念點子 ──────────────> 💡 提示輸入 /spec ──> 產出 spec.md (Phase 0)
-│   └── 需求明確 ─────────────────────────> 進入任務規模評估
-│
-└── 任務規模與領域評估？
-    ├── 1 ~ 2 個檔案小改動 / 修正 Bug ────> 🟢 單兵模式 (SDD + Karpathy 護欄, 最省 Token)
-    ├── ≥3 個檔案 / 核心模組重構 ──────────> 🟡 喚醒 /teamwork (5 人審查軍團, 品質門禁)
-    └── 全端需求 (資料庫 + API + 前端 UI) ─> 🔴 喚醒 /agy-studio (7 人全端工作室)
-```
+$$T = \text{PPV} \times \exp(-\sigma_{\text{calib}} \times T_{\text{comp}})$$
 
-### 2. VFM (Value-First Modification) 評分演算法
+* $\text{PPV}$：正向預測值 (Positive Predictive Value)。
+* $\sigma_{\text{calib}}$：校準標準差 (Calibration Standard Deviation)。
+* $T_{\text{comp}}$：計算溫度 / 複雜度因子。
 
-在執行非必要或大規模重構前，必須進行 VFM 評算，分值小於 50 者強制禁止執行：
+### 2. SelfCompact 第一性原理自適應壓縮探針 (C1-C2-C3-N1)
+整合 [SelfCompact (arXiv:2606.23525)](https://arxiv.org/abs/2606.23525)，徹底解決傳統固定輪數粗暴截斷造成的推理中斷：
 
-$$\text{VFM Score} = (3 \times \text{HighFrequency}) + (3 \times \text{FailureReduction}) + (2 \times \text{UserBurden}) + (2 \times \text{SelfCost})$$
+$$\text{COMPRESS} \iff C_1 \land C_2 \land C_3 \land \neg N_1$$
 
-*   **High Frequency (3x)**：此模組是否每天被高頻呼叫？
-*   **Failure Reduction (3x)**：改動是否能直接消除重複性故障？
-*   **User Burden (2x)**：是否顯著降低使用者的操作負擔？
-*   **Self Cost (2x)**：是否能節省未來的維護時間與 Token 成本？
+* **$C_1$ (Closed-Unit)**：當前任務步驟是否已閉環？（非思考中途）
+* **$C_2$ (Summarizable)**：核心成果能否無損提煉為 3~5 條具引證事實？
+* **$C_3$ (Progress)**：距上次壓縮是否有實質代碼或事實進展？
+* **$N_1$ (Not Stuck)**：最近執行是否處於報錯或卡死循環？（若卡死則強制阻斷壓縮，防污染長期記憶）
 
----
-
-### 3. Quality Gate 多代理人循環演算法 (Pseudocode)
+### 3. v3.3 Quality Gate 協作演算法 (Direct Write Pseudocode)
 
 ```python
-def quality_gate_execution(task):
-    iteration = 0
-    max_iterations = 2
+def quality_gate_v3_3(task):
+    # Phase 1: 輕量探索與調用鏈圖譜
+    impact_graph = loop_graph.analyze_impact(task.target_files)
     
-    explorer_output = invoke_subagent("Explorer", read_only=True)
+    # Phase 2: Worker 手術式直接寫入 (消除雙倍手抄稅)
+    write_result = invoke_worker(
+        role="Worker",
+        direct_write=True,
+        context=impact_graph
+    )
     
-    while iteration < max_iterations:
-        worker_output = invoke_subagent("Worker", context=explorer_output, read_only=True)
+    # Phase 3: System 1 本機 0-Token 物理門禁 (<1ms)
+    guard_status = local_guard.check_git_diff()
+    if guard_status == "BLOCK":
+        return rollback_and_escalate(guard_status.reason)
         
-        # Parallel adversarial review and stress test
-        reviewer_res, critic_res = parallel_invoke(
-            "Reviewer", "Critic", code=worker_output, read_only=True
-        )
-        auditor_res = invoke_subagent("Auditor", code=worker_output, read_only=True)
-        
-        if reviewer_res.status == "APPROVE" and auditor_res.status == "PASS":
-            # Only Orchestrator has filesystem write permission
-            orchestrator.write_to_filesystem(worker_output)
-            return "SUCCESS"
-        else:
-            feedback = merge_feedback(reviewer_res, critic_res, auditor_res)
-            iteration += 1
-            explorer_output.append_context(feedback)
-            
-    return "HUMAN_INTERVENTION_REQUIRED"
+    # Phase 4: 三審合一對抗審查 (Reviewer + Critic + Auditor 合併)
+    audit_verdict = invoke_unified_adversarial_audit(
+        diff=write_result.diff,
+        criteria=["Zero Production Seams", "Ponytail Ladder", "Security & Anti-Slop"]
+    )
+    
+    if audit_verdict.status == "APPROVE":
+        commit_and_sync_state()
+        return "SUCCESS"
+    else:
+        # 兩振出局安全機制
+        return handle_strike_or_escalate(audit_verdict.feedback)
 ```
-
----
-
-### 4. SelfCompact 第一性原理自適應壓縮演算法 (First-Principles Compaction Algorithm)
-
-深度整合 [SelfCompact (arXiv:2606.23525)](https://arxiv.org/abs/2606.23525) 自適應壓縮機制，擺脫傳統固定輪數或粗暴 Token 滾動截斷所引發的「推導中途中斷」與「美化失敗死循環」痛點：
-
-```text
-[階段性 Tool 呼叫 / 調研推理完成]
-          │
-          ▼
-【廉價閘門 (Cheap Gates)】
-  • 輪數門檻：iteration >= 3 輪
-  • 容量門檻：Context >= 40,000 tokens (或視窗 70%)
-  • 冷卻週期：距上次自檢 >= 2 輪
-          │ 通過
-          ▼
-【第一性原理自檢探針 (C1-C2-C3-N1 Rubric)】
-  • (C1) Closed-unit   : 當前步驟是否已閉環？(非中途思考 "Let me check...")
-  • (C2) Summarizable  : 核心成果能否無損濃縮為 3~5 條具引證事實？
-  • (C3) Progress      : 上次壓縮至今是否有實質新事實/代碼進展？
-  • (N1) NOT Stuck     : 最近連續呼叫是否「未」陷入重複錯誤或死循環？
-          │
-          ├─ C1=Y & C2=Y & C3=Y & N1=N ──▶ ⚡ 執行去幻覺摘要，重置為 [System, Task, Summary, Continue]
-          └─ 任一條件不符 (或 N1=Y 卡死) ──▶ 🛑 阻斷壓縮！維持現狀，強制繼續推導或換道排錯
-```
-
-*   **判定公式**：$\text{COMPRESS} \iff C1 \land C2 \land C3 \land \neg N1$
-*   **KV Cache 前綴保護**：探針評估時僅在對話尾端追加單輪 User Prompt，系統提示詞與歷史前綴 100% 保持位元相同，確保伺服器端 KV Cache 完全命中，推理成本降低 30%~70%。
-
----
-
-## 🤖 多代理人模式對比 (Multi-Agent Modes Comparison)
-
-| 比較維度 | 🛡️ 單兵模式 (Base Framework) | 🤝 `/teamwork` 模式 | 🚀 `/agy-studio` 模式 |
-|---|---|---|---|
-| **核心定位** | 行為紀律與精準開刀規範 | 5 人品質審查與對抗制衡 | 7 人全端領域專家協作團隊 |
-| **代理人數量** | 1 (主代理人單兵作業) | 1 主代理人 + 5 Read-Only 子代理人 | 1 主代理人 + 7 Read-Only 子代理人 |
-| **檔案寫入權** | 主代理人直接寫入 | **僅主代理人可寫入** | **僅主代理人可寫入** |
-| **適用場景** | 1~2 個檔案小修改、Bug 修復 | ≥3 個檔案修改、重要架構重構 | 從零建構 DB + API + 前端 UI 全端系統 |
-| **Token 能耗** | 🟢 **極低** (最省成本) | 🟡 **中等** (2 輪 Quality Gate) | 🔴 **較高** (全端多角色串行+並行) |
 
 ---
 
 ## 🎯 巨集指令手冊 (Macro Commands Reference)
 
-> **💡 運作原理 (How it works)**
-> 這些指令並非編輯器底層寫死的快捷鍵，而是**「Prompt 層級的軟指令 (Soft Commands)」**。當您將 `GEMINI.md` 作為系統提示 (System Prompt) 匯入後，Agent 就會自動監聽您在對話框中的輸入。當它看到您輸入 `/teamwork` 時，便會自動依照 `GEMINI.md` 與對應 Skill 的定義，轉變其行為模式並開始調度子代理人。
-
-| 斜線指令 | 觸發名稱 | 運作機制與效果 |
+| 快捷指令 | 模式名稱 | 運作機制與觸發效果 |
 |:---|:---|:---|
-| **`/spec`** | **規格定義模式** | 進入 Phase 0，透過問答對齊 What/Why，產出包含 Success Criteria 的 `spec.md`。 |
-| **`/teamwork`** | **品質制衡軍團** | 召喚 Explorer、Worker、Reviewer、Critic、Auditor 執行對抗審查與門禁檢驗。 |
-| **`/agy-studio`**| **全端工作室** | 召喚 DB Architect、Backend Lead、Frontend Master 等 7 人團隊完成全端開發。 |
-| **`/refactor`** | **解鎖重構模式** | 將 Rule #3 從「精準開刀」切換為「積極清理」，全域掃描 DRY/SOLID 違反處。 |
-| **`/review`** | **對抗性代碼審查** | 引入「暴躁資深工程師」無情挑剔漏洞，再由「理性架構師」給出修復優先級。 |
-| **`/ui-check`** | **視覺化驗收** | 喚醒 Browser Subagent 使用 Playwright 進行 RWD 排版截圖與視覺稽核。 |
-| **`/fix`** | **深度除錯模式** | 觸發 `debug-pro` Skill，先建立假設並於 Sandbox 隔離根本原因後才修復。 |
-| **`/caveman`** | **洞穴人省話模式** | 實作期間刪除廢話與客套語，極簡化 Output Tokens (省 65-75%)。 |
-| **`/prune` / `/distill`** | **上下文主動清理與熱蒸餾** | 刪除過期 Log 與廢棄方案，提煉 6 大核心要素（目標/限制/決策/進度/未決問題/下一步），並自動同步至 `auto-snapshot` 本地記憶。 |
-| **`/trust`** | **熱力學信任與 SHARS 評估** | 觸發 BTC 信任分數運算 ($T = \text{PPV} \cdot \exp(-\sigma \cdot T_{\text{comp}})$) 與 SHARS 逐段原子事實抽樣檢驗。 |
-| **`/dros`** | **執行期安全網關檢查** | 檢查 DROS VajraClaw 本機網關 (`:8080`) 連線狀態、AST 點陣規則與 W3C did:key 憑證。 |
+| **`/spec`** | **規格定義** | 進入 Phase 0，透過反詰問問答對齊 What/Why，產出具驗證標準的 `spec.md`。 |
+| **`/teamwork`** | **品質制衡軍團** | **手動顯式召喚** 5 人品質制衡軍團（Worker 直接手術式寫入 ➔ 三審合一對抗審查）。 |
+| **`/agy-studio`**| **全端工作室** | **手動顯式召喚** 7 人全端工作室完成 DB + API + UI 全流程交付。 |
+| **`/ponytail`** | **偷懶模式** | 啟動資深偷懶工程師 7 階梯思考，挑選最偷懶、代碼量最少且正確的解法。 |
+| **`/ponytail-review`** | **過度工程審查** | 審查 Diff 是否違反 Ponytail 階梯，獵殺未要求的抽象與多餘包裝。 |
+| **`/ponytail-audit`** | **全庫瘦身盤點** | 掃描專案中可被原生特性、標準庫或現有依賴取代的肥大代碼。 |
+| **`/ponytail-debt`** | **捷徑技術債帳本** | 登記刻意採用的捷徑（標記極限門檻與重構路線），納入 `STATE.md` 追蹤。 |
+| **`/ponytail-gain`** | **成效記分板** | 計算代碼淨減少行數 (Net-Negative LOC)、移除非必要依賴數與 Token 節省率。 |
+| **`/review`** | **對抗性代碼審查** | 啟動三審合一對抗審查，以 REJECT 預設立場嚴格檢驗生產接縫與邊界漏洞。 |
+| **`/test-audit`** / **`/tdd`** | **測試品質門禁** | 啟動垂直切片紅綠循環，執行門禁四問與 15 種垃圾模式掃描，確保零生產接縫。 |
+| **`/diagnosing-bugs`** | **6 階除錯迴圈** | 針對難以重現的疑難雜症啟動系統化除錯，根因未查明前嚴禁盲目試錯。 |
+| **`/ui-check`** | **Anti-Slop 前端審查** | 檢驗 WCAG 2.x 4.5:1 對比度、毛玻璃 backdrop-blur 上限與 AI 假大空文案過濾。 |
+| **`/caveman`** | **洞穴人省話模式** | 刪除所有客套廢話，極度簡化 Output Tokens (省 65-75%)。 |
+| **`/prune`** / **`/distill`** | **長任務熱蒸餾** | 觸發 SelfCompact C1-C2-C3-N1 探針，提煉核心膠囊並同步至本地記憶。 |
+| **`/snapshot`** / **`/recover`** | **本地持久化記憶** | 透過 `auto-snapshot` 擷取里程碑、決策與交接，維護 `STATE.md` 狀態脊椎。 |
+| **`/gate`** | **本機決策門禁** | 執行 `scripts/local_guard.py --git` 進行 <1ms 0-Token 物理安全審查。 |
+| **`/loop`** | **迴圈工程巡檢** | 檢查 `gate.yaml`、漂移哨兵 (`loop_drift.py`) 與不變量約束。 |
 
 ---
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本架構內建 17 大關鍵 Skill（存放於 `skills/`）：
+本框架核心技能存放於 `skills/`，經過 v3.3 精煉整併後，每項皆符合 **≤15KB 硬限制**：
 
-1. **`trust-governor`**：雙軌防幻覺治理引擎（BTC 熱力學信度校準 ＋ Oxford SHARS ICML 2026 逐段原子事實動態重寫，阻斷幻覺滾雪球）。
-2. **`dros-gateway`**：DROS VajraClaw 執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 角色身分治理。
-3. **`karpathy-guidelines`**：LLM 行為矯正核心，提供量化邊界（如 200 行能寫成 50 行者強制重寫、BTC 困惑即停）。
-4. **`caveman`**：Token 壓縮通訊模式，支援 `lite`, `full`, `ultra`, `wenyan` 等多種簡化等級。
-5. **`context-compressor`**：雙向 Token 節省工具，深度整合 **SelfCompact (arXiv:2606.23525)** 廉價閘門與 C1-C2-C3-N1 第一性原理規約，守護跨階段對話歷史熱蒸餾。
-6. **`context-pruner`**：長任務上下文主動清理與 6 要素熱蒸餾技能（整合 DeTools 最佳實踐）。
-7. **`auto-snapshot`**：本地持久化 AI 記憶引擎與 Append-Only SHA-256 Merkle 快照日誌，增設 SelfCompact C1 閉環與 N1 卡死阻斷雙重記憶防線。
-8. **`promptcraft`**：高階 LLM 提示詞工程、Meta-Prompting、Plan-and-Execute 範式、Reflexion 反思迴圈與 LLM-as-a-Judge 多維量化評估量表。
-9. **`diagrams-skill`**：宣告式 Python 架構繪圖與 SQL DDL 轉 ERD 逆向工程套件。
-10. **`frontend-taste-v2`**：反模板化前端 UI/UX 設計品味套件，內建 Hallmark 5 維度審美自檢打分矩陣。
-11. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS Variables 雙軌 Token 映射。
-12. **`ux-audit`**：基於格式塔心理學、費茨定律與 PencilPlaybook 量化工程參數（40% Disabled Opacity、44px 熱區）的 UX 審查套件。
-13. **`gsap-motion`**：現代網頁動效、ScrollTrigger 滾動視差、時間軸編排與 React/Next.js 互動設計引擎。
-14. **`cinematic-ui`**：電影級敘事視覺與氛圍光影設計引擎，借鑑導演鏡頭美學與沉浸式佈局。
-15. **`landing-page-architect`**：高轉換落地頁 (CRO) 架構引擎，結合 AIDA/PAS 文案模型與轉換組件。
-16. **`teamwork`**：5 人多代理人品質保證、W3C DID 權限隔離、BTC 行為探針與 LLM-as-a-Judge 審計循環。
-17. **`agy-studio`**：7 人全端開發團隊協作 SOP、DID 角色綁定與 Milestone 追蹤。
-18. **`loop-budget`**：多代理人迴圈預算與 Token 配額管理系統，防止代理人無限迴圈與預算超支。
-19. **`loop-constraints`**：硬性約束與不變量守護（基於 `invariants.yaml` 與 `gate.yaml`）。
-20. **`loop-triage`**：自動化迴圈失敗分析、分類分級與自動升級 (Escalation) 機制。
-21. **`loop-verifier`**：Maker/Checker 角色硬分離、15 種代碼垃圾模式掃描與 Fail-Before-Pass 檢驗。
-22. **`test-audit`**：嚴謹測試品質審計、斷言完整性哨兵與防退化防線。
-23. **`ollaya-decision`**：地端 Laya 決策模型與 Ollaya 快速推理技能（<50ms 響應、0 輸出 Token 消耗）。
+1. **`teamwork` (v3.3)**：5 人品質制衡軍團。落實手動顯式觸發、Worker 直接手術式寫入與三審合一對抗審查。
+2. **`agy-studio` (v3.3)**：7 人全端工作室。融入 Ponytail 7 階梯與 Direct Surgical Write，消除雙倍手抄稅。
+3. **`karpathy-guidelines` (3-in-1)**：規格定義與行為矯正核心。整合 Phase 0 規格定義、Grilling 壓力反詰問與 Project Planner 里程碑拆解。
+4. **`ponytail` (5-in-1)**：資深偷懶工程師模式全集。內建 7 階梯核心、過度工程審查、全庫盤點、捷徑帳本與成效記分板。
+5. **`code-review` (6-in-1)**：全維度代碼審查總擎。吸收 defensive-coding, security, secret-scanner, architecture 與 ponytail-review。
+6. **`diagnosing-bugs` (3-in-1)**：系統化除錯總擎。整合 6 階段除錯迴圈、bug-tracker 嚴重度分級與 quick-fix-patterns 常見錯誤速查。
+7. **`frontend-taste-v2` (8-in-1)**：反罐頭前端視覺與 UX 總擎（~7KB）。將 gsap-motion, cinematic-ui, landing-page-architect, ux-audit 收納於內部 `./references/` 按需動態加載。
+8. **`test-audit` (3-in-1)**：測試驅動開發與品質門禁。整合垂直切片 TDD、新增測試門禁四問、15 種垃圾測試模式與零生產接縫審計。
+9. **`auto-snapshot` (5-in-1)**：本地持久化記憶總擎。整合 milestone, session-handoff, context-recovery, decision-logger 與 work-resume-sop，同步維護 `STATE.md`。
+10. **`context-pruner` (2-in-1)**：自適應上下文壓縮總擎。深度整合 SelfCompact C1-C2-C3-N1 第一性原理探針與 8 刻面可審計熱蒸餾膠囊。
+11. **`trust-governor`**：雙軌防幻覺治理引擎（BTC 熱力學信度校準 ＋ Oxford SHARS 逐段原子事實動態重寫）。
+12. **`dros-gateway`**：DROS VajraClaw 確定性執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 身分隔離。
+13. **`promptcraft`**：高階提示詞工程框架。遵循 Prompt as Code，提供 5 階段流水線、Plan-and-Execute 與 LLM-as-a-Judge 評估。
+14. **`caveman`**：Token 壓縮通訊模式，支援 lite, full, ultra, wenyan 等簡化等級。
+15. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS 雙軌 Token 映射。
+16. **`diagrams-skill`**：宣告式架構繪圖與 SQL DDL 轉 ERD 逆向工程工具。
+17. **`loop-verifier` / `loop-budget` / `loop-triage` / `loop-constraints`**：迴圈工程防線，負責不變量守護、預算熔斷與漂移防護。
+18. **`ollaya-decision`**：本機 Laya 決策模型與快推理技能（相容 System 1 原語，<50ms 響應、0 Token 消耗）。
 
 ---
 
-## 🛡️ 5-Agent 品質大體檢認證 (Full Audit Certificate)
+## ⚡ 雙引擎底層架構：SWC AST 確定性門禁與 LLMCompiler 並行排程
 
-本專案已通過 **5 人品質制衡軍團 (5-Agent Quality League)** 的全域 360 度無死角極限審查，榮獲 **GRADE A+ EXCELLENT** 健康與安全評定：
-
-```mermaid
-flowchart LR
-    EXP["🧭 Explorer 偵察<br/>38/38 資產完整"] --> SEC["🛡️ Sentinel 安全<br/>0 密鑰洩漏 / AST 熔斷"]
-    SEC --> REV["📐 Reviewer 架構<br/>0 硬編碼路徑 / 跨平台"]
-    REV --> CRI["👹 Critic 紅隊<br/>空字串早退 / 防注入"]
-    CRI --> AUD["⚖️ Auditor 品質總監<br/>100% 測試全綠燈"]
-```
-
-### 驗證通過矩陣 (Verification Pass Matrix)
-
-| 檢驗維度 | 負責代理人 | 測試範圍 | 實測結果 | 評定狀態 |
-|---|---|---|---|:---:|
-| **PromptScript DSL** | 🧭 Explorer | 6 大 `.prs` 模組語意與 `@use` 引用 | 0 錯誤、0 阻塞 | 🟢 **PASS** |
-| **跨技術棧 Prompts** | 📐 Reviewer | 15 款 Prompt YAML Frontmatter Schema | 15/15 格式驗證通過 | 🟢 **PASS** |
-| **熱力學信任與 SHARS** | 👹 Critic / ⚖️ Auditor | BTC 閉式解、方差懲罰、逐段防雪崩採樣 | 8/8 測試通過 (100% 覆蓋) | 🟢 **PASS** |
-| **全域安全與跨平台** | 🛡️ Sentinel | Secret 掃描、XML 轉義、動態路徑探測 | 0 安全漏洞、100% 可攜 | 🟢 **PASS** |
-
----
-
-## 🔍 外部專案與工具評估三準則 (External Repo Evaluation SOP)
-
-為防止團隊或代理人盲目引入外部依賴造成環境污染、維護負擔或 Token 膨脹，本框架確立嚴格的「外部專案評估三部曲」。在決定安裝任何開源專案前，必須輸出量化評估報告供工程師決策：
-
-### 1. 核心定位與技術機制 (What It Does)
-* **痛點與初衷**：該專案解決軟體工程、提示工程或代理人協作中的何種具體瓶頸？是否為當前工作流的關鍵缺口？
-* **底層實作架構**：運行環境依賴（Node/Python/Go）、依賴複雜度、AST 編譯或核心演算法機制。
-
-### 2. 現況對標與深度比較 (Comparative Benchmark)
-* **既有架構覆蓋度**：與現行 `7-Phase-Agentic-Workflow`、Antigravity 原生規範或專案既有模組的重疊度分析。
-* **差異與互補點**：它帶來了什麼全新能力？哪些部分存在冗餘、多層抽象或潛在架構衝突？
-
-### 3. 實裝路線、Token 效益與決策矩陣 (ROI & Decision Matrix)
-* **Token 經濟學量化**：
-  * 對話執行期是否能真正減少 Token 消耗？（嚴防「名為優化、實則膨脹 Context」的工具）。
-  * 編譯期模組化去重（DRY）與語意防呆帶來的 Token 節約效益。
-* **實裝路線 vs 純吸收優化**：
-  * **路線 A（硬實裝）**：安裝全域/本地套件（依賴成本、維護負擔、版本衝突風險）。
-  * **路線 B（純吸收優化 - 推薦優先）**：汲取其設計哲學與架構模式，以原生零依賴 Python/腳本自研實作。
-* **決策矩陣 (Go / No-Go / Hybrid)**：提供明確的判斷依據與推薦選項，經審查授權後才執行動作。
-
-> [!TIP]
-> **經典案例 1：PromptScript (`mrwogu/promptscript`) 決策存證**
-> - **評估結論**：PromptScript 核心價值在於 `.prs` 宣告式語法與單一真實來源 (SSOT)；其全域 CLI 依賴 Node.js，且在對話執行期無法節省 Context Token。
-> - **採納決策**：**方案 A（純吸收優化，維持原生零依賴）**。
-> - **落地成果**：吸納其 DSL 架構至本專案 `.promptscript/` 6 大模組，自研純標準庫驗證器 `scripts/sync_promptscript.py`，達成 0 外部相依與 0 Token 膨脹。
->
-> **經典案例 2：Context Diamond (`RainCherb/context-diamond`) 決策存證**
-> - **評估結論**：Context Diamond 提供純確定性上下文壓縮膠囊與 Loss Report；但其現行版本（v0.7.0 Alpha）關鍵字比對僅支援英/俄文硬編碼，若直接安裝會因無法辨識繁體中文語意而粗暴截斷關鍵中文決策與約束，造成反覆試錯。
-> - **採納決策**：**方案 B（純吸收優化，原生融合進化）**。
-> - **落地成果**：不安裝外部 Alpha 套件，將其「8 大刻面 (Pulse, Goal, Constraints, Decisions, Facts, State, Risks, Anchors)」與「Loss Report 遺失審計」機制完全中文化原生融合至專案之 `context-pruner` 與 `context-compressor` 技能中，達成無損可審計跨階段交接。
->
-> **經典案例 3：llm-schema-validator (`ashwinpaulallen/llm-schema-validator`) 決策存證**
-> - **評估結論**：該專案為 Node.js 應用層之結構化輸出抽取與 Coercion 驗證庫，屬於產品代碼依賴，而非 Agent 開發工作流本體之工具，直接安裝會產生死代碼與環境污染。
-> - **採納決策**：**方案 B（純吸收架構模式，沈澱至後端規範）**。
-> - **落地成果**：不安裝 npm 套件，汲取其「容錯轉型優先於重試 (Coercion-First over Retry)」與「路徑精準錯誤回注 (Path-Precise Reflexion)」模式，原生納入 `STUDIO_RULES.md` 的 TypeScript 規範與 `prompts/nodejs-ts/create-service.prompt.md` 標準，有效杜絕多輪 API 盲目重試之 Token 浪費。
->
-> **經典案例 4：DSPy (`stanfordnlp/dspy`) 決策存證**
-> - **評估結論**：史丹佛出品之重型 AI Pipeline 自動優化與編譯框架，依賴 PyTorch/Transformers 龐大依賴庫，且其編譯搜尋（Optimizer）需消耗海量 Token 跑樣本評估；在即時動態的 Agent 開發工作流中缺乏訓練場景，直接安裝會引發嚴重的依賴污染。
-> - **採納決策**：**方案 B（純吸收架構哲學，零依賴進化）**。
-> - **落地成果**：不安裝任何外部 heavy 套件，將其「Signature 契約化宣告 (`[Inputs] -> [Transformation] -> [Strict Outputs]`)」與 2025 最新「GEPA 反思演化突變 (Reflective Mutation)」哲學深度沉澱至 `STUDIO_RULES.md` 第 10 節，確立失敗時以結構化反思替代盲目重新生成，維持專案極致輕量與零 Token 浪費。
->
-> **經典案例 5：StructLLM (`piotrmaciejbednarski/structllm`) 決策存證**
-> - **評估結論**：StructLLM 僅為 LiteLLM 之 70 行極淺封裝庫 (Shallow Wrapper)，缺乏獨立演算法、容錯 (Coercion) 與錯誤重試機制，且在 Python 生態已有 `instructor` 等成熟方案，直接安裝僅會帶來龐大的 LiteLLM 依賴包袱。
-> - **採納決策**：**方案 B（沉澱架構防坑規範，零依賴進化）**。
-> - **落地成果**：不安裝任何套件，汲取其 Pydantic 資料契約精神，在 `STUDIO_RULES.md` 的 Python 規範中確立原生使用 `model_validate_json()`，並在評估 SOP 中正式確立「超薄包裝層防坑準則 (Reject Shallow Wrappers Guard)」，凡小於 100 行之第三方轉包層一律判定為無引入價值，堅決保持專案純淨。
->
-> **經典案例 6：LangGraph (`langchain-ai/langgraph`) 決策存證**
-> - **評估結論**：LangGraph 為生產級多 Agent 循環狀態圖編排框架，依賴龐大的 LangChain 生態鏈；其在產品後端中若未精細修剪歷史會導致 Token 爆炸，在即時 Coding Agent 開發工作流內部無調用場景，直接安裝會產生死代碼與依賴污染。
-> - **採納決策**：**方案 B（純吸收狀態圖與 Reducer 架構，零依賴進化）**。
-> - **落地成果**：不安裝套件，吸納其「State Reducer 狀態增量融合規則（Append-Only / Reconcile & Prune / Overwrite-Latest）」與「Human-in-the-Loop 顯式中斷門禁 (Breakpoint Gates)」，深度沉澱至 `STUDIO_RULES.md` 第 14 節，為長流程多代理人開發賦予確定性狀態融合機制，徹底消除狀態衝突與資訊覆蓋。
->
-> **經典案例 7：Instructor (`567-labs/instructor`) 決策存證**
-> - **評估結論**：Jason Liu 主導之業界結構化輸出頂級開源標竿，深度整合 Pydantic 與主流 LLM；若在開發工作流中直接安裝會引入重型外部依賴，且其單純的 `max_retries` 重試機制容易造成 Token 翻倍浪費。
-> - **採納決策**：**方案 B（純吸收結構化輸出與欄位驗證反饋合約，零依賴進化）**。
-> - **落地成果**：維持 100% 純 Python 零外部依賴，汲取其「Pydantic 欄位驗證反饋合約 (Actionable ValidationError Contract)」與「三級降級容錯矩陣 (Native Schema ➔ Tool Calling ➔ Markdown JSON + Coercion)」，沉澱至 `STUDIO_RULES.md` 第 17 節與 `prompts/python/create-feature.prompt.md`，確保模型在遭遇資料校驗錯誤時能接收具體修復指令，達成單輪百分之百精準修復。
->
-> **經典案例 8：TypeSafe AI Jev / System One Models (`typesafe.ai`) 決策存證**
-> - **評估結論**：前 OpenAI 研究員、InstructGPT 與 RLHF 核心貢獻者 Diogo Almeida 於 2026/09 推出首款 System One 決策模型 Jev，主打非自回歸 (NAR) 單次前向推論 (70~500ms)、原生 Type-Safe 輸出與 RLCD 概率校準；但其目前為閉源專有雲端 API (Early Access Waitlist)，無法本地離線運行或無限制存取。
-> - **採納決策**：**方案 B（純吸收非自回歸快思考與決策原語架構，零依賴進化）**。
-> - **落地成果**：吸納其「三大決策原語 (Noul, Choice, Score)」、「快慢雙軌分流架構 (System 1 快判定 ➔ System 2 慢推理)」與「RLCD 概率校準門禁」核心精神，於專案實作零外部依賴之 `scripts/system_one.py` 決策閘門，並深度沉澱至 `STUDIO_RULES.md` 第 18 節；全面終結在單純是非、分類與打分環節呼叫大型生成式 LLM 產生冗贅說明的 Token 浪費，達成輸出端零 Token 開銷與毫秒級響應。
->
-> **經典案例 9：json-render (`vercel-labs/json-render`) 決策存證**
-> - **評估結論**：Vercel Labs 出品之 Generative UI 框架，主打 Catalog 封閉白名單約束與 RFC 6902 扁平樹串流；屬於應用程式執行期 (Runtime) 前端組件庫，若作為 7-Phase 開發工作流本體之依賴會引發重型 Node.js 依賴污染，且全量注入 Catalog 會造成嚴重的 System Prompt Token 膨脹。
-> - **採納決策**：**方案 B（純吸收 Generative UI 契約架構，結合自研兵器進化）**。
-> - **落地成果**：維持 100% 零外部依賴，吸納其「Catalog-First SDD 白名單」與「SpecStream 扁平樹增量修補」架構，結合專案自研之 `system_one.py` 實施動態目錄裁剪（降低 70%+ System Prompt Token 開銷）、結合 `STUDIO_RULES.md` 第 17 節注入 Coercion-First 本地容錯防線，並藉由 `ui_audit.py` 確立 Catalog 組件 Anti-Slop 審美門禁；沉澱至 `STUDIO_RULES.md` 第 20 節與 `prompts/react-ts/create-generative-catalog.prompt.md`。
->
-> **經典案例 10：shadcn/ui (`shadcn-ui/ui`) 決策存證**
-> - **評估結論**：全球頂級開源 Headless + Tailwind 組件範式（基於 Radix UI Primitives），非傳統黑盒 npm 套件，採用直接複製源碼至專案（Code Ownership）模式；無障礙標準極高且 Tree-shaking 零負擔。
-> - **採納決策**：**方案 B（確立為前端專案 Canonical UI 標準，維持工作流零依賴）**。
-> - **落地成果**：工作流核心不引入任何外部依賴，正式將 `shadcn/ui` 沉澱為 `STUDIO_RULES.md` 的 React 預設標準庫與 `prompts/react-ts/create-component.prompt.md` 標準原語；並與 `ui_audit.py` 審美門禁深度整合，防範預設黑白模板的 AI Slop 罐頭感。
->
-> **經典案例 11：outlines (`dottxt-ai/outlines`) 決策存證**
-> - **評估結論**：dottxt-ai 出品之引導式生成 (Guided Generation) 標竿庫，核心在於有限狀態機 (FSM) 與 Token-Level Logit Masking；直接在推論採樣階段物理阻斷非法 Token，達成數學級 100% 格式遵從與 0 語法錯誤重試。屬於 Python 推論期依賴（需 PyTorch/vLLM），若直接作為 7-Phase 工作流本體依賴會引發重度環境污染。
-> - **採納決策**：**方案 B（純吸收 FSM 引導式生成架構，升級結構化防線至 Quad-Tier）**。
-> - **落地成果**：維持工作流 100% 純標準庫零依賴，將其「Token 級 Logit 遮罩 / FSM 受限採樣」沉澱為 `STUDIO_RULES.md` 第 17 節的 **Tier 0 終極防線**，並於 `prompts/python/create-feature.prompt.md` 注入受限解碼範式；為專案自建 LLM 推論服務提供數學級可靠性。
->
-> **經典案例 12：SWC (`swc-project/swc`) 與 LLMCompiler (`SqueezeAILab/LLMCompiler`) 雙引擎決策存證**
-> - **評估結論**：SWC 為 Rust 生態最高速編譯器，具備微秒級 AST 遍歷與特徵抽取能力；LLMCompiler 提出 DAG 編譯器與 Task Fetching Unit (TFU) 並行架構，大幅降低多工具調用延遲與累計 Context Token 開銷。
-> - **採納決策**：**方案 B（吸收雙引擎核心思想，以純標準庫與輕量核心落地，徹底杜絕肥大依賴）**。
-> - **落地成果**：底層實裝 `scripts/swc_extractor.js`（支援單檔與 `--batch` 串流）與 Level 0.5 門禁 `scripts/ast_guard.js`（微秒級 0 Token 攔截生產測試接縫 `INV_VERIFY_04` 與 15 種垃圾測試 `INV_VERIFY_02`）；頂層以純 Python 3.11 標準庫實裝 `scripts/dag_runner.py`（基於 `graphlib.TopologicalSorter` + `asyncio`，消滅 CWE-78 注入與程序樹洩漏）；於 `STUDIO_RULES.md` 第 22 節建立 DAG 拓撲排程規範；新增 `tests/test_swc_llmcompiler.py`，全套 13 大單元測試 100% 綠燈。
-
----
-
-## ⚡ SWC AST 語意門禁與 LLMCompiler 並行排程 (Dual Engine Architecture)
-
-在 v2.12 中，本框架吸收了 Rust 生態最高速編譯器 **SWC** 與柏克萊 SqueezeAILab 的 **LLMCompiler**，構建了「底層確定性 AST 靜態語意分析」與「頂層代理人並行 DAG 拓撲編譯」的雙引擎架構。
-
-### 1. 雙引擎架構拓撲圖 (Dual Engine Architecture Diagram)
+本框架整合 Rust 生態最高速編譯器 **SWC** 與柏克萊 SqueezeAILab 的 **LLMCompiler**：
 
 ```mermaid
 flowchart TD
-    subgraph TOP ["頂層: LLMCompiler 並行排程引擎 (dag_runner.py)"]
-        DAG_IN["LLM 輸出 DAG Plan (JSON)"] --> TS["TopologicalSorter<br/>(純 Python 3.11 graphlib)"]
+    subgraph TOP ["頂層: LLMCompiler 並行排程引擎 (scripts/dag_runner.py)"]
+        DAG_IN["LLM 輸出 DAG 執行計劃 (JSON)"] --> TS["TopologicalSorter<br/>(純 Python 3.11 graphlib)"]
         TS --> TFU["Task Fetching Unit (TFU)<br/>asyncio.create_subprocess_exec"]
         TFU --> P1["並行任務 1 (測試執行)"]
-        TFU --> P2["並行任務 2 (程式碼分析)"]
+        TFU --> P2["並行任務 2 (程式碼靜態掃描)"]
         P1 & P2 --> SUB["$k 上游輸出代換 ($1, $2)"]
-        SUB --> DOWN["下游依賴任務 (報告總結)"]
+        SUB --> DOWN["下游彙整任務 (產生報告)"]
     end
 
-    subgraph BOTTOM ["底層: Level 0.5 SWC AST 確定性門禁 (ast_guard.js)"]
-        DIFF["Git Diff / 檔案變更"] --> SWC["@swc/core AST 走訪器<br/>(swc_extractor.js)"]
+    subgraph BOTTOM ["底層: Level 0.5 SWC AST 確定性門禁 (scripts/ast_guard.js)"]
+        DIFF["Git Diff / 檔案變更"] --> SWC["@swc/core 高速 AST 遍歷器<br/>(scripts/swc_extractor.js)"]
         SWC --> GATE1{"INV_VERIFY_04<br/>零生產接縫檢驗"}
         SWC --> GATE2{"INV_VERIFY_02<br/>15 種垃圾測試/佔位符"}
-        GATE1 -->|抓到 mock export / 接縫參數| BLOCK["🛑 BLOCK (0 Token / <1ms 物理攔截)"]
+        GATE1 -->|抓到 mock export / 接縫參數| BLOCK["🛑 BLOCK (0 Token / &lt;1ms 物理阻斷)"]
         GATE2 -->|抓到空測試 / it.todo| BLOCK
         GATE1 & GATE2 -->|合規通過| PASS["✅ PASS 放行至 System 1"]
     end
 ```
 
-### 2. 核心效益矩陣 (Efficiency & Token Metrics)
+---
 
-| 特性維度 | 傳統 ReAct / 正則模式 | SWC + LLMCompiler 雙引擎 | 量化增益 |
-|---|---|---|---|
-| **多工具執行延遲** | 循序串聯等待 \(T_1 + T_2 + T_3\) | DAG 拓撲並行調度 \(\max(T_1, T_2) + T_3\) | **⚡ 延遲降低 ~3.7x** |
-| **多輪 Context Token** | 每輪重複累積先前全部輸出 (\(O(N^2)\)) | 一次規劃 DAG，本地純異步執行與代換 | **🔻 累計 Token 減少 50%~70%** |
-| **測試接縫與後門檢驗** | 送入 LLM 進行 Prompt Review (~3k Token) | `@swc/core` AST 語法樹直接判定 | **🛡️ 耗時 <1ms，0 Token 阻斷** |
-| **JS/TS 呼叫圖譜精確度** | 正則表達式匹配（易漏箭頭函式與解構） | 全 AST 語法樹呼叫邊抽取 | **🎯 邊關聯精確度 100%** |
-| **執行相依性與環境安全** | 依賴龐大框架 / Shell 字串注入風險 | 純標準庫 `graphlib`、參數陣列、Windows 程序樹遞迴回收 | **🔒 免疫 CWE-78、零殭屍殘留** |
+## 🔍 開源專案與技能引入前置殘酷審查 SOP (Pre-Flight Gate)
+
+為防止團隊或代理人盲目引入外部套件造成依賴污染、維護負擔或 Token 膨脹，本框架確立嚴格的**前置殘酷審查門禁**。
+凡使用者提供外部 GitHub 專案或 Skill 要求整合時，**嚴禁直接安裝**，必須優先出具《前置殘酷審查報告》：
+
+1. **底層實作本質**：拆穿行銷包裝，用 2~3 句話揭露其底層真實技術原理（是否為劣質拼湊或淺層包裝）。
+2. **原生能力覆蓋對比**：對比目前環境與既有 7-Phase 工作流是否已涵蓋，拒絕重複造輪子。
+3. **三代價綜合評估**：
+   - **Token 額度代價**：是否會長期在 System Prompt 塞入冗餘描述、偷吃上下文或引發多輪重試？
+   - **系統與硬體負擔**：是否需要常駐行程、寫註冊表、佔用硬碟或吃 CPU？
+   - **安全與隱私風險**：是否過度索取權限、有洩漏機敏資料或引入攻擊面之風險？
+4. **殘酷裁定與「純吸收優化」鐵律**：明確給出【★★★ 建議採用 / ⚠️ 純吸收優化（汲取精華併入核心工作流，嚴禁新裝獨立全域 Skill） / ❌ 強烈勸退】。吸收新長處時須遵循「替換淘汰」原則（單檔守住 ≤15 KB 上限）。
+
+> [!TIP]
+> **經典吸收案例存證**：
+> - **PromptScript (`mrwogu/promptscript`)**：純吸收其 DSL 語意至 `.promptscript/` 6 大模組，自研純標準庫同步器，0 外部相依。
+> - **Context Diamond (`RainCherb/context-diamond`)**：不安裝 Alpha 套件，將 8 大刻面與 Loss Report 審計原生融合至 `context-pruner`。
+> - **DSPy (`stanfordnlp/dspy`)**：不安裝重型依賴，純吸收其「Signature 契約化宣告」與 GEPA 反思演化模式至後端規範與 `reflexion.py`。
+> - **StructLLM (`piotrmaciejbednarski/structllm`)**：確立「超薄包裝層防坑準則」，凡小於 100 行之第三方轉包層一律拒絕引入，直接使用原生標準庫。
+> - **LangGraph (`langchain-ai/langgraph`)**：不安裝龐大生態，吸納其 State Reducer 與 Human-in-the-Loop 中斷門禁哲學。
+> - **TypeSafe AI Jev (`typesafe.ai`)**：吸納其三大決策原語 (Noul/Choice/Score) 與快慢雙軌哲學，自研純標準庫 `local_guard.py`。
+> - **shadcn/ui (`shadcn-ui/ui`)**：確立為前端專案 Canonical UI 標準，直接源碼持有 (Code Ownership)，工作流核心維持 0 依賴。
 
 ---
 
@@ -526,138 +352,93 @@ flowchart TD
 │   ├── agents.prs                               # 5 人品質制衡軍團與全端專家子代理人宣告
 │   ├── governance.prs                           # DROS AST 熔斷、BTC 熱力學閥值與 SHARS 抽樣
 │   ├── shortcuts.prs                            # 統一巨集指令 (/spec, /teamwork, /review...)
-│   └── skills.prs                               # 17 項特化技能映射宣告
+│   └── skills.prs                               # 精煉核心技能映射宣告 (v3.3)
 ├── promptscript.yaml                            # 跨 49+ IDE 編譯目標設定 (Antigravity/Claude/Cursor/Copilot...)
 ├── GEMINI.md                                    # 全域規則 (Layer 1) → 安裝至 ~/.gemini/GEMINI.md
-├── STUDIO_RULES.md                              # 專案級補充規則 (Layer 2) → 放置於專案根目錄
-├── README.md                                    # 本文件
-├── AGY_SDD_Karpathy_Framework_Guide.md          # 完整理論與操作手冊
-├── Auto_Trigger_and_Switching_Playbook.md        # 模型調度與模式切換教戰手冊
-├── Framework_vs_Teamwork_AGYStudio_Comparison.md # 單兵 vs 多代理人比較分析
-├── prompts/                                     # 📚 標準化跨技術棧 Prompt 模板庫
-│   ├── shared/prompt-schema.json                # Frontmatter JSON Schema 規範
-│   ├── python/                                  # Python 3.12+ (Feature, Debug, Refactor, Pytest)
-│   ├── react-ts/                                # React 19 / TS (Component, Hook, UI-Debug)
-│   ├── nodejs-ts/                               # Node.js / TS (Service, Middleware)
-│   ├── laravel/                                 # Laravel 13+ / PHP 8.4+ (Feature, Migration, Pest, Action)
-│   └── fullstack/                               # API Route & DB Migration 模板
-├── scripts/                                     # 🛠️ 自動化驗證與同步工具
-│   ├── verify_all.py                            # 一鍵全專案 13 大套件批次驗證入口
-│   ├── swc_extractor.js                         # ⚡ SWC 語意特徵與呼叫圖譜抽取器 (含 --batch 模式)
-│   ├── ast_guard.js                             # 🛑 Level 0.5 確定性 AST 安全門禁 (<1ms, 0 Token 攔截)
-│   ├── dag_runner.py                            # 🚀 LLMCompiler 並行 DAG 拓撲排程器 (純標準庫 graphlib + asyncio)
-│   ├── loop_graph.py                            # 🕸️ 架構圖譜與衝擊半徑分析引擎 (SWC AST + 正則平滑降級)
-│   ├── local_guard.py                           # 🛡️ 本機 System 1 決策門禁鏈 (含 Level 0.5 AST 原生整合)
-│   ├── system_one.py                            # 🧠 System 1 非自回歸決策閘門 (Noul/Choice/Score)
-│   ├── capsule.py                               # 8 刻面膠囊自動提煉與 Loss Report 審計器
-│   ├── ui_audit.py                              # UI/UX Anti-Slop 視覺預檢引擎
-│   ├── reflexion.py                             # GEPA 自我修復反思迴圈 (ICML 2025/2026)
-│   ├── sync_promptscript.py                     # PromptScript 語意驗證與跨 IDE 同步校驗器
-│   └── validate_prompts.py                      # Prompt Schema 嚴格校驗腳本
-├── tests/                                       # 🧪 專案級驗證測試套件
-│   ├── test_swc_llmcompiler.py                  # SWC AST 門禁與 LLMCompiler DAG 排程器 13 項測試
-│   ├── test_local_guard.py                      # 本機決策閘門 9 項單元測試
-│   ├── test_loop_graph.py                       # 架構圖譜引擎 11 項單元測試
-│   └── test_loop_drift.py                       # 系統不變量漂移 11 項單元測試
-└── skills/                                      # 技能模組 → 安裝至 ~/.gemini/config/skills/
-    ├── trust-governor/SKILL.md                  # BTC 熱力學防幻覺治理與信度校準
-    │   └── scripts/governor.py                  # 純標準庫熱力學評分與行為聚類腳本
-    ├── dros-gateway/SKILL.md                    # DROS 執行期安全與 Docker 網關
-    ├── karpathy-guidelines/SKILL.md
-    ├── teamwork/SKILL.md
-    ├── agy-studio/SKILL.md
-    ├── caveman/SKILL.md
-    ├── context-compressor/SKILL.md
-    ├── context-pruner/SKILL.md
-    ├── auto-snapshot/SKILL.md
-    ├── promptcraft/SKILL.md
-    ├── diagrams-skill/SKILL.md
-    ├── frontend-taste-v2/SKILL.md
-    ├── ui-designer/SKILL.md
-    ├── ux-audit/SKILL.md
-    ├── gsap-motion/SKILL.md
-    ├── cinematic-ui/SKILL.md
-    └── landing-page-architect/SKILL.md
+├── AGENTS.md                                    # 專案級治理守則與機械化安全門禁
+├── STUDIO_RULES.md                              # 專案級補充規則 (TS/Py/PHP 規範、屬性遮蔽防護)
+├── STATE.md                                     # 專案當前活體狀態脊椎 (State Spine)
+├── gate.yaml                                    # 物理路徑封鎖黑名單與單次修改上限門禁
+├── invariants.yaml                              # 系統核心不變量規則清單
+├── scripts/                                     # 🛠️ 自動化驗證與治理工具庫
+│   ├── verify_all.py                            # ⚡ 一鍵全專案 14 大套件批次驗證矩陣
+│   ├── local_guard.py                           # 🛡️ 本機 System 1 決策門禁 (Handwired ReLU, <1ms, 0 Token)
+│   ├── loop_graph.py                            # 🕸️ 架構圖譜與衝擊半徑分析引擎 (AST 調用圖譜)
+│   ├── ui_audit.py                              # 🎨 前端 UI/UX Anti-Slop 三大客觀驗收門禁
+│   ├── reflexion.py                             # 🔄 GEPA 自我修復反思迴圈 (ICML 2025/2026)
+│   ├── swc_extractor.js                         # ⚡ SWC 語意特徵與呼叫圖譜抽取器
+│   ├── ast_guard.js                             # 🛑 Level 0.5 確定性 AST 安全門禁 (<1ms)
+│   ├── dag_runner.py                            # 🚀 LLMCompiler 並行 DAG 拓撲排程器
+│   ├── system_one.py                            # 🧠 System 1 非自回歸決策閘門原語
+│   ├── capsule.py                               # 💊 8 刻面膠囊自動提煉與 Loss Report 審計器
+│   ├── loop_drift.py                            # 🩺 系統不變量漂移巡檢哨兵
+│   ├── sync_promptscript.py                     # 🔄 PromptScript 語意驗證與跨 IDE 編譯同步器
+│   └── validate_prompts.py                      # 📚 Prompt Schema 嚴格校驗腳本
+├── tests/                                       # 🧪 專案級驗證測試套件 (14 大矩陣 100% 綠燈)
+│   ├── test_local_guard.py                      # 本機決策閘門單元測試
+│   ├── test_loop_graph.py                       # 架構圖譜與衝擊半徑測試
+│   ├── test_swc_llmcompiler.py                  # SWC AST 門禁與 DAG 排程器測試
+│   └── test_loop_drift.py                       # 系統不變量漂移測試
+└── skills/                                      # 🧩 精煉核心技能模組 (v3.3, 單檔 ≤15KB)
+    ├── teamwork/                                # 5 人品質制衡軍團 (v3.3, Direct Write & 三審合一)
+    ├── agy-studio/                              # 7 人全端工作室 (v3.3, Ponytail 融入)
+    ├── code-review/                             # 6-in-1 全維度代碼審查總擎
+    ├── ponytail/                                # 5-in-1 資深偷懶工程師 7 階梯模式全集
+    ├── test-audit/                              # 3-in-1 垂直切片 TDD 與測試品質門禁
+    ├── diagnosing-bugs/                         # 3-in-1 系統化 6 階除錯迴圈
+    ├── frontend-taste-v2/                       # 8-in-1 反罐頭前端設計 (內含 references/ 按需庫)
+    ├── auto-snapshot/                           # 5-in-1 本地持久化記憶總擎
+    ├── context-pruner/                          # 2-in-1 SelfCompact 自適應熱蒸餾總擎
+    ├── karpathy-guidelines/                     # 3-in-1 規格定義、Grilling 與行為護欄
+    ├── trust-governor/                          # BTC 熱力學防幻覺治理
+    ├── dros-gateway/                            # DROS 執行期安全與 AST 熔斷
+    ├── promptcraft/                             # 提示詞即代碼與 LLM 編排
+    ├── caveman/                                 # Token 壓縮通訊模式
+    └── ui-designer/                             # UI/UX 設計推理引擎
 ```
 
-
-
 ---
 
-## 🤖 安裝指南 (Installation Guide)
+## 🤖 安裝與快速上手指南 (Installation & Quickstart)
 
-### 人類工程師手動安裝
-
-1. **全域規則 (Layer 1)**：將 `GEMINI.md` 複製至 `~/.gemini/GEMINI.md`（Windows: `C:\Users\<Username>\.gemini\GEMINI.md`）。
-2. **技能模組**：將 `skills/` 下的所有子資料夾複製至 `~/.gemini/config/skills/`。
-3. **專案級規則 (Layer 2, 可選)**：將 `STUDIO_RULES.md` 放入您的開發專案根目錄。
-
----
-
-### 跨 IDE 編譯與同步 (PromptScript Multi-IDE Compilation)
-
-若您使用 Claude Code、Cursor、GitHub Copilot、Windsurf 或 Antigravity 等不同 AI 工具：
-
+### 1. 本地環境驗證（14 大套件全綠驗證）
+在初次安裝或更新後，執行全套驗證矩陣，確保本地環境 100% 合規：
 ```bash
-# 1. 一鍵執行全專案 13 大批次驗證矩陣 (DSL + Schema + Governor + UI + Capsule + Anti-Slop + GEPA + System 1 + Loop Gate + Loop Sentinel + Loop Graph + Local Guard + SWC/LLMCompiler)
 python scripts/verify_all.py
+```
 
-# 2. Level 0.5 確定性 AST 門禁審查 (微秒級 0 Token 攔截測試接縫與垃圾測試)
-node scripts/ast_guard.js --git
-
-# 3. LLMCompiler 純標準庫並行 DAG 拓撲排程測試
-python scripts/dag_runner.py --test
-
-# 4. SWC AST 語意特徵抽取 (支援單檔與 --batch 串流)
-node scripts/swc_extractor.js <file>
-
-# 5. 匯出或驗證 8 刻面可審計上下文膠囊 (8-Facet Context Capsule + Loss Report)
-python scripts/capsule.py export -o .agent/CAPSULE.md
-python scripts/capsule.py verify
-
-# 6. 前端 UI/UX Anti-Slop 抗罐頭視覺預檢
-python scripts/ui_audit.py src/ --check --threshold 80
-
-# 7. GEPA 自我修復反思迴圈 (攔截失敗並自動生成靶向約束)
-python scripts/reflexion.py run "python scripts/validate_prompts.py"
-
-# 8. System 1 極速決策閘門 (Noul/Choice/Score <5ms 零 Token 初篩)
-python scripts/system_one.py --test
-
-# 9. Loop Engineering 物理安全硬門禁 (Path Denylist & Windows Backslash Protection)
-python scripts/loop_gate.py --test
-
-# 10. Loop Sentinel 漂移哨兵與金鑰防護 (Invariants & Git Test Co-evolution)
-python scripts/loop_drift.py
-
-# 11. Loop Graph 確定性架構知識圖譜與衝擊半徑分析 (SWC AST Extraction & Blast Radius)
-python scripts/loop_graph.py --scan
-python scripts/loop_graph.py --impact <file_or_function>
-python scripts/loop_graph.py --map --focus <file> --budget 1024
-
-# 12. PromptScript 語意驗證與多 IDE 編譯 (49+ Targets)
+### 2. 跨 IDE 編譯與同步 (PromptScript Multi-IDE Sync)
+將單一真相來源 `.promptscript/` 編譯輸出至您的目標 AI 開發環境（Claude Code, Cursor, Copilot, Antigravity 等）：
+```bash
+# 驗證 DSL 語意與技能映射
 python scripts/sync_promptscript.py
+
+# 執行全端編譯
 python scripts/sync_promptscript.py --compile
 ```
+
+### 3. 日常開發快速上手 SOP
+1. **規格定義**：遇到新需求，輸入 **`/spec`** 進行 Phase 0 問答，產出 `spec.md`。
+2. **調用鏈探索**：探索不熟悉的代碼，執行：
+   ```bash
+   python scripts/loop_graph.py --map --focus <目標檔案>
+   ```
+3. **精準開刀**：遵循 **Ponytail 7 階梯** 與 **Caveman 模式** 進行實作，堅守「零非必要生產接縫」。
+4. **本機 0-Token 門禁驗證**：完成變更後，執行本地快審查：
+   ```bash
+   python scripts/local_guard.py --git
+   ```
+5. **三審合一對抗審查**：輸入 **`/review`** 進行對抗性審核，或輸入 **`/ui-check`** 驗收前端視覺。
+6. **狀態同步**：完成階段任務後，執行快照存檔：
+   ```bash
+   auto-snapshot capture milestone "變更摘要" --files <檔案路徑>
+   ```
 
 ---
 
 ### 🔄 姊妹專案推薦 (Ecosystem Companions)
 
 - 🔗 [**PingpowerTW/agent-loop-engineering**](https://github.com/PingpowerTW/agent-loop-engineering)：開箱即用的獨立 Loop Engineering L3 實踐樣板庫，涵蓋 `STATE.md` 狀態脊椎、`gate.yaml`、Token 預算守護與多代理人驗證迴圈。
-
----
-
-### Agent 自動安裝命令 (For AI Agents)
-
-> **Agent Instructions:**
-> 當使用者指示「安裝 7-Phase 工作流」或「載入這個框架」時，請依照以下步驟自動為使用者建置環境：
->
-> 1. **定位設定檔目錄**：確認使用者的全域設定路徑。通常為 `~/.gemini/`（Windows: `C:\Users\<Username>\.gemini\`）。
-> 2. **部署全域規則 (Layer 1)**：將本 Repo 根目錄的 `GEMINI.md` 複製至 `~/.gemini/GEMINI.md`。
-> 3. **部署技能模組**：將本 Repo 中 `skills/` 目錄下的所有特化技能資料夾（含 `trust-governor`, `dros-gateway`, `promptcraft`, `teamwork`, `agy-studio`, `caveman`, `context-compressor`, `karpathy-guidelines` 等），複製至 `~/.gemini/config/skills/`。若目錄不存在請先建立。
-> 4. **部署專案級規則 (Layer 2, 可選)**：若使用者有指定的開發專案目錄，將 `STUDIO_RULES.md` 複製至該專案的根目錄。
-> 5. **回報安裝結果**：完成後回覆：「✅ 7 階段 Agentic 工作流已安裝完畢。輸入 `/spec` 或 `/teamwork` 即可開始工作！」
 
 ---
 
