@@ -244,6 +244,66 @@ class UserService {}
         res2 = self.graph.compute_diff_blast_radius(diff_changed)
         self.assertEqual(res2["test_signal"], "changed")
 
+    def test_cross_layer_http_env_and_dead_code(self):
+        api_py = self.test_dir / "api.py"
+        api_py.write_text(
+            "import os\n"
+            "def init_env():\n"
+            "    os.environ['PAYMENT_KEY'] = 'live'\n"
+            "\n"
+            "def callback_sorter(x):\n"
+            "    return x\n"
+            "\n"
+            "def charge_card():\n"
+            "    sorted([1, 2], key=callback_sorter)\n"
+            "    return os.getenv('PAYMENT_KEY')\n"
+            "\n"
+            "@app.get('/api/orders/<int:order_id>')\n"
+            "def get_order(order_id):\n"
+            "    return charge_card()\n"
+            "\n"
+            "def orphan_helper():\n"
+            "    return 42\n"
+            "\n"
+            "def main():\n"
+            "    pass\n",
+            encoding="utf-8",
+        )
+        ui_js = self.test_dir / "client.js"
+        ui_js.write_text(
+            "function loadOrder() {\n"
+            "  return fetch('/api/orders/42');\n"
+            "}\n"
+            "function unrelatedUiFn() {\n"
+            "  return 1;\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        scanner = CodeAstScanner(self.test_dir, self.graph)
+        scanner.parse_python_file(api_py, "api.py")
+        scanner.parse_js_file(ui_js, "client.js")
+
+        # 1. Cross-layer HTTP route blast radius: backend get_order -> route:/api/orders/{} -> frontend loadOrder (not unrelatedUiFn)
+        blast_http = self.graph.compute_blast_radius("fn:api.py::get_order")
+        dep_labels = {d["label"] for d in blast_http["dependents"]}
+        self.assertIn("/api/orders/{}", dep_labels)
+        self.assertIn("loadOrder", dep_labels)
+        self.assertNotIn("unrelatedUiFn", dep_labels)
+
+        # 2. Cross-layer CONFIGURES blast radius: env:PAYMENT_KEY -> charge_card -> get_order -> loadOrder
+        blast_env = self.graph.compute_blast_radius("env:PAYMENT_KEY")
+        env_deps = {d["label"] for d in blast_env["dependents"]}
+        self.assertIn("charge_card", env_deps)
+        self.assertIn("get_order", env_deps)
+
+        # 3. Dead code candidates: orphan_helper is flagged, while route handler, direct callee, callback reference, and main are excluded
+        dead_labels = {c["label"] for c in self.graph.find_dead_code_candidates()}
+        self.assertIn("orphan_helper", dead_labels)
+        self.assertNotIn("get_order", dead_labels)        # Protected by route:/api/orders/{}
+        self.assertNotIn("charge_card", dead_labels)      # Called by get_order
+        self.assertNotIn("callback_sorter", dead_labels)  # Passed as CALL_REFERENCE (key=callback_sorter)
+        self.assertNotIn("main", dead_labels)             # Entry point
+
 
 if __name__ == "__main__":
     unittest.main()

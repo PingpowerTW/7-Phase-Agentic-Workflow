@@ -95,7 +95,29 @@ PATTERNS = [
         "Form input lacks accessible focus indicator.",
         "Add visible keyboard focus ring: `focus:outline-none focus:ring-2 focus:ring-primary`.",
     ),
+    (
+        "ai-copywriting-slop",
+        "MEDIUM",
+        15,
+        r"(?:\b(?:unlock the power of|elevate your workflow|supercharge your|seamlessly integrate|game-changer|next-generation platform|10,000%\s*ROI)\b|\b99\.999%(?!\w))",
+        "Generic AI marketing buzzword or fabricated metric slop detected.",
+        "Replace filler buzzwords and unverifiable claims with concrete, factual product mechanics.",
+    ),
 ]
+
+
+def wcag_contrast_ratio(hex1: str, hex2: str) -> float:
+    """Compute WCAG 2.x contrast ratio (1.0 to 21.0) between two #RGB/#RRGGBB hex colors."""
+    def _lum(h: str) -> float:
+        h = h.lstrip("#")
+        if len(h) == 3:
+            h = "".join(c * 2 for c in h)
+        vals = [int(h[i : i + 2], 16) / 255.0 for i in (0, 2, 4)]
+        r, g, b = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in vals]
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    l1, l2 = sorted((_lum(hex1), _lum(hex2)), reverse=True)
+    return round((l1 + 0.05) / (l2 + 0.05), 2)
 
 
 def audit_content(content: str, file_path: str = "snippet") -> AuditReport:
@@ -122,6 +144,75 @@ def audit_content(content: str, file_path: str = "snippet") -> AuditReport:
                         suggestion=suggestion,
                     )
                 )
+
+    # WCAG 2.x True Hex Contrast Check (foreground vs background on same element/line)
+    fg_re = re.compile(r"(?:(?<!hover:)text-\[|(?<![-\w])color:\s*['\"]?)(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\b")
+    bg_re = re.compile(r"(?:(?<!hover:)bg-\[|background(?:Color|-color)?:\s*['\"]?)(#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?)\b")
+    for idx, line in enumerate(lines, 1):
+        fg_m, bg_m = fg_re.search(line), bg_re.search(line)
+        if fg_m and bg_m:
+            ratio = wcag_contrast_ratio(fg_m.group(1), bg_m.group(1))
+            if ratio < 4.5:
+                violations.append(
+                    SlopViolation(
+                        rule_id="low-contrast-hex",
+                        severity="HIGH",
+                        penalty=20,
+                        message=f"WCAG 2.x AA contrast failure ({ratio}:1 < 4.5:1) between {fg_m.group(1)} and {bg_m.group(1)}.",
+                        line_number=idx,
+                        code_snippet=f"{fg_m.group(0)} / {bg_m.group(0)}",
+                        suggestion="Increase luminance delta to achieve at least 4.5:1 for normal text.",
+                    )
+                )
+
+    # Glassmorphism Dose-Cap (R-10/R-13: max 2 active backdrop-blur surfaces per component)
+    blur_matches = list(
+        re.finditer(
+            r"\bbackdrop-blur(?!-(?:none|0)\b)(?:-[a-z0-9]+)?\b|backdrop-filter:\s*blur\((?!0(?:px)?\))",
+            content,
+            re.IGNORECASE,
+        )
+    )
+    if len(blur_matches) >= 3:
+        third = blur_matches[2]
+        violations.append(
+            SlopViolation(
+                rule_id="excessive-glass-blur",
+                severity="MEDIUM",
+                penalty=15,
+                message="Glassmorphism dose-cap exceeded (>=3 backdrop-blur surfaces in one view).",
+                line_number=content[: third.start()].count("\n") + 1,
+                code_snippet=third.group(0),
+                suggestion="Reserve backdrop-blur for at most 1-2 sticky headers or modal overlays; use solid surface tokens elsewhere.",
+            )
+        )
+
+    # UI Finish-Gate Contract: Async/data-driven views must not ship Happy-Path-Only
+    has_async = re.search(r"\b(?:fetch|useQuery|useSWR|useEffect)\s*\(|\baxios\.", content)
+    has_map = re.search(r"\.map\s*\(", content)
+    sanitized = re.sub(r"console\.(?:error|warn)\s*\([^)]*\)", "", content)
+    has_loading = bool(re.search(r"\b(?:isLoading|loading|skeleton|spinner|pending|Suspense)\b", sanitized, re.IGNORECASE))
+    has_empty_or_err = bool(
+        re.search(
+            r"\b(?:isError|error|empty|fallback)\b|no\s+data|length\s*[=!]==?\s*0|!\w+\.length",
+            sanitized,
+            re.IGNORECASE,
+        )
+    )
+    trigger_match = has_async or has_map
+    if trigger_match and ((has_async and not (has_loading and has_empty_or_err)) or (not has_async and not (has_loading or has_empty_or_err))):
+        line_no = content[: trigger_match.start()].count("\n") + 1
+        violations.append(
+            SlopViolation(
+                rule_id="missing-ui-finish-states",
+                severity="HIGH",
+                penalty=20,
+                message="Async/data-driven view only implements Happy Path (missing loading/empty/error finish states).",
+                line_number=line_no,
+                code_snippet=trigger_match.group(0),
+                suggestion="Treat loading, empty, and error states as part of the finished product (UI Finish-Gate Contract).",
+            )
+        )
 
     # Compute final score
     total_penalty = sum(v.penalty for v in violations)
@@ -183,6 +274,33 @@ def run_self_tests():
     """
     clean_report = audit_content(clean_code)
     assert clean_report.score >= 90, f"Clean snippet scored too low: {clean_report.score}"
+
+    # Test 3: UI Finish-Gate Stateful UI Completeness check (including console.error bypass & chained .map)
+    happy_path_only = "\n<div>{getItems().map(i => <span key={i.id}>{i.name}</span>)}</div>"
+    hp_report = audit_content(happy_path_only)
+    assert any(v.rule_id == "missing-ui-finish-states" and v.line_number == 2 for v in hp_report.violations)
+    console_err_bypass = "useEffect(() => { fetch('/api').catch(e => console.error(e)); }, []);"
+    ce_report = audit_content(console_err_bypass)
+    assert any(v.rule_id == "missing-ui-finish-states" for v in ce_report.violations)
+    complete_state_ui = "<div>{isLoading ? <Spinner/> : isError ? <Error/> : items.length === 0 ? <Empty/> : items.map(i => <span key={i.id}>{i.name}</span>)}</div>"
+    cs_report = audit_content(complete_state_ui)
+    assert not any(v.rule_id == "missing-ui-finish-states" for v in cs_report.violations)
+
+    # Test 4: Anti-Slop WCAG 2.x Hex Contrast, Glassmorphism Dose-Cap & Copywriting Slop
+    assert wcag_contrast_ratio("#ffffff", "#000000") == 21.0
+    assert wcag_contrast_ratio("#777777", "#ffffff") < 4.5
+    antislop_snippet = (
+        '<div style={{ color: "#888", backgroundColor: "#fff" }}>Guaranteed 99.999% uptime</div>\n'
+        '<div class="backdrop-blur-md">Card 1</div>\n'
+        '<div class="backdrop-blur-lg">Card 2</div>\n'
+        '<div class="backdrop-blur-xl">Card 3</div>'
+    )
+    as_report = audit_content(antislop_snippet)
+    rule_ids = {v.rule_id for v in as_report.violations}
+    assert {"low-contrast-hex", "excessive-glass-blur", "ai-copywriting-slop"}.issubset(rule_ids), rule_ids
+    # Ensure backdrop-blur-none / blur(0) do not trigger false-positive dose cap
+    no_blur_fp = '<div class="backdrop-blur-md"/><div class="backdrop-blur-lg"/><div class="backdrop-blur-none"/>'
+    assert not any(v.rule_id == "excessive-glass-blur" for v in audit_content(no_blur_fp).violations)
     print("[PASS] scripts/ui_audit.py self-tests passed 100%!")
 
 

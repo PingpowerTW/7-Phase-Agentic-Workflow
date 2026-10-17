@@ -293,7 +293,10 @@ def check_decision_regression(
     norm_changed = [normalize_path(f) for f in (changed_files or []) if f]
     violations: List[str] = []
 
-    for raw in snap_file.read_text(encoding="utf-8", errors="replace").splitlines():
+    # OpenMontage 'Re-log Changed Decisions' Contract:
+    # Fold append-only SNAPSHOT.jsonl by (category, subject) or touches anchor so revised decisions supersede stale ones.
+    active_decisions: Dict[str, Dict[str, Any]] = {}
+    for idx, raw in enumerate(snap_file.read_text(encoding="utf-8", errors="replace").splitlines()):
         raw = raw.strip()
         if not raw:
             continue
@@ -304,6 +307,34 @@ def check_decision_regression(
         if not isinstance(entry, dict) or entry.get("type") != "decision":
             continue
 
+        touches_raw = entry.get("touches") or entry.get("files") or []
+        if isinstance(touches_raw, str):
+            touches_raw = [touches_raw]
+        norm_touches = ",".join(sorted(normalize_path(str(t)) for t in touches_raw if t))
+        subj = entry.get("subject")
+        cat = entry.get("category", "default")
+        title_str = entry.get("title") or entry.get("summary") or ""
+
+        # Evict prior decision if it shares the same (category, subject), same title,
+        # or same touches anchor without a conflicting subject.
+        for k, old in list(active_decisions.items()):
+            old_subj = old.get("subject")
+            old_touches_raw = old.get("touches") or old.get("files") or []
+            if isinstance(old_touches_raw, str):
+                old_touches_raw = [old_touches_raw]
+            old_touches = ",".join(sorted(normalize_path(str(t)) for t in old_touches_raw if t))
+            if subj and old_subj:
+                if (cat, subj) == (old.get("category", "default"), old_subj):
+                    del active_decisions[k]
+            elif (title_str and title_str == (old.get("title") or old.get("summary"))) or (norm_touches and norm_touches == old_touches):
+                del active_decisions[k]
+
+        d_key = f"{cat}::{subj}" if subj else (f"touches::{norm_touches}" if norm_touches else f"title::{title_str or idx}")
+        active_decisions[d_key] = entry
+
+    for entry in active_decisions.values():
+        if entry.get("superseded") is True:
+            continue
         ruled_out = entry.get("ruled_out") or []
         if isinstance(ruled_out, str):
             ruled_out = [ruled_out]
@@ -326,7 +357,7 @@ def check_decision_regression(
             if not file_hit:
                 continue
 
-        title = entry.get("title") or entry.get("summary") or "歷史技術決策"
+        title = entry.get("title") or entry.get("subject") or entry.get("summary") or "歷史技術決策"
         reason = entry.get("decision") or ""
         for item in ruled_out:
             pat = str(item).strip()

@@ -392,6 +392,48 @@ class ArchitectureGraph:
             **bfs,
         }
 
+    def find_dead_code_candidates(self) -> List[Dict[str, Any]]:
+        """
+        Identify functions with zero incoming callers (excluding entry points, tests, dunders, and route handlers).
+        Inspired by codebase-memory-mcp Dead Code Candidates.
+        """
+        entry_names = {"main", "setup", "teardown", "setUp", "tearDown", "run_self_tests"}
+        candidates: List[Dict[str, Any]] = []
+        for nid, data in self.nodes.items():
+            if data.get("type") != "function":
+                continue
+            lbl = data.get("label", "")
+            short_name = lbl.split(".")[-1]
+            if (
+                lbl in entry_names
+                or short_name in entry_names
+                or short_name.startswith("test_")
+                or (short_name.startswith("__") and short_name.endswith("__"))
+            ):
+                continue
+            callers = {p for p in self.adj_in.get(nid, set()) if not p.startswith("mod:")} - {nid}
+            callers |= self.adj_in.get(f"fn:{lbl}", set()) - {nid}
+            if "." in lbl:
+                callers |= self.adj_in.get(f"fn:{short_name}", set()) - {nid}
+            if not callers:
+                candidates.append({
+                    "id": nid,
+                    "label": lbl,
+                    "file": data.get("file", ""),
+                    "start_line": data.get("start_line", 1),
+                })
+        return sorted(candidates, key=lambda c: (c["file"], c["start_line"], c["label"]))
+
+
+def _normalize_route(raw_path: str) -> str:
+    """Normalize dynamic route placeholders (:id, {id}, <int:id>, ${id}, /123) to '{}' for cross-service matching."""
+    path = raw_path.split("?")[0].strip()
+    if not path.startswith("/"):
+        m = re.search(r"(/api/[^\s'\"`?#]+)", path)
+        path = m.group(1) if m else "/" + path
+    path = re.sub(r"\$\{[^}]+\}|\{[^{}]+\}|<[^>]+>|:[A-Za-z_][A-Za-z0-9_]*|(?<=/)\d+(?=/|$)", "{}", path)
+    return path.rstrip("/") or "/"
+
 
 def parse_diff_ranges(diff_text: str) -> Dict[str, List[Tuple[int, int]]]:
     """Parse unified diff into {normalized_file_path: [(start_line, end_line), ...]} of actual modified lines."""
@@ -497,6 +539,43 @@ class CodeAstScanner:
         for full_path, rel_path in js_files:
             self._parse_js_lexical_fallback(full_path, rel_path)
 
+    def _extract_cross_layer_edges(self, snippet: str, rel_path: str, owner_id: str):
+        """Extract cross-layer CONFIGURES (env:<KEY>) and HTTP_CALLS (route:/...) edges."""
+        # 1. CONFIGURES: Env Var writers (env:KEY -> owner) & readers (owner -> env:KEY)
+        for m in re.findall(r"""(?:os\.environ\s*\[\s*['"]([A-Z0-9_]+)['"]\s*\]|process\.env\.([A-Z0-9_]+))\s*=(?!=)""", snippet):
+            key = m[0] or m[1]
+            env_id = f"env:{key}"
+            self.graph.add_node(env_id, label=key, node_type="env", file_path=rel_path)
+            self.graph.add_edge(env_id, owner_id, relation="configures")
+        for m in re.findall(
+            r"""(?:os\.getenv\s*\(\s*['"]([A-Z0-9_]+)['"]|os\.environ\.get\s*\(\s*['"]([A-Z0-9_]+)['"]|os\.environ\s*\[\s*['"]([A-Z0-9_]+)['"]\s*\](?!\s*=(?!=))|(?:process\.env|import\.meta\.env)\.([A-Z0-9_]+)(?!\s*=(?!=)))""",
+            snippet,
+        ):
+            key = next((k for k in m if k), "")
+            if key:
+                env_id = f"env:{key}"
+                self.graph.add_node(env_id, label=key, node_type="env", file_path=rel_path)
+                self.graph.add_edge(owner_id, env_id, relation="configures")
+
+        # 2. HTTP_CALLS: Server route definitions (route:/... -> owner) & client calls (owner -> route:/...)
+        for raw_route in re.findall(
+            r"""(?:@(?:app|router|bp|api)\.(?:route|get|post|put|delete|patch)|\b(?:app|router|Route)\s*(?:\.|::)\s*(?:get|post|put|delete|patch))\s*\(\s*['"]([^'"]+)['"]""",
+            snippet,
+        ):
+            norm_r = _normalize_route(raw_route)
+            rid = f"route:{norm_r}"
+            self.graph.add_node(rid, label=norm_r, node_type="route", file_path=rel_path)
+            self.graph.add_edge(rid, owner_id, relation="http_route")
+
+        for raw_url in re.findall(
+            r"""\b(?:fetch|(?:axios|requests|http|client)\.(?:get|post|put|delete|patch))\s*\(\s*[`'"]([^`'"]*?/api/[^`'"]*)[`'"]""",
+            snippet,
+        ):
+            norm_r = _normalize_route(raw_url)
+            rid = f"route:{norm_r}"
+            self.graph.add_node(rid, label=norm_r, node_type="route", file_path=rel_path)
+            self.graph.add_edge(owner_id, rid, relation="http_calls")
+
     def parse_python_file(self, full_path: Path, rel_path: str):
         """Use Python's built-in AST parser to extract symbols and dependencies."""
         try:
@@ -505,6 +584,8 @@ class CodeAstScanner:
         except SyntaxError:
             return
 
+        source_lines = source.splitlines()
+        covered_lines: Set[int] = set()
         is_test = "test" in rel_path.lower()
         mod_type = "test" if is_test else "module"
         mod_id = f"mod:{rel_path}"
@@ -537,25 +618,35 @@ class CodeAstScanner:
             elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 func_id = f"fn:{rel_path}::{node.name}"
                 fn_type = "test" if node.name.startswith("test_") or is_test else "function"
+                end_l = getattr(node, "end_lineno", node.lineno)
+                dec_start = min([node.lineno] + [getattr(d, "lineno", node.lineno) for d in getattr(node, "decorator_list", [])])
                 self.graph.add_node(
                     func_id,
                     label=node.name,
                     node_type=fn_type,
                     file_path=rel_path,
-                    start_line=node.lineno,
-                    end_line=getattr(node, "end_lineno", node.lineno),
+                    start_line=dec_start,
+                    end_line=end_l,
                 )
                 self.graph.add_edge(mod_id, func_id, relation="defines")
+                covered_lines.update(range(dec_start, end_l + 1))
+                fn_src = "\n".join(source_lines[max(0, dec_start - 1) : end_l])
+                self._extract_cross_layer_edges(fn_src, rel_path, func_id)
 
-                # Function calls inside function
+                # Function calls & callback references (CALL_REFERENCE) inside function
                 for child in ast.walk(node):
                     if isinstance(child, ast.Call):
                         if isinstance(child.func, ast.Name):
-                            called_func = f"fn:{child.func.id}"
-                            self.graph.add_edge(func_id, called_func, relation="calls")
+                            self.graph.add_edge(func_id, f"fn:{child.func.id}", relation="calls")
                         elif isinstance(child.func, ast.Attribute):
-                            called_func = f"fn:{child.func.attr}"
-                            self.graph.add_edge(func_id, called_func, relation="calls")
+                            self.graph.add_edge(func_id, f"fn:{child.func.attr}", relation="calls")
+                        for arg in list(child.args) + [kw.value for kw in child.keywords]:
+                            if isinstance(arg, ast.Name):
+                                self.graph.add_edge(func_id, f"fn:{arg.id}", relation="calls")
+
+        top_src = "\n".join(line for idx, line in enumerate(source_lines, 1) if idx not in covered_lines)
+        if top_src:
+            self._extract_cross_layer_edges(top_src, rel_path, mod_id)
 
     def parse_js_file(self, full_path: Path, rel_path: str):
         """
@@ -592,6 +683,10 @@ class CodeAstScanner:
         mod_id = f"mod:{rel_path}"
         self.graph.add_node(mod_id, label=Path(rel_path).name, node_type=mod_type, file_path=rel_path)
 
+        full_path = self.root / rel_path
+        source_lines = full_path.read_text(encoding="utf-8", errors="replace").splitlines() if full_path.exists() else []
+        covered_lines: Set[int] = set()
+
         for imp in data.get("imports", []):
             target = imp.get("source", "")
             if target.startswith("."):
@@ -615,6 +710,14 @@ class CodeAstScanner:
                 fn_type = "test" if "test" in name.lower() or is_test else "function"
                 self.graph.add_node(fid, label=name, node_type=fn_type, file_path=rel_path, start_line=s_line, end_line=e_line)
                 self.graph.add_edge(mod_id, fid, relation="defines")
+                if isinstance(s_line, int) and isinstance(e_line, int) and source_lines:
+                    covered_lines.update(range(s_line, e_line + 1))
+                    self._extract_cross_layer_edges("\n".join(source_lines[max(0, s_line - 1) : e_line]), rel_path, fid)
+
+        if source_lines:
+            top_src = "\n".join(line for idx, line in enumerate(source_lines, 1) if idx not in covered_lines)
+            if top_src:
+                self._extract_cross_layer_edges(top_src, rel_path, mod_id)
 
         for c in data.get("calls", []):
             caller = c.get("caller")
@@ -646,17 +749,27 @@ class CodeAstScanner:
                 target_id = f"mod:{target}"
             self.graph.add_edge(mod_id, target_id, relation="imports")
 
-        fn_matches = re.findall(r"""(?:function\s+([A-Za-z0-9_]+)|class\s+([A-Za-z0-9_]+))""", content)
-        for fn_name, cls_name in fn_matches:
+        decl_matches = list(re.finditer(r"""(?:function\s+([A-Za-z0-9_]+)|class\s+([A-Za-z0-9_]+))""", content))
+        if not decl_matches:
+            self._extract_cross_layer_edges(content, rel_path, mod_id)
+            return
+        if decl_matches[0].start() > 0:
+            self._extract_cross_layer_edges(content[: decl_matches[0].start()], rel_path, mod_id)
+        for idx, m in enumerate(decl_matches):
+            fn_name, cls_name = m.group(1), m.group(2)
+            end_pos = decl_matches[idx + 1].start() if idx + 1 < len(decl_matches) else len(content)
+            chunk = content[m.start() : end_pos]
             if fn_name:
                 fid = f"fn:{rel_path}::{fn_name}"
                 fn_type = "test" if "test" in fn_name.lower() or is_test else "function"
                 self.graph.add_node(fid, label=fn_name, node_type=fn_type, file_path=rel_path)
                 self.graph.add_edge(mod_id, fid, relation="defines")
+                self._extract_cross_layer_edges(chunk, rel_path, fid)
             elif cls_name:
                 cid = f"cls:{rel_path}::{cls_name}"
                 self.graph.add_node(cid, label=cls_name, node_type="class", file_path=rel_path)
                 self.graph.add_edge(mod_id, cid, relation="defines")
+                self._extract_cross_layer_edges(chunk, rel_path, cid)
 
     def parse_system_policies(self):
         """Parse invariants.yaml, gate.yaml, and link policy nodes to code."""
@@ -1143,6 +1256,7 @@ def main():
     parser.add_argument("--scan", action="store_true", help="Scan repository and output graph artifacts")
     parser.add_argument("--impact", type=str, help="Calculate blast radius and impacted dependents for a file/function")
     parser.add_argument("--diff-impact", action="store_true", help="Calculate innermost-symbol blast radius & TestSignal from git diff HEAD")
+    parser.add_argument("--dead-code", action="store_true", help="Find unreferenced dead-code function candidates")
     parser.add_argument("--god-nodes", action="store_true", help="Display top God Nodes (central hubs)")
     parser.add_argument("--map", action="store_true", help="Output token-budgeted repo map (personalized PageRank)")
     parser.add_argument("--focus", action="append", default=[], help="Focus file(s) for personalized ranking; repeatable")
@@ -1158,6 +1272,13 @@ def main():
     scanner.scan_repository()
 
     out_dir = root_dir / args.out_dir
+
+    if args.dead_code:
+        dead = graph.find_dead_code_candidates()
+        print(f"🧹 DEAD CODE CANDIDATES ({len(dead)} unreferenced functions):")
+        for c in dead:
+            print(f"  - {c['file']}:{c['start_line']} -> {c['label']}()")
+        return
 
     if args.diff_impact:
         try:

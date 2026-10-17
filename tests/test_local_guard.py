@@ -197,6 +197,37 @@ denylist:
             # Unrelated file does not trigger the file-scoped decision
             self.assertEqual(run_guard(bad_diff, changed_files=["src/other.py"], label="Other File"), 0)
 
+            # Append-Only Revision (Latest-Wins per touches / category+subject):
+            # Appending a revised decision for the same anchor supersedes the old ruled_out list,
+            # while an orthogonal decision on the same file with a different subject coexists.
+            with snap.open("a", encoding="utf-8") as f:
+                f.write(json.dumps({
+                    "type": "decision",
+                    "category": "resilience",
+                    "subject": "Retry cap",
+                    "title": "Allow defaultRetryMax 10 with jitter, rule out 99",
+                    "decision": "Jittered backoff makes 10 safe; 99 still blocks.",
+                    "touches": ["src/client.py#defaultRetryMax"],
+                    "ruled_out": ["defaultRetryMax = 99"],
+                }) + "\n")
+                f.write(json.dumps({
+                    "type": "decision",
+                    "category": "resilience",
+                    "subject": "Timeout floor",
+                    "title": "Never set timeout = 0",
+                    "decision": "Zero timeout disables deadline protection.",
+                    "touches": ["src/client.py"],
+                    "ruled_out": ["timeout = 0"],
+                }) + "\n")
+            # Old ruled-out value (10) now passes
+            self.assertEqual(run_guard(bad_diff, changed_files=["src/client.py"], label="Revised Decision Pass"), 0)
+            # New ruled-out value (99) from 'Retry cap' blocks (was NOT overwritten by 'Timeout floor' on same file)
+            diff_99 = "--- a/src/client.py\n+++ b/src/client.py\n@@ -10,1 +10,1 @@\n+defaultRetryMax = 99\n"
+            self.assertEqual(run_guard(diff_99, changed_files=["src/client.py"], label="Revised Decision Block 99"), 1)
+            # Orthogonal 'Timeout floor' decision on the same file also blocks
+            diff_timeout = "--- a/src/client.py\n+++ b/src/client.py\n@@ -12,1 +12,1 @@\n+timeout = 0\n"
+            self.assertEqual(run_guard(diff_timeout, changed_files=["src/client.py"], label="Coexisting Subject Block"), 1)
+
 
 if __name__ == "__main__":
     unittest.main()

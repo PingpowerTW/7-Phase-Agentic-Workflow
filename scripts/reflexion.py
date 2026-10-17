@@ -148,14 +148,26 @@ def format_gepa_capsule(diagnostics: List[DiagnosticUnit]) -> str:
     return "\n".join(out)
 
 
+def check_score_plateau(scores: List[float], max_iterations: int = 3) -> Tuple[bool, str]:
+    """Evaluator-Optimizer Circuit Breaker: exit and escalate on 2-round score plateau or max iterations."""
+    if len(scores) >= 2 and (scores[-1] - scores[-2]) <= 0:
+        return True, f"SCORE_PLATEAU_DETECTED ({scores[-2]} -> {scores[-1]}): Diminishing returns; halt loop and escalate."
+    if len(scores) >= max_iterations:
+        return True, f"MAX_ITERATIONS_REACHED ({len(scores)}/{max_iterations}): Escalate to human."
+    return False, "CONTINUE"
+
+
 def run_command_with_reflexion(cmd_str: str) -> int:
     """Run a shell command, and if it fails, intercept and output GEPA diagnostics."""
     start_msg = f"[*] Executing target command under GEPA supervision: {cmd_str}"
     print(start_msg)
     
     res = subprocess.run(cmd_str, shell=True, capture_output=True, text=True, encoding="utf-8", errors="replace")
+    reflexion_json = REPO_ROOT / ".agent" / "REFLEXION.json"
     
     if res.returncode == 0:
+        if reflexion_json.exists():
+            reflexion_json.unlink(missing_ok=True)
         print("[PASS] Command succeeded with exit code 0.")
         if res.stdout:
             print(res.stdout.strip())
@@ -166,14 +178,26 @@ def run_command_with_reflexion(cmd_str: str) -> int:
     diagnostics = parse_diagnostics(combined_output)
     capsule = format_gepa_capsule(diagnostics)
 
-    # Save to .agent/REFLEXION.json
-    agent_dir = REPO_ROOT / ".agent"
-    agent_dir.mkdir(parents=True, exist_ok=True)
-    reflexion_json = agent_dir / "REFLEXION.json"
+    # Save to .agent/REFLEXION.json & track score history for plateau circuit breaking
+    reflexion_json.parent.mkdir(parents=True, exist_ok=True)
+    prev_scores: List[float] = []
+    if reflexion_json.exists():
+        try:
+            prev_data = json.loads(reflexion_json.read_text(encoding="utf-8", errors="replace"))
+            if prev_data.get("command") == cmd_str and not prev_data.get("plateau_halted"):
+                prev_scores = list(prev_data.get("score_history", []))
+        except Exception:
+            pass
+    current_score = max(0.0, 100.0 - 20.0 * len(diagnostics))
+    score_history = prev_scores + [current_score]
+    halted, halt_reason = check_score_plateau(score_history)
     
     payload = {
         "command": cmd_str,
         "exit_code": res.returncode,
+        "score_history": score_history,
+        "plateau_halted": halted,
+        "halt_reason": halt_reason,
         "diagnostics": [asdict(d) for d in diagnostics],
         "markdown_capsule": capsule,
     }
@@ -181,6 +205,8 @@ def run_command_with_reflexion(cmd_str: str) -> int:
 
     print("\n" + "=" * 60)
     print("❌ COMMAND FAILED! INTERCEPTED BY GEPA REFLEXION ENGINE:")
+    if halted:
+        print(f"🛑 [CIRCUIT BREAKER] {halt_reason}")
     print("=" * 60)
     print(capsule)
     print(f"[+] Reflexion capsule written to: {reflexion_json}")
@@ -212,6 +238,13 @@ def run_self_tests():
     capsule_text = format_gepa_capsule(d1 + d2)
     assert "GEPA Reflective Diagnosis" in capsule_text
     assert "Targeted Mutation" in capsule_text
+
+    # Test 4: Evaluator-Optimizer 2-round Score Plateau Circuit Breaker
+    assert check_score_plateau([60.0, 80.0]) == (False, "CONTINUE")
+    assert check_score_plateau([60.0, 60.0])[0] is True and "SCORE_PLATEAU_DETECTED" in check_score_plateau([60.0, 60.0])[1]
+    assert check_score_plateau([80.0, 60.0])[0] is True and "SCORE_PLATEAU_DETECTED" in check_score_plateau([80.0, 60.0])[1]
+    assert check_score_plateau([40.0, 60.0, 60.0])[1].startswith("SCORE_PLATEAU_DETECTED")
+    assert check_score_plateau([40.0, 60.0, 80.0])[1].startswith("MAX_ITERATIONS_REACHED")
 
     print("[PASS] scripts/reflexion.py internal self-tests passed 100%!")
 
