@@ -21,9 +21,9 @@
 >    - Code Review:「🔍 *實作已完成，建議可輸入 `/review` 進行對抗審查，或輸入 `/ui-check` 進行畫面驗收。*」
 > 5. **At Milestone / Pre-Release (里程碑達成或準備上線時)**:
 >    - Full Audit:「🩺 *即將發佈或達成里程碑，建議啟動『全域掃描矩陣』(defensive-coding + security + dependency) 進行深度體檢。*」
-> 6. **Model Switch**:
->    - Post-Design:「*規劃已完成並生成交辦文件，建議切換至 Gemini 3.5 Flash 執行實作，並可考慮啟動 /caveman 模式。*」
->    - Post-Impl:「*代碼實作已完成，建議切換至 Gemini 3.1 Pro / Claude 進行 Review 審查。*」
+> 6. **Model Switch (跨模型防破快取)**:
+>    - Post-Design:「*規劃已完成並寫入交辦文件。⚠️ 同視窗切換模型會導致 100% Cache Miss 重算，請開啟【New Session】再切換至 Flash 執行實作（並可啟動 `/caveman`）。*」
+>    - Post-Impl:「*代碼實作已完成並同步狀態。⚠️ 如需切換至 Pro / Claude / Argon 進行 `/review` 審查，請開啟【New Session】避免舊對話歷史重算。*」
 > 7. **At Loop Health / Handoff (巡檢或會話交接時)**:
 >    - State Sync:「🔄 *已完成階段性工作，請確認 `STATE.md` 狀態脊椎已同步更新，並可隨時執行 loop-audit 評估專案健康度。*」
 

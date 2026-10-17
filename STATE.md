@@ -1,16 +1,22 @@
 # Loop State — AI 優化 Workspace
 
-Last run: 2026-10-17T00:20:00+08:00 (Anti-Slop Absorption: WCAG 2.x Luminance Contrast, Glassmorphism Dose-Cap & AI Copywriting Slop Gate)
+Last run: 2026-10-17T20:06:00+08:00 (v3.3.1 Token Cache-Miss & Parallel Tool Call Guardrails: GEMINI.md New-Session Model Switch & AGENTS.md Parallel Call Discipline)
 
 ## Level 0: Macro Concept Anchor (Current Active Goal)
 
-- **Active Goal**: 完成 `anti-slop`（WCAG 2.x 相對亮度對比度、毛玻璃劑量上限與 AI 罐頭文案攔截）、`codebase-memory-mcp`（跨層 HTTP 路由/環境變數邊界與 `--dead-code` 死代碼獵殺）、`agency-agents`（UI 完稿五態與 2 輪分數高原熔斷）、`OpenMontage`（決策修訂折疊與高定反罐頭契約）、`Handwired` 及 `Trail-Code` 核心演算法零依賴吸收。
+- **Active Goal**: 完成本機 Token 經濟與 7-Phase 工作流 v3.3 深度重構與 GitHub 開源發佈（GitHub 舊版本備份為 `backup/v3.2-legacy` 與 `v3.2-archive` 標籤、更新核心技能為精煉架構、重寫全新 v3.3 README.md、補齊平行工具呼叫與跨模型防破快取護欄，並已成功 push 至 GitHub `PingpowerTW/7-Phase-Agentic-Workflow`）。
 - **Invariants Guard**: 保持 Git 時光機保護 (`INV_SAFE_04`)、兩振硬熔斷 (`INV_VERIFY_05`)、零生產接縫 (`INV_VERIFY_03`)、歷史決策防翻案 (`INV_DECISION_01`) 與零漂移狀態。
 
 ---
 
 ## High Priority (In-Flight Tasks / Waiting on Human)
 
+- [x] **v3.3 GitHub Publication & Full Documentation Overhaul**:
+  1. 遠端 GitHub 舊狀態完整備份：建立遠端備份分支 `backup/v3.2-legacy` 與永久標籤 `v3.2-archive`；
+  2. 技能整併同步：同步 15 大核心技能，清理冗餘獨立資料夾（移入 `frontend-taste-v2/references/` 與主技能），落實單檔 ≤15KB；
+  3. README.md 全新重構：撰寫完整 v3.3 規格文件（涵蓋 Direct Surgical Write、Unified 3-in-1 Adversarial Audit、Handwired ReLU 決策門禁、Anti-Slop 前端門禁與開源前置殘酷審查）；
+  4. 14 大整合驗證套件 100% 綠燈，成功推送到 GitHub `main` 與發佈 `v3.3.0` 標籤。
+- [x] **v3.3 Token Economy Overhaul & 7-Phase Skill Consolidation**: 基於 486 份歷史 Transcript 實證分析，徹底解決 Gemini 4 Argon / Claude Opus 本機額度秒噴問題：1. 升級 [`teamwork/SKILL.md`](file:///C:/Users/HYC/.gemini/config/skills/teamwork/SKILL.md) 與 [`agy-studio/SKILL.md`](file:///C:/Users/HYC/.gemini/config/skills/agy-studio/SKILL.md) 至 v3.3（取消 ≥3 檔案自動觸發、消除 Read-Only Worker 雙倍手抄 Output Token 稅、拔除不存在之 `stage_runner.py` 呼叫、將 Reviewer+Critic+Auditor 三審合一省下 67% 審查 Context、全面補入 Ponytail 7 階梯）；2. 停用 `science` 插件（42 個技能）、封存 83 個 0 讀取非框架技能，並將剩餘 26 個重疊技能按 6 大群組提煉整併入 `code-review`、`auto-snapshot`、`context-pruner`、`ponytail`、`diagnosing-bugs`、`test-audit`、`karpathy-guidelines`、`frontend-taste-v2`（全域技能由 216 個收斂至 47 個，減幅 78%）；3. 擴充 [`AGENTS.md`](file:///d:/AI/%E5%84%AA%E5%8C%96/AGENTS.md) 第 3 節將 Skill / Plugin / Rule 集納入殘酷審查與 ≤15 KB 上限門禁；4. 於 [`AGENTS.md`](file:///d:/AI/%E5%84%AA%E5%8C%96/AGENTS.md) 實裝「強制平行工具呼叫 (Parallel Tool Calls)」與「禁對 `.jsonl/.log` 使用 `view_file`」止血紀律，並於 [`GEMINI.md`](file:///d:/AI/%E5%84%AA%E5%8C%96/GEMINI.md) 第 6 節加入跨模型切換強制開啟 New Session 防破快取護欄。
 - [x] **Anti-Slop Deterministic Gate Absorption (`ui_audit.py`)**: 通過 Phase 0 前置殘酷審查（拒絕安裝 `npx antislop-ai` 與 6 份冗長綁架式 Markdown 規則），以純標準庫將三大核心檢查濃縮進 `ui_audit.py`：1. 實裝 [`wcag_contrast_ratio()`](file:///d:/AI/%E5%84%AA%E5%8C%96/7-Phase-Agentic-Workflow/scripts/ui_audit.py#L109-L120) 與 `low-contrast-hex`（精確計算 WCAG 2.x 相對亮度比值 $< 4.5:1$ 之同元素前/背景 Hex 配對）；2. 實裝 `excessive-glass-blur`（單一視圖超過 2 處 `backdrop-blur` 觸發劑量上限告警）；3. 實裝 `ai-copywriting-slop`（攔截 `Unlock the power of`、`99.999%` 等 AI 罐頭行銷詞與假數據）。
 - [x] **Codebase-Memory-MCP Graph Intelligence Absorption (`loop_graph.py`)**: 通過 Phase 0 前置殘酷審查（拒絕安裝觸發 Defender 報毒之 C 常駐 Daemon 與 17 個 MCP 工具 Schema 稅），以純標準庫吸收兩大圖譜精華：1. 實裝 `find_dead_code_candidates()` 與 `--dead-code` CLI（自動排除入口點、測試、Dunder 與路由處理器，精準定位零入度孤立函數）；2. 於 `CodeAstScanner` 實裝 `_extract_cross_layer_edges()` 與 `_normalize_route()`，支援跨前後端 `HTTP_CALLS`（`route:/api/...` 動態參數對齊）與環境變數 `CONFIGURES`（`env:<KEY>` 讀寫串聯）之跨層爆炸半徑追蹤。
 - [x] **Agency-Agents Pattern Absorption (`ui_audit.py` & `reflexion.py`)**: 通過 Phase 0 前置殘酷審查（拒絕安裝 `agency-agents-app` 桌面端與匯入 150+ 罐頭人設 `.md`），以純標準庫機械化吸收兩項契約：1. 於 `ui_audit.py` 實裝 `missing-ui-finish-states`（攔截僅實作 Happy Path 而缺漏 `loading/empty/error` 完稿狀態之非同步/清單視圖）；2. 於 `reflexion.py` 實裝 `check_score_plateau()`（Evaluator-Optimizer 連續 2 輪分數高原 `delta <= 0` 或達上限即熔斷跳出）。
@@ -26,6 +32,7 @@ Last run: 2026-10-17T00:20:00+08:00 (Anti-Slop Absorption: WCAG 2.x Luminance Co
 
 | Version / Tag | Core Intent & Scope | Key Invariants Preserved | Detail Pointer |
 | :--- | :--- | :--- | :--- |
+| **v3.3** | Token Economy Overhaul, Direct Surgical Write, 3-in-1 Audit & Skill Consolidation | `INV_SAFE_04`, `INV_VERIFY_05`, `INV_VERIFY_03`, `INV_DECISION_01` | GitHub `PingpowerTW/7-Phase-Agentic-Workflow` (`v3.3.0`) |
 | **v3.2** | NCM Concept Tree Alignment (CTAP), DRY Gate & 50ms Fast-Probe | `CTAP`, `INV_SAFE_04`, `INV_VERIFY_05`, NCM L0-L2 | [Archive #24](docs/history/MILESTONES_ARCHIVE.md#24-ncm-concept-tree-alignment-ctap--multi-scale-memory-architecture) |
 | **v3.1** | Surgical Patch Stager (`### PATCH:`) & Suite 14 | `INV_PHP_01`, `INV_LARAVEL_01~04`, `INV_TS_01` | [Archive #1](docs/history/MILESTONES_ARCHIVE.md#1-v31-surgical-patch-stager--14-suite-verification-matrix) |
 | **v3.0** | Contract-First DAG, Step 2.5 0-Token Sieve, Rule Slimming | `INV_TS_01`, `INV_REACT_01~02` | [Archive #2](docs/history/MILESTONES_ARCHIVE.md#2-v30-multi-agent--studio-architecture-upgrade-contract-first-parallel-dag-0-token-sieve--context-tiering) |
