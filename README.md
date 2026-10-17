@@ -6,18 +6,15 @@
 
 ---
 
-本專案是一套專為現代 AI Coding 時代設計的**高吞吐量、低 Token 能耗、零生產接縫的全流程多代理人開發協作架構**。
-
-在經歷了早期 ReAct 輪詢的高昂 Context 消耗與多代理人雙倍手抄代碼的瓶頸後，**v3.3 迎來全面進化**：
-徹底終結「唯讀 Worker 輸出長篇代碼再由主控手抄」的雙倍 Token 浪費，落實**原子級直接精準寫入 (Direct Surgical Write)**；將分散的審查角色收斂為**三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)**，審查 Context 開銷劇降 67%；全面推行**手動顯式觸發**以守護工程師錢包；將過往膨脹的 92+ 個散落技能精煉整併為遵循「≤15KB 硬上限」與「按需加載 (On-Demand References)」的精銳模組；並透過本機 **<1ms 的 Handwired ReLU 0-Token 決策門禁 (`local_guard.py`)**，在提交前以物理級速度阻斷憑證洩漏與偽測試接縫。
+本專案是一套專為現代 AI Coding 設計的**高吞吐量、低 Token 能耗、零生產接縫的全流程多代理人開發協作架構**。透過結合**原子級手術式直寫 (Direct Surgical Write)**、**三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)**、**按需參考庫架構 (On-Demand References, 單檔 ≤15KB)** 以及本機 **<1ms Handwired ReLU 0-Token 決策門禁 (`local_guard.py`)**，在確保企業級工程品質與安全邊界的同時，最大化上下文利用率與系統吞吐量。
 
 ---
 
 ## 📌 目錄 (Table of Contents)
 
-1. [💥 為什麼升級 v3.3？（Token 經濟學的第二次革命）](#-為什麼升級-v33token-經濟學的第二次革命)
-2. [🏛️ 四層認知架構與多軌防禦體系 (Cognitive Architecture)](#️-四層認知架構與多軌防禦體系-cognitive-architecture)
-3. [⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)](#-promptscript-跨-ide-編譯架構-promptscript-universal-compiler)
+1. [🏛️ 四層認知架構與多軌防禦體系 (Cognitive Architecture)](#️-四層認知架構與多軌防禦體系-cognitive-architecture)
+2. [⚡ 核心技術機制與 Token 經濟架構 (Core Technical Mechanisms)](#-核心技術機制與-token-經濟架構-core-technical-mechanisms)
+3. [🔄 PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)](#-promptscript-跨-ide-編譯架構-promptscript-universal-compiler)
 4. [🌟 核心理念與護欄 (Core Philosophy & Guardrails)](#-核心理念與護欄-core-philosophy--guardrails)
 5. [🗺️ 7-Phase 協作生命週期標準作業程序 (The 7-Phase SOP)](#️-7-phase-協作生命週期標準作業程序-the-7-phase-sop)
 6. [🤖 多代理人模式對比 (Multi-Agent Modes Matrix)](#-多代理人模式對比-multi-agent-modes-matrix)
@@ -31,45 +28,9 @@
 
 ---
 
-## 💥 為什麼升級 v3.3？（Token 經濟學的第二次革命）
-
-在舊版多代理人架構中，開發者常面臨「Token 燃燒極快、模型上下文污染、小任務被過度工程化劫持」三大痛點。v3.3 針對這三大痛點推行了關鍵手術式升級：
-
-### 1. 消除唯讀 Worker 雙倍手抄代碼稅 (Direct Surgical Write)
-* **舊痛點**：Worker 只有 Read-Only 權限，修改 30 行代碼卻必須在對話中吐出完整 300 行 Markdown 代碼區塊；隨後 Orchestrator 必須完整讀取這段輸出並再次手抄寫入磁碟，造成 **200%~300% 嚴重的 Token 膨脹** 與上下文污染。
-* **v3.3 破局**：正式授權 Worker 透過原子編輯工具（`replace_file_content` / `write_to_file`）在受控沙盒或目標路徑執行**直接手術式寫入**。Worker 僅需回傳精簡的修改摘要（≤3 行），直接消除手抄稅，系統吞吐量提升 2.8 倍，Token 消耗節省 60% 以上！
-
-### 2. 三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)
-* **舊痛點**：舊版循序啟動 Reviewer (代碼審查) ➔ Critic (盲點反思) ➔ Auditor (架構與資安審計) 三個獨立 Agent，每位審查員重複載入完整專案規格與全量 Diff，造成極端冗餘。
-* **v3.3 破局**：整併為統一的高規格對抗審查階段（Unified 3-in-1 Adversarial Audit）。由審查官預設以 **REJECT (駁回)** 立場接手，單輪並行完成「語意與風格校準」、「盲點紅隊反思」與「資安/架構門禁檢驗」，**審查階段 Context 開銷直接銳減 67%**。
-
-### 3. 手動顯式觸發原則 (Manual Explicit Trigger Only)
-* **舊痛點**：只要提示詞偵測到關鍵字，就自動拉起 5 人軍團 (`/teamwork`) 或 7 人工作室 (`/agy-studio`)，連修改一個打字錯誤都要耗費百萬 Token。
-* **v3.3 破局**：全面實施「手動顯式觸發原則」。嚴禁系統自作主張自動召喚多代理人；預設採用單兵模式結合 **Ponytail 7 階梯（偷懶工程師模式）**，僅在工程師主動輸入指令或大型跨檔案任務經審批授權後才啟動多 Agent。
-
-### 4. 6 大群組技能精煉與按需參考庫 (Skill Consolidation & References)
-* **舊痛點**：社群與專案長期累積 92+ 個散落技能，每個都在 System Prompt 中爭搶 attention 權重，引發注意力分散、指令漂移與嚴重的字元額度浪費。
-* **v3.3 破局**：完成 6 大群組深度整併，將重疊工具吸收為 10 餘個精銳核心技能，每個技能遵守 **≤15KB 硬上限**：
-  * `code-review`：6-in-1 吸收 defensive-coding, security, secret-scanner, architecture, ponytail-review。
-  * `auto-snapshot`：5-in-1 吸收 session-handoff, context-recovery, decision-logger, work-resume-sop, progress-tracker。
-  * `context-pruner`：2-in-1 吸收 context-compressor SelfCompact C1-C2-C3-N1 探針。
-  * `ponytail`：5-in-1 吸收 review, audit, debt, gain 子模式。
-  * `diagnosing-bugs`：3-in-1 吸收 bug-tracker, quick-fix-patterns。
-  * `test-audit`：3-in-1 吸收 tdd, testing 垂直切片與門禁四問。
-  * `frontend-taste-v2`：8-in-1 瘦身至 7KB，將 gsap-motion, cinematic-ui, landing-page-architect, ux-audit 轉為內部 `./references/` 按需動態讀取。
-
-### 5. 本機 System 1 0-Token 決策門禁 (Handwired ReLU Gate)
-* **舊痛點**：過去依賴雲端自回歸 LLM 去判定「是否寫了測試後門」、「是否洩漏憑證」，每次判定延遲 2~5 秒且消耗數千 Token。
-* **v3.3 破局**：自研 `scripts/local_guard.py` 提供 **<1ms、0 Token 開銷** 的本機硬阻斷：
-  * **零生產接縫 (Zero Production Seams)**：秒級阻斷 `@visibleForTesting`, `export /* test-only */`, 可選 mock 參數。
-  * **硬編碼憑證與金鑰掃描**：正則掃描 AWS, Stripe, Google, JWT, 私鑰等機敏標記。
-  * **Ponytail 階梯定位與過度工程評分**：提供 Handwired 決策邏輯，相容 TypeSafe / Ollaya 本機小模型，離線自動平滑回退至硬規則。
-
----
-
 ## 🏛️ 四層認知架構與多軌防禦體系 (Cognitive Architecture)
 
-本框架構建了從物理執行期、微秒級快思考，到宏觀工程規格的多層縱深架構：
+本框架構建了從物理執行期、微秒級快思考，到宏觀工程規格的多層縱深防禦體系：
 
 ```mermaid
 flowchart TD
@@ -87,10 +48,37 @@ flowchart TD
 
 ---
 
-## ⚡ PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
+## ⚡ 核心技術機制與 Token 經濟架構 (Core Technical Mechanisms)
 
-本框架以 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth, SSOT)**。
-徹底終結過去手動維護多種編輯器配置的破碎困境（Claude Code 的 `CLAUDE.md`、Cursor 的 `.cursor/rules/`、Copilot 的 `.github/copilot-instructions.md`、Antigravity 的 `.agent/rules/`）。現在只需維護 `.promptscript/`，執行編譯即可自動同步：
+### 1. 原子手術式直寫 (Direct Surgical Write)
+在多代理人協作模式下，Worker 代理人具備受控沙盒或目標路徑的原子編輯權限（`replace_file_content` / `write_to_file`），直接對目標代碼區段執行手術式寫入，並僅向主控端回傳精簡變更摘要（≤3 行）。此設計消除了子代理人在對話視窗傾倒全檔 Markdown 再由主控複製貼上的雙倍 I/O Token 開銷。
+
+### 2. 三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)
+Phase 5 審查階段採用單一高規格對抗審查機制，預設以 **REJECT (駁回)** 立場接手，於單次 Context 載入中並行完成三大維度驗收：
+* **語意與風格校準 (Reviewer)**：檢驗命名契約、型別嚴密性與 Ponytail 精簡階梯合規度。
+* **盲點紅隊反思 (Critic)**：針對邊界條件、競態條件 (Race Conditions) 與異常處理進行壓力挑刺。
+* **資安與架構審計 (Auditor)**：檢驗零非必要生產接縫 (Zero Production Seams)、OWASP 弱點與模組耦合度。
+
+### 3. 顯式調度門禁 (Manual Explicit Dispatch)
+系統嚴格區分任務規模與調度邊界：
+* **單兵作業（預設）**：日常開發與小型修改（<3 檔案）強制採單兵直寫模式，結合 Ponytail 7 階梯最小化變更。
+* **多代理人軍團（顯式觸發）**：5 人品質制衡軍團 (`/teamwork`) 與 7 人全端工作室 (`/agy-studio`) 僅在工程師明確下達指令或跨模組大型架構重構經授權後啟動，防止輕量任務遭受多代理人調度稅。
+
+### 4. 核心技能模組化與按需參考庫 (Modular Skills & On-Demand References)
+所有頂層技能模組（`skills/*/SKILL.md`）嚴格遵守 **≤15KB 檔案上限**，確保常駐或喚醒時不污染主上下文視窗。高深領域規範與延伸框架細節（如 GSAP 動效、Cinematic 光影、CRO 落地頁模型、OWASP 清單、Mocking 準則等）一律拆分為 `./references/*.md`，僅在觸發對應子任務時按需動態載入 (Lazy Loading)。
+
+### 5. 本機 System 1 0-Token 決策門禁 (Handwired ReLU Gate)
+`scripts/local_guard.py` 實作無分支 6 維特徵 ReLU 線性網路 ($\mathbf{h}=\text{ReLU}(\mathbf{W}\mathbf{x}+\mathbf{b})$) 與靜態語意分析，提供 **<1ms、0 Token 開銷** 的提交前物理攔截：
+* **零生產接縫檢驗 (`INV_VERIFY_03`)**：攔截生產代碼中僅為配合測試而開的後門（如 `@visibleForTesting`、`export /* test-only */`、可選 mock 注入參數）。
+* **硬編碼憑證阻斷**：正則與熵值掃描 AWS、Stripe、Google、JWT 與私鑰字串。
+* **歷史決策防翻案 (`INV_DECISION_01`)**：比對 `.agent/SNAPSHOT.jsonl` 中的 `ruled_out` 歷史決策，自動攔截重蹈覆轍的退化寫法。
+* **隨插即用後端**：支援相容 `/v1/systemone` 協議之本機決策模型（Ollaya / Laya），離線時 0 延遲自動運行 Handwired ReLU 引擎。
+
+---
+
+## 🔄 PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
+
+本框架以 **PromptScript DSL (v1.5.0)** 作為代理人系統的**單一真實來源 (Single Source of Truth, SSOT)**。只需維護 `.promptscript/` 目錄下的宣告式模組，即可透過編譯引擎自動同步至各家 AI 編輯器格式：
 
 ```mermaid
 flowchart TD
@@ -173,14 +161,14 @@ flowchart LR
 
 ## 🤖 多代理人模式對比 (Multi-Agent Modes Matrix)
 
-| 比較維度 | 🛡️ 單兵模式 (Base Framework) | 🤝 `/teamwork` 軍團 (v3.3) | 🚀 `/agy-studio` 工作室 (v3.3) |
+| 比較維度 | 🛡️ 單兵模式 (Base Framework) | 🤝 `/teamwork` 品質制衡軍團 | 🚀 `/agy-studio` 全端工作室 |
 |---|---|---|---|
 | **核心定位** | 日常開發、快速修復、行為紀律 | 5 人關鍵品質制衡與架構重構 | 7 人全端專家工作室 (DB+API+UI) |
-| **觸發方式** | 預設預設模式 (無需任何指令) | **手動顯式指令 (`/teamwork`)** | **手動顯式指令 (`/agy-studio`)** |
+| **觸發方式** | 預設模式 (無需任何指令) | **手動顯式指令 (`/teamwork`)** | **手動顯式指令 (`/agy-studio`)** |
 | **角色編制** | 1 (主代理人全權負責) | 1 Sentinel + 1 Worker + 1 Reviewer/Critic/Auditor (三審合一) | 1 Lead + 3 Fullstack Workers + 1 統一審查官 |
 | **檔案寫入權限** | 主代理人直接手術式開刀 | **Worker 在沙盒/目標路徑直接寫入** | **領域 Worker 依契約直接寫入** |
 | **審查機制** | System 1 本機門禁檢查 | **三審合一對抗審查 (REJECT 預設立場)** | **三審合一對抗審查 + Anti-Slop 前端門禁** |
-| **Token 能耗** | 🟢 **極低** (最經濟) | 🟡 **中等** (比舊版節省 ~60%) | 🟠 **受控** (三審合一消除手抄開銷) |
+| **Token 能耗** | 🟢 **極低** (最經濟) | 🟡 **中等** (單輪對抗審查) | 🟠 **受控** (三審合一 + 原子直寫) |
 | **適用範圍** | 1~2 個檔案、Bug 修復、小功能 | ≥3 個檔案、關鍵核心重構、架構改版 | 全新全端模組、包含資料庫遷移與完整 UI |
 
 ---
@@ -197,7 +185,7 @@ $$T = \text{PPV} \times \exp(-\sigma_{\text{calib}} \times T_{\text{comp}})$$
 * $T_{\text{comp}}$：計算溫度 / 複雜度因子。
 
 ### 2. SelfCompact 第一性原理自適應壓縮探針 (C1-C2-C3-N1)
-整合 [SelfCompact (arXiv:2606.23525)](https://arxiv.org/abs/2606.23525)，徹底解決傳統固定輪數粗暴截斷造成的推理中斷：
+整合 [SelfCompact (arXiv:2606.23525)](https://arxiv.org/abs/2606.23525)，解決傳統固定輪數截斷造成的推理中斷：
 
 $$\text{COMPRESS} \iff C_1 \land C_2 \land C_3 \land \neg N_1$$
 
@@ -206,14 +194,14 @@ $$\text{COMPRESS} \iff C_1 \land C_2 \land C_3 \land \neg N_1$$
 * **$C_3$ (Progress)**：距上次壓縮是否有實質代碼或事實進展？
 * **$N_1$ (Not Stuck)**：最近執行是否處於報錯或卡死循環？（若卡死則強制阻斷壓縮，防污染長期記憶）
 
-### 3. v3.3 Quality Gate 協作演算法 (Direct Write Pseudocode)
+### 3. Quality Gate 協作演算法 (Direct Write Pseudocode)
 
 ```python
-def quality_gate_v3_3(task):
+def quality_gate_execution(task):
     # Phase 1: 輕量探索與調用鏈圖譜
     impact_graph = loop_graph.analyze_impact(task.target_files)
     
-    # Phase 2: Worker 手術式直接寫入 (消除雙倍手抄稅)
+    # Phase 2: Worker 手術式直接寫入
     write_result = invoke_worker(
         role="Worker",
         direct_write=True,
@@ -225,7 +213,7 @@ def quality_gate_v3_3(task):
     if guard_status == "BLOCK":
         return rollback_and_escalate(guard_status.reason)
         
-    # Phase 4: 三審合一對抗審查 (Reviewer + Critic + Auditor 合併)
+    # Phase 4: 三審合一對抗審查 (Reviewer + Critic + Auditor)
     audit_verdict = invoke_unified_adversarial_audit(
         diff=write_result.diff,
         criteria=["Zero Production Seams", "Ponytail Ladder", "Security & Anti-Slop"]
@@ -267,10 +255,10 @@ def quality_gate_v3_3(task):
 
 ## 🧩 技能模組盤點 (Skills Index)
 
-本框架核心技能存放於 `skills/`，經過 v3.3 精煉整併後，每項皆符合 **≤15KB 硬限制**：
+本框架核心技能存放於 `skills/`，每項頂層 `SKILL.md` 皆嚴格控制在 **≤15KB** 內，延伸細節透過 `./references/` 按需載入：
 
-1. **`teamwork` (v3.3)**：5 人品質制衡軍團。落實手動顯式觸發、Worker 直接手術式寫入與三審合一對抗審查。
-2. **`agy-studio` (v3.3)**：7 人全端工作室。融入 Ponytail 7 階梯與 Direct Surgical Write，消除雙倍手抄稅。
+1. **`teamwork`**：5 人品質制衡軍團。落實手動顯式觸發、Worker 直接手術式寫入與三審合一對抗審查。
+2. **`agy-studio`**：7 人全端工作室。結合 Ponytail 7 階梯與 Direct Surgical Write 完成端到端全端交付。
 3. **`karpathy-guidelines` (3-in-1)**：規格定義與行為矯正核心。整合 Phase 0 規格定義、Grilling 壓力反詰問與 Project Planner 里程碑拆解。
 4. **`ponytail` (5-in-1)**：資深偷懶工程師模式全集。內建 7 階梯核心、過度工程審查、全庫盤點、捷徑帳本與成效記分板。
 5. **`code-review` (6-in-1)**：全維度代碼審查總擎。吸收 defensive-coding, security, secret-scanner, architecture 與 ponytail-review。
@@ -352,7 +340,7 @@ flowchart TD
 │   ├── agents.prs                               # 5 人品質制衡軍團與全端專家子代理人宣告
 │   ├── governance.prs                           # DROS AST 熔斷、BTC 熱力學閥值與 SHARS 抽樣
 │   ├── shortcuts.prs                            # 統一巨集指令 (/spec, /teamwork, /review...)
-│   └── skills.prs                               # 精煉核心技能映射宣告 (v3.3)
+│   └── skills.prs                               # 核心技能映射宣告
 ├── promptscript.yaml                            # 跨 49+ IDE 編譯目標設定 (Antigravity/Claude/Cursor/Copilot...)
 ├── GEMINI.md                                    # 全域規則 (Layer 1) → 安裝至 ~/.gemini/GEMINI.md
 ├── AGENTS.md                                    # 專案級治理守則與機械化安全門禁
@@ -379,9 +367,9 @@ flowchart TD
 │   ├── test_loop_graph.py                       # 架構圖譜與衝擊半徑測試
 │   ├── test_swc_llmcompiler.py                  # SWC AST 門禁與 DAG 排程器測試
 │   └── test_loop_drift.py                       # 系統不變量漂移測試
-└── skills/                                      # 🧩 精煉核心技能模組 (v3.3, 單檔 ≤15KB)
-    ├── teamwork/                                # 5 人品質制衡軍團 (v3.3, Direct Write & 三審合一)
-    ├── agy-studio/                              # 7 人全端工作室 (v3.3, Ponytail 融入)
+└── skills/                                      # 🧩 核心技能模組 (單檔 ≤15KB + 按需參考庫)
+    ├── teamwork/                                # 5 人品質制衡軍團 (Direct Write & 三審合一)
+    ├── agy-studio/                              # 7 人全端工作室 (Ponytail 7 階梯整合)
     ├── code-review/                             # 6-in-1 全維度代碼審查總擎
     ├── ponytail/                                # 5-in-1 資深偷懶工程師 7 階梯模式全集
     ├── test-audit/                              # 3-in-1 垂直切片 TDD 與測試品質門禁
