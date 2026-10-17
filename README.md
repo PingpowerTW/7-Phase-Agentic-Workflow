@@ -273,8 +273,7 @@ def quality_gate_execution(task):
 14. **`caveman`**：Token 壓縮通訊模式，支援 lite, full, ultra, wenyan 等簡化等級。
 15. **`ui-designer`**：Open Design 9-Section 設計系統生成引擎，支援 Tailwind / CSS 雙軌 Token 映射。
 16. **`diagrams-skill`**：宣告式架構繪圖與 SQL DDL 轉 ERD 逆向工程工具。
-17. **`loop-verifier` / `loop-budget` / `loop-triage` / `loop-constraints`**：迴圈工程防線，負責不變量守護、預算熔斷與漂移防護。
-18. **`ollaya-decision`**：本機 Laya 決策模型與快推理技能（相容 System 1 原語，<50ms 響應、0 Token 消耗）。
+17. **`ollaya-decision`**：本機 Laya 決策模型與快推理技能（相容 System 1 原語，<50ms 響應、0 Token 消耗）。
 
 ---
 
@@ -421,12 +420,6 @@ python scripts/sync_promptscript.py --compile
    ```bash
    auto-snapshot capture milestone "變更摘要" --files <檔案路徑>
    ```
-
----
-
-### 🔄 姊妹專案推薦 (Ecosystem Companions)
-
-- 🔗 [**PingpowerTW/agent-loop-engineering**](https://github.com/PingpowerTW/agent-loop-engineering)：開箱即用的獨立 Loop Engineering L3 實踐樣板庫，涵蓋 `STATE.md` 狀態脊椎、`gate.yaml`、Token 預算守護與多代理人驗證迴圈。
 
 ---
 

@@ -77,26 +77,6 @@
     description: "7-Agent Collaborative Fullstack Studio for End-to-End Delivery"
   }
 
-  loop-budget: {
-    path: "./skills/loop-budget"
-    description: "Multi-Agent Loop Budget & Token Quota Management System"
-  }
-
-  loop-constraints: {
-    path: "./skills/loop-constraints"
-    description: "Hard Constraints and Invariant Enforcement for Agentic Execution Loops"
-  }
-
-  loop-triage: {
-    path: "./skills/loop-triage"
-    description: "Failure Analysis, Triage and Escalation for Automated Loops"
-  }
-
-  loop-verifier: {
-    path: "./skills/loop-verifier"
-    description: "Maker/Checker Separation, Anti-Slop Scanning & Fail-Before-Pass Verifier"
-  }
-
   test-audit: {
     path: "./skills/test-audit"
     description: "Rigorous Test Quality Auditing and Assertion Integrity Sentinel"
