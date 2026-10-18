@@ -228,8 +228,50 @@ denylist:
             diff_timeout = "--- a/src/client.py\n+++ b/src/client.py\n@@ -12,1 +12,1 @@\n+timeout = 0\n"
             self.assertEqual(run_guard(diff_timeout, changed_files=["src/client.py"], label="Coexisting Subject Block"), 1)
 
+    def test_rollback_incident_to_eval_pipeline(self):
+        import json
+        import os
+        import subprocess
+        from local_guard import execute_rollback, evaluate_incidents
+
+        # Initialize real git repo at test_dir boundary
+        subprocess.run(["git", "init"], cwd=self.test_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=self.test_dir, check=True, capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Tester"], cwd=self.test_dir, check=True, capture_output=True)
+        prod_file = self.test_dir / "service.py"
+        prod_file.write_text("def add(a, b):\n    return a + b\n", encoding="utf-8")
+        subprocess.run(["git", "add", "service.py"], cwd=self.test_dir, check=True, capture_output=True)
+        subprocess.run(["git", "commit", "-m", "baseline"], cwd=self.test_dir, check=True, capture_output=True)
+
+        orig_cwd = Path.cwd()
+        try:
+            os.chdir(self.test_dir)
+            # Rollback #1: test seam backdoor
+            prod_file.write_text("def add(a, b):\n    return a + b\ndef set_mock_for_test(x):\n    return x\n", encoding="utf-8")
+            self.assertEqual(execute_rollback(), 0)
+            self.assertNotIn("set_mock_for_test", prod_file.read_text(encoding="utf-8"))
+
+            # Rollback #2: enterprise factory bloat (must preserve Rollback #1 in .agent/eval_incidents.jsonl!)
+            prod_file.write_text("class AbstractProxyFactoryBean:\n    pass\nclass SingletonServiceManager:\n    pass\n", encoding="utf-8")
+            self.assertEqual(execute_rollback(), 0)
+
+            inc_file = self.test_dir / ".agent" / "eval_incidents.jsonl"
+            self.assertTrue(inc_file.is_file())
+            lines = [ln for ln in inc_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            self.assertEqual(len(lines), 2)
+            self.assertGreater(json.loads(lines[0])["features"][0], 0.0)
+            self.assertGreater(json.loads(lines[1])["features"][1], 0.0)
+
+            # Append corrupt JSON line to verify defensive parsing in evaluate_incidents()
+            with inc_file.open("a", encoding="utf-8") as f:
+                f.write("{corrupt_json_line\n")
+            self.assertEqual(evaluate_incidents(), 0)
+        finally:
+            os.chdir(orig_cwd)
+
 
 if __name__ == "__main__":
     unittest.main()
+
 
 

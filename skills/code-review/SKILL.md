@@ -9,6 +9,7 @@ description: >
 
 > **核心理念**：單次讀取變更檔案，一次完成「正確性、防禦性邊界、OWASP 資安與密鑰、架構狀態契約、Ponytail 精簡度、前端 Anti-Slop」六維度審查。
 > **Confidence Gate**：僅報告 **>80% 確信** 的真實問題；跳過未修改區域的風格偏好；同類問題強制合併報告。
+> **Incremental & Anti-Loop Gate**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪即強制收斂）；對已標註刻意捷徑（`ponytail:`）或已附理由豁免（Wontfix）之項目，嚴禁重複報警。
 
 ## 📚 深度參考庫 (`./references/` 按需讀取)
 - [`references/defensive-coding.md`](references/defensive-coding.md)：JS/TS/Python 空值、非同步與邊界修復範本

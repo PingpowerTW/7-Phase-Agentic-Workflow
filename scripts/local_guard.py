@@ -776,6 +776,45 @@ def is_git_repo() -> bool:
         return False
 
 
+def _capture_rollback_incident(diff: str, changed_files: List[str]) -> Optional[Path]:
+    """將觸發兩振回滾之失敗 Diff 沉澱至 .agent/eval_incidents.jsonl 並微調 ReLU 權重 (Anthropic Incident-to-Eval)"""
+    if not diff.strip():
+        return None
+    x = _extract_handwired_features(diff)
+    if sum(x[:4]) > 0:
+        tune_handwired_weights(diff, 0.9 if x[0] > 0 else 0.0, 4.5 if sum(x[1:4]) > 0 else 2.0, lr=0.05)
+    target_dir = Path.cwd() / ".agent"
+    target_dir.mkdir(parents=True, exist_ok=True)
+    inc_file = target_dir / "eval_incidents.jsonl"
+    record = {
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "files": changed_files,
+        "features": x,
+        "diff_snippet": diff[:1000],
+    }
+    with inc_file.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return inc_file
+
+
+def evaluate_incidents() -> int:
+    """回放 .agent/eval_incidents.jsonl 驗證當前門禁對歷史事故/Revert 樣本之攔截率"""
+    inc_file = Path.cwd() / ".agent" / "eval_incidents.jsonl"
+    if not inc_file.is_file():
+        print(f"{CYAN}ℹ️  [Incident Eval] 尚無歷史回滾樣本 (.agent/eval_incidents.jsonl)。{RESET}")
+        return 0
+    records = []
+    for ln in inc_file.read_text(encoding="utf-8", errors="replace").splitlines():
+        if ln.strip():
+            try:
+                records.append(json.loads(ln))
+            except Exception:
+                continue
+    caught = sum(1 for r in records if run_guard(r.get("diff_snippet", ""), "Incident Replay", r.get("files")) == 1)
+    print(f"{GREEN}📊 [Incident Eval] 歷史事故攔截率: {caught}/{len(records)} ({(caught/len(records)*100 if records else 100):.1f}%){RESET}")
+    return 0 if caught == len(records) else 1
+
+
 def execute_rollback() -> int:
     """執行 0.05 秒物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05)"""
     if not is_git_repo():
@@ -785,11 +824,13 @@ def execute_rollback() -> int:
     print(f"\n{YELLOW}{BOLD}⚡ 正在觸發兩振硬熔斷物理回滾 (INV_VERIFY_05)...{RESET}")
     start = time.perf_counter()
     try:
+        diff, changed = get_git_info()
         subprocess.run(["git", "restore", "."], check=True, capture_output=True)
-        subprocess.run(["git", "clean", "-fd"], check=True, capture_output=True)
+        subprocess.run(["git", "clean", "-fd", "-e", ".agent", "-e", ".agents"], check=True, capture_output=True)
+        _capture_rollback_incident(diff, changed)
         elapsed_ms = (time.perf_counter() - start) * 1000
         print(f"{GREEN}✅ [秒級硬熔斷成功] 工作區已乾淨復原至安全 Commit 基準點！耗時: {elapsed_ms:.1f} ms{RESET}")
-        print(f"{CYAN}💡 上下文毒化已阻斷，未留任何無效補丁。請重新釐清問題或調整提示詞。{RESET}\n")
+        print(f"{CYAN}💡 上下文毒化已阻斷，失敗特徵已沉澱至 .agent/eval_incidents.jsonl。{RESET}\n")
         return 0
     except Exception as e:
         print(f"{RED}❌ 回滾失敗: {e}{RESET}")
@@ -866,6 +907,7 @@ if __name__ == "__main__":
     parser.add_argument("--git", action="store_true", help="自動審查當前 git diff 與檔案變更")
     parser.add_argument("--check-git", action="store_true", help="檢驗 Git 時光機地基狀態 (INV_SAFE_04)")
     parser.add_argument("--rollback", action="store_true", help="觸發兩振硬熔斷 0.05 秒物理回滾 (INV_VERIFY_05)")
+    parser.add_argument("--eval-incidents", action="store_true", help="回放 .agent/eval_incidents.jsonl 驗證歷史事故攔截率")
     parser.add_argument("--code", type=str, help="直接傳入要審查的代碼字串")
     parser.add_argument("--file", type=str, help="指定要審查的檔案路徑")
     parser.add_argument("--stdin", action="store_true", help="從標準輸入 (stdin) 讀取內容")
@@ -877,6 +919,8 @@ if __name__ == "__main__":
         sys.exit(check_git_status())
     elif args.rollback:
         sys.exit(execute_rollback())
+    elif args.eval_incidents:
+        sys.exit(evaluate_incidents())
 
     content = ""
     label = "Direct Input"
