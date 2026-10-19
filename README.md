@@ -1,12 +1,13 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人協作與 Token 經濟學架構)
 
-> **版本**：v3.3 (Unified 3-in-1 Adversarial Audit, Direct Surgical Write, Handwired ReLU & Skill Consolidation Edition)  
+> **版本**：v3.3.3 (Harness² Recursive Self-Evolution, Incident-to-Eval Pipeline, Unified 3-in-1 Adversarial Audit & Handwired ReLU Edition)  
 > **適用環境**：Google Antigravity, Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, Factory, OpenCode 等 49+ 款主流 AI 開發環境  
-> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust) 與長任務自適應熱蒸餾 (SelfCompact)。
+> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust)、長任務自適應熱蒸餾 (SelfCompact)、Harness² 雙層遞迴自進化 (Recursive Experience Library) 與 Anthropic 事故回滾評測集 (Incident-to-Eval Pipeline)。
 
 ---
 
-本專案是一套專為現代 AI Coding 設計的**高吞吐量、低 Token 能耗、零生產接縫的全流程多代理人開發協作架構**。透過結合**原子級手術式直寫 (Direct Surgical Write)**、**三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)**、**按需參考庫架構 (On-Demand References, 單檔 ≤15KB)** 以及本機 **<1ms Handwired ReLU 0-Token 決策門禁 (`local_guard.py`)**，在確保企業級工程品質與安全邊界的同時，最大化上下文利用率與系統吞吐量。
+本專案是一套專為現代 AI Coding 設計的**高吞吐量、低 Token 能耗、零生產接縫的全流程多代理人開發協作架構**。透過結合**原子級手術式直寫 (Direct Surgical Write)**、**三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)**、**按需參考庫架構 (On-Demand References, 單檔 ≤15KB)**、**Harness² 雙層遞迴自進化經驗庫 (`reflexion.py` + `EXPERIENCE.md`)** 以及本機 **<1ms Handwired ReLU 0-Token 決策門禁 (`local_guard.py`)**，在確保企業級工程品質與安全邊界的同時，最大化上下文利用率與系統吞吐量。
+
 
 ---
 
@@ -74,7 +75,19 @@ Phase 5 審查階段採用單一高規格對抗審查機制，預設以 **REJECT
 * **歷史決策防翻案 (`INV_DECISION_01`)**：比對 `.agent/SNAPSHOT.jsonl` 中的 `ruled_out` 歷史決策，自動攔截重蹈覆轍的退化寫法。
 * **隨插即用後端**：支援相容 `/v1/systemone` 協議之本機決策模型（Ollaya / Laya），離線時 0 延遲自動運行 Handwired ReLU 引擎。
 
+### 6. Harness² 雙層遞迴自進化經驗庫 (Harness² Recursive Experience Library)
+借鑑 Google Cloud AI Research `Harness²` (arXiv:2610.14224) 核心思想——在模型權重凍結前提下，實現「基底不變 ($H_0$)、領域經驗動態合成 (Compose)」的自進化閉環，解決傳統工作流無法隨任務自我進化的痛點：
+* **閉環自動提煉 (Auto-Evolve on Recovery)**：在 `scripts/reflexion.py` 監控下，當指令經歷「先失敗 ➔ 後修復通過 (Exit 0)」時，系統以純 Python 標準庫自動提煉 `<cue, lesson, evidence>` 三元組並沉澱至 `.agent/library/<domain>/EXPERIENCE.md`。
+* **動態合成與防作弊門禁 (`compose_domain_harness`)**：進入特定領域任務時，動態載入該領域過去進化出的至多 5 條實證法則；並實裝 `assert_no_grader_leakage()` 物理阻斷假測試通過字眼，徹底避免全域 System Prompt 永久肥大。
+
+### 7. Anthropic 事故回滾評測管線 (Incident-to-Eval Rollback Pipeline)
+汲取 Anthropic Claude Code 團隊代碼審查與事故治理實踐，將代碼審查的反思迴圈轉化為持續防禦資產：
+* **失敗特徵沉澱**：當觸發兩振硬熔斷 (`--rollback`) 時，`scripts/local_guard.py` 自動將失敗 Diff 與 6 維特徵向量追加至 `.agent/eval_incidents.jsonl`，並反向微調 Handwired ReLU 權重。
+* **歷史事故回放 (`--eval-incidents`)**：回放評測歷史事故樣本，量化驗證 System 1 門禁對歷史回滾模式的攔截率。
+* **Incremental & Anti-Loop 複審門禁**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪強制收斂），對已標註 `ponytail:` 捷徑或附理由豁免之項目嚴禁重複報警跳針。
+
 ---
+
 
 ## 🔄 PromptScript 跨 IDE 編譯架構 (PromptScript Universal Compiler)
 
@@ -248,6 +261,8 @@ def quality_gate_execution(task):
 | **`/caveman`** | **洞穴人省話模式** | 刪除所有客套廢話，極度簡化 Output Tokens (省 65-75%)。 |
 | **`/prune`** / **`/distill`** | **長任務熱蒸餾** | 觸發 SelfCompact C1-C2-C3-N1 探針，提煉核心膠囊並同步至本地記憶。 |
 | **`/snapshot`** / **`/recover`** | **本地持久化記憶** | 透過 `auto-snapshot` 擷取里程碑、決策與交接，維護 `STATE.md` 狀態脊椎。 |
+| **`/evolve`** | **工作流自進化** | 執行 `scripts/reflexion.py evolve` 記錄 `<cue, lesson, evidence>` 三元組至領域 `EXPERIENCE.md`。 |
+| **`/compose`** | **領域經驗動態合成** | 執行 `scripts/reflexion.py compose` 依領域/關鍵字動態載入歷史法則，實現 0 污染的持續自進化。 |
 | **`/gate`** | **本機決策門禁** | 執行 `scripts/local_guard.py --git` 進行 <1ms 0-Token 物理安全審查。 |
 | **`/loop`** | **迴圈工程巡檢** | 檢查 `gate.yaml`、漂移哨兵 (`loop_drift.py`) 與不變量約束。 |
 
@@ -265,7 +280,8 @@ def quality_gate_execution(task):
 6. **`diagnosing-bugs` (3-in-1)**：系統化除錯總擎。整合 6 階段除錯迴圈、bug-tracker 嚴重度分級與 quick-fix-patterns 常見錯誤速查。
 7. **`frontend-taste-v2` (8-in-1)**：反罐頭前端視覺與 UX 總擎（~7KB）。將 gsap-motion, cinematic-ui, landing-page-architect, ux-audit 收納於內部 `./references/` 按需動態加載。
 8. **`test-audit` (3-in-1)**：測試驅動開發與品質門禁。整合垂直切片 TDD、新增測試門禁四問、15 種垃圾測試模式與零生產接縫審計。
-9. **`auto-snapshot` (5-in-1)**：本地持久化記憶總擎。整合 milestone, session-handoff, context-recovery, decision-logger 與 work-resume-sop，同步維護 `STATE.md`。
+9. **`auto-snapshot` (5-in-1 + Harness²)**：本地持久化記憶與自進化總擎。整合 milestone, session-handoff, context-recovery, decision-logger, work-resume-sop 與 Harness² 領域自進化經驗庫 (`EXPERIENCE.md`)，同步維護 `STATE.md`。
+
 10. **`context-pruner` (2-in-1)**：自適應上下文壓縮總擎。深度整合 SelfCompact C1-C2-C3-N1 第一性原理探針與 8 刻面可審計熱蒸餾膠囊。
 11. **`trust-governor`**：雙軌防幻覺治理引擎（BTC 熱力學信度校準 ＋ Oxford SHARS 逐段原子事實動態重寫）。
 12. **`dros-gateway`**：DROS VajraClaw 確定性執行期安全網關、<1μs AST 點陣硬熔斷與 W3C did:key 身分隔離。
@@ -326,8 +342,11 @@ flowchart TD
 > - **LangGraph (`langchain-ai/langgraph`)**：不安裝龐大生態，吸納其 State Reducer 與 Human-in-the-Loop 中斷門禁哲學。
 > - **TypeSafe AI Jev (`typesafe.ai`)**：吸納其三大決策原語 (Noul/Choice/Score) 與快慢雙軌哲學，自研純標準庫 `local_guard.py`。
 > - **shadcn/ui (`shadcn-ui/ui`)**：確立為前端專案 Canonical UI 標準，直接源碼持有 (Code Ownership)，工作流核心維持 0 依賴。
+> - **Harness² (`google-research/harness2`, arXiv:2610.14224)**：拒絕 $4k+3k$ 盲目重跑的 $8\sim 35\times$ Token 稅與 Linux/Docker/Vertex 依賴，以純標準庫吸收「基底不變 ($H_0$)、領域經驗動態合成 (`EXPERIENCE.md`)」與修復成功自動進化閉環至 `scripts/reflexion.py`。
+> - **Anthropic Claude Code Team Code Review**：汲取事故評測集理念，於 `local_guard.py` 實裝兩振回滾特徵沉澱 (`eval_incidents.jsonl`) 與回放評測 (`--eval-incidents`)，並於 `code-review` 實裝 Incremental & Anti-Loop 門禁。
 
 ---
+
 
 ## 📁 專案結構 (Project Structure)
 
