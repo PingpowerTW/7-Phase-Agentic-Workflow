@@ -1,8 +1,8 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人協作與 Token 經濟學架構)
 
-> **版本**：v3.3.3 (Harness² Recursive Self-Evolution, Incident-to-Eval Pipeline, Unified 3-in-1 Adversarial Audit & Handwired ReLU Edition)  
+> **版本**：v3.3.5 (DeepInfer 4-Pillar Absorption, YOCO SWA Bounded Replay, DSpark Verification Scheduling, Engram Fingerprinting & Handwired ReLU Edition)  
 > **適用環境**：Google Antigravity, Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, Factory, OpenCode 等 49+ 款主流 AI 開發環境  
-> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust)、長任務自適應熱蒸餾 (SelfCompact)、Harness² 雙層遞迴自進化 (Recursive Experience Library) 與 Anthropic 事故回滾評測集 (Incident-to-Eval Pipeline)。
+> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust)、長任務自適應熱蒸餾 (SelfCompact)、Harness² 雙層遞迴自進化 (Recursive Experience Library)、Anthropic 事故回滾評測集 (Incident-to-Eval Pipeline) 以及 DeepInfer 四大核心演算法 (SWA Bounded Replay, DSpark Scheduling, Engram Fingerprinting, Median Runtime Tracker)。
 
 ---
 
@@ -85,6 +85,13 @@ Phase 5 審查階段採用單一高規格對抗審查機制，預設以 **REJECT
 * **失敗特徵沉澱**：當觸發兩振硬熔斷 (`--rollback`) 時，`scripts/local_guard.py` 自動將失敗 Diff 與 6 維特徵向量追加至 `.agent/eval_incidents.jsonl`，並反向微調 Handwired ReLU 權重。
 * **歷史事故回放 (`--eval-incidents`)**：回放評測歷史事故樣本，量化驗證 System 1 門禁對歷史回滾模式的攔截率。
 * **Incremental & Anti-Loop 複審門禁**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪強制收斂），對已標註 `ponytail:` 捷徑或附理由豁免之項目嚴禁重複報警跳針。
+
+### 8. DeepInfer 四大核心演算法吸收 (DeepInfer 4-Pillar Algorithmic Absorption)
+借鑑 DeepSeek `DeepInfer` (v4.1-Flash / DSpark) 核心技術，通過 Phase 0 前置殘酷審查，在零新增外部依賴、純標準庫下吸收四大精華：
+* **YOCO SWA 有界後綴重播 (`auto-snapshot` & `context-pruner`)**：切分 Global Block State (`STATE.md`) 與 SWA Bounded Ring (`SWA_BOUNDED_REPLAY_LIMIT = 7` = 活躍視窗 $W=5$ + 兩振回退緩衝 $K=2$)，使上下文重播成本降至 $O(1)$ 常數。
+* **DSpark 路徑累積信心排程 (`trust-governor/scripts/governor.py`)**：實裝 `schedule_dspark_verification()`，依據路徑累積信心度動態截斷低信心尾部推導，節省 ~30% 無效推導 Token。
+* **Engram 正規化指紋比對 (`auto-snapshot/src/core.ts`)**：實裝 `NFKC -> NFD 去重音 -> lowercase -> 空白折疊 -> CJK 2-gram / 3-gram` 特徵提取，大幅提升本地記憶命中率。
+* **滑動視窗中位數延遲估計器 (`local_guard.py`)**：以 `collections.deque(maxlen=9)` 與標準庫 `statistics.median` 動態收斂 Timeout 下限，且僅於線上 HTTP 200 RPC 時更新樣本，避免離線 Handwired ReLU 污染計時。
 
 ---
 
@@ -207,7 +214,22 @@ $$\text{COMPRESS} \iff C_1 \land C_2 \land C_3 \land \neg N_1$$
 * **$C_3$ (Progress)**：距上次壓縮是否有實質代碼或事實進展？
 * **$N_1$ (Not Stuck)**：最近執行是否處於報錯或卡死循環？（若卡死則強制阻斷壓縮，防污染長期記憶）
 
-### 3. Quality Gate 協作演算法 (Direct Write Pseudocode)
+### 3. DSpark 期望推進率排程演算法 (Confidence-Scheduled Verification)
+借鑑 DeepInfer DSpark 推理排程架構，針對長鏈推導步驟計算路徑累積信心度 $C_k = \prod_{j=1}^k p_j$，並選擇最大化單位驗證成本之期望推進率的最佳截斷步數 $k^*$：
+
+$$k^* = \arg\max_{k \in [1, K]} \frac{1 + \sum_{j=1}^k C_j}{\text{cost}(k)}$$
+
+* 當步進累積信心 $C_k < 0.20$ 時提前截斷，避免低信心尾部引發幻覺滾雪球。
+* 信心充足 ($p > 0.85$) 時走 `FAST_PATH` 輕量驗證；不確定性高時觸發完整 `FULL_SHARS` 動態重寫。
+
+### 4. YOCO SWA 有界後綴重播公式 (SWA Bounded Replay)
+將工作區長程記憶解耦為全域常駐狀態與有界滑動視窗，消除對巨型歷史日誌的整檔重讀：
+
+$$S_{\text{replay}} = \text{Snapshots}[-K_{\text{bound}}:] \quad \text{where } K_{\text{bound}} = \min(\max(1, K_{\text{keep}}), 50)$$
+
+* 預設 $K_{\text{keep}} = 7 = W(5) + K(2)$，實現常數級 $O(1)$ 記憶恢復開銷。
+
+### 5. Quality Gate 協作演算法 (Direct Write Pseudocode)
 
 ```python
 def quality_gate_execution(task):
