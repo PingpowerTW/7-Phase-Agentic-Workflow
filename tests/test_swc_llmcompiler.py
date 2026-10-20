@@ -235,9 +235,14 @@ class TestDagRunner(unittest.TestCase):
         self.assertEqual(results["step_merge"].output, "Hello World!")
 
     def test_concurrency_speedup(self):
-        """測試 2: 驗證無依賴任務確實並行調度 (總壁鐘時間 < 循序累計時間)"""
+        """測試 2: 驗證無依賴任務確實並行調度 (所有任務在最早結束前皆已啟動重疊執行)"""
+        start_times = []
+        end_times = []
+
         async def sleep_coro(delay):
+            start_times.append(time.perf_counter())
             await asyncio.sleep(delay)
+            end_times.append(time.perf_counter())
             return "ok"
 
         tasks = [
@@ -251,7 +256,11 @@ class TestDagRunner(unittest.TestCase):
         elapsed = time.perf_counter() - t0
 
         self.assertEqual(len(results), 3)
-        self.assertLess(elapsed, 0.25, f"並行未生效，總耗時: {elapsed:.2f}s")
+        self.assertEqual(len(start_times), 3)
+        self.assertEqual(len(end_times), 3)
+        # 嚴密重疊驗證：最晚啟動的任務必須早於最早結束的任務，證明非循序阻塞
+        self.assertLess(max(start_times), min(end_times), "任務並非並行調度 (存在循序阻塞)")
+        self.assertLess(elapsed, 0.8, f"並行調度異常超時: {elapsed:.2f}s")
 
     def test_cycle_error_detection(self):
         """測試 3: 驗證環狀依賴會被明確捕捉為 graphlib.CycleError"""
