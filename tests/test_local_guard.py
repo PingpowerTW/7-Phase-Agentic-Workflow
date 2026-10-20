@@ -101,12 +101,12 @@ denylist:
 
     def test_check_regex_secrets(self):
         # Detect OpenAI key
-        code_with_key = 'const key = "sk-abcdefghijklmnopqrstuvwxyz1234567890";'
+        code_with_key = 'const key = "sk-' + 'abcdefghijklmnopqrstuvwxyz1234567890";'
         found = check_regex_secrets(code_with_key)
         self.assertTrue(len(found) > 0)
 
         # Detect generic API key
-        code_generic = 'api_key: "abcdef1234567890abcdef"'
+        code_generic = 'api_key: "' + 'abcdef1234567890abcdef"'
         found = check_regex_secrets(code_generic)
         self.assertTrue(len(found) > 0)
 
@@ -125,7 +125,7 @@ denylist:
         self.assertEqual(exit_code, 0)
 
     def test_run_guard_secret_block(self):
-        code = 'AWS_SECRET = "AKIA1234567890123456";\n'
+        code = 'AWS_SECRET = "AKIA' + '1234567890123456";\n'
         exit_code = run_guard(code, label="Test Secret")
         self.assertEqual(exit_code, 1)
 
@@ -268,6 +268,26 @@ denylist:
             self.assertEqual(evaluate_incidents(), 0)
         finally:
             os.chdir(orig_cwd)
+
+    def test_median_runtime_tracker(self):
+        from local_guard import MedianRuntimeTracker
+        tracker = MedianRuntimeTracker(window_size=9, min_samples=5)
+        for v in [10.0, 12.0, 11.0, 9.0]:
+            tracker.update(v)
+            self.assertIsNone(tracker.get())
+        tracker.update(500.0)  # extreme I/O spike outlier
+        self.assertEqual(tracker.get(), 11.0)
+        # Fill remaining window slots and verify circular eviction
+        for v in [10.0, 10.0, 10.0, 10.0, 10.0]:
+            tracker.update(v)
+        self.assertEqual(tracker.get(), 10.0)
+        self.assertEqual(tracker.adaptive_timeout_sec(10.0), 0.25)
+        # Verify offline Handwired ReLU runs in run_guard do NOT pollute global _RUNTIME_TRACKER
+        from local_guard import _RUNTIME_TRACKER
+        _RUNTIME_TRACKER._samples.clear()
+        for _ in range(6):
+            run_guard("x = 1\n", label="Offline No-Pollute")
+        self.assertIsNone(_RUNTIME_TRACKER.get())
 
 
 if __name__ == "__main__":

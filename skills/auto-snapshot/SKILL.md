@@ -30,9 +30,9 @@ description: >
 
 當開啟新對話、使用者輸入 `/recover`、或說「繼續 / 繼續處理 / resume」時，依序執行以下 3 步：
 
-1. **瞬間載入本地記憶（免盲目探索）**：
-   - 先讀 `STATE.md` 掌握當前進行中任務與觀察清單。
-   - 執行關鍵字指紋檢索：`auto-snapshot recover --query "<當前任務關鍵字>"`（或 `--skill <關聯技能>`）。若顯示 `✅ 本地記憶覆蓋查詢`，直接採用本地記憶，跳過遠端檢索以節省 Token。
+1. **瞬間載入本地記憶（YOCO + SWA Bounded Replay 免盲目探索）**：
+   - **Global Block State（全域共享錨點）**：先讀 `STATE.md` 掌握當前進行中任務與觀察清單（如 DeepInfer YOCO Layer 20 全域 KV，跨 Session 持久複用）。
+   - **SWA Bounded Replay（有界後綴重播，O(1) 成本）**：執行 Engram 正規化指紋檢索 `auto-snapshot recover --query "<當前任務關鍵字>"`（預設 `--keep 7` = 活躍視窗 `W=5` + 兩振回退緩衝 `K=2`，嚴禁全量重讀歷史 JSONL）。若顯示 `✅ 本地記憶覆蓋查詢`，直接採用本地記憶，跳過遠端檢索以節省 40%~50% Token。
 2. **工作恢復健康快檢 (Work Resume Health Check)**：
    - 在動手寫新代碼前，先確認 `git status --short` 工作區是否乾淨，並對受影響範圍跑一次輕量門禁（如 `python scripts/local_guard.py --git` 或既有單元測試），確認基準線為綠燈後再繼續未完成任務。
 3. **報到格式（控制在 8 行內）**：

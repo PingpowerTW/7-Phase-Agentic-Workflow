@@ -8,7 +8,8 @@ description: >
 
 # 🧹 Context Pruner & SelfCompact — 上下文熱蒸餾與雙向節流引擎 (2-in-1 Edition)
 
-> **核心理念**：結合 **SelfCompact (arXiv:2606.23525)** 第一性原理壓縮門禁與 **Context Diamond 8 刻面膠囊**，清除試錯噪訊並保護 KV Cache 前綴。
+> **核心理念**：結合 **SelfCompact (arXiv:2606.23525)** 第一性原理壓縮門禁、**DeepInfer YOCO SWA Bounded Replay（有界後綴重播）** 與 **Context Diamond 8 刻面膠囊**，清除試錯噪訊並保護 KV Cache 前綴。
+> - **YOCO 雙層截斷鐵律**：將長對話狀態切分為 **Global Block State**（寫入 `STATE.md` 與 8 刻面膠囊之不可變契約）與 **SWA Bounded Ring**（僅保留最近 `W=5` 輪活躍細節 + `K=2` 兩振回退緩衝 = 7 個微觀單元），使壓縮與重建成本恆定為 $O(1)$。
 
 ---
 

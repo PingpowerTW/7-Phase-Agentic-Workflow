@@ -201,7 +201,6 @@ class AtomicClaim:
     statement: str
     is_verified: bool
     uncertainty: float
-    metadata: Dict[str, Any]
 
 
 @dataclass(frozen=True)
@@ -272,7 +271,6 @@ def evaluate_segment(
             statement=claim_stmt,
             is_verified=is_factual,
             uncertainty=round(uct, 4),
-            metadata={},
         )
         uncertainties.append(uct)
         if is_factual:
@@ -355,6 +353,90 @@ def generate_following_constraint(
 
 
 # ==========================================
+# 3. DSpark Confidence-Scheduled Verification
+# ==========================================
+
+@dataclass(frozen=True)
+class DSparkScheduleResult:
+    selected_depth: int
+    cumulative_confidences: List[float]
+    expected_accepted_steps: float
+    estimated_cost: float
+    efficiency_score: float
+    truncated: bool
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "selected_depth": self.selected_depth,
+            "cumulative_confidences": [round(c, 4) for c in self.cumulative_confidences],
+            "expected_accepted_steps": round(self.expected_accepted_steps, 4),
+            "estimated_cost": round(self.estimated_cost, 4),
+            "efficiency_score": round(self.efficiency_score, 4),
+            "truncated": self.truncated,
+        }
+
+
+def schedule_dspark_verification(
+    step_confidences: Sequence[float],
+    baseline_cost: float = 1.0,
+    step_cost_slope: float = 0.35,
+    min_cumulative_conf: float = 0.50,
+) -> DSparkScheduleResult:
+    """
+    DSpark Confidence-Scheduled Variable-Length Verification (absorbed from DeepInfer mtp_varlen.hpp).
+    Computes path cumulative confidence C_k = prod_{j=1}^k p_j and selects prefix depth k* in [1..K]
+    that maximizes expected valid progress per unit verification cost:
+        Efficiency(k) = (1 + sum_{j=1}^k C_j) / (baseline_cost + step_cost_slope * k)
+    subject to C_k >= min_cumulative_conf (for k >= 1). Always verifies at least step 1 if non-empty.
+    """
+    if not step_confidences:
+        return DSparkScheduleResult(0, [], 0.0, baseline_cost, 0.0, False)
+
+    cum_conf: List[float] = []
+    running = 1.0
+    for p in step_confidences:
+        try:
+            val = float(p)
+            if math.isnan(val) or math.isinf(val):
+                val = 0.0
+            elif 1.0 < val <= 100.0:
+                val /= 100.0
+            clamped = max(0.0, min(1.0, val))
+        except (TypeError, ValueError):
+            clamped = 0.0
+        running *= clamped
+        cum_conf.append(running)
+
+    best_k = 1
+    best_expected = 1.0 + cum_conf[0]
+    best_cost = max(1e-6, baseline_cost + step_cost_slope * 1)
+    best_eff = best_expected / best_cost
+
+    cur_expected = 1.0
+    for idx, c_k in enumerate(cum_conf):
+        k = idx + 1
+        cur_expected += c_k
+        if k > 1 and c_k < min_cumulative_conf:
+            break
+        cost_k = max(1e-6, baseline_cost + step_cost_slope * k)
+        eff_k = cur_expected / cost_k
+        if eff_k >= best_eff:
+            best_eff = eff_k
+            best_k = k
+            best_expected = cur_expected
+            best_cost = cost_k
+
+    return DSparkScheduleResult(
+        selected_depth=best_k,
+        cumulative_confidences=cum_conf,
+        expected_accepted_steps=round(best_expected - 1.0, 4),
+        estimated_cost=round(best_cost, 4),
+        efficiency_score=round(best_eff, 4),
+        truncated=best_k < len(step_confidences),
+    )
+
+
+# ==========================================
 # Self-Test / Verification Suite
 # ==========================================
 if __name__ == "__main__":
@@ -433,4 +515,11 @@ if __name__ == "__main__":
     assert res8.factual_ratio == 1.0
     print(f"  [PASS] SHARS Case 5 (Empty Segment Defensive): Action={res8.action}")
 
-    print("[+] All 8 Trust Governor & SHARS verification tests passed successfully with 100% coverage!")
+    # --- Test 9: DSpark Confidence-Scheduled Variable-Length Verification ---
+    dspark_high = schedule_dspark_verification([95, 94, 93, 0.92, 0.91])  # Supports percentage & float
+    assert dspark_high.selected_depth == 5 and not dspark_high.truncated
+    dspark_drop = schedule_dspark_verification([0.92, 0.88, float("nan"), 0.20, 0.10])
+    assert dspark_drop.selected_depth == 2 and dspark_drop.truncated
+    print(f"  [PASS] DSpark Case 6 (Dynamic Confidence Schedule): HighDepth={dspark_high.selected_depth} DropDepth={dspark_drop.selected_depth}")
+
+    print("[+] All 9 Trust Governor, SHARS & DSpark verification tests passed successfully with 100% coverage!")

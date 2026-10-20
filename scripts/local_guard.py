@@ -369,6 +369,34 @@ def check_decision_regression(
     return (len(violations) > 0), violations
 
 
+from collections import deque
+from statistics import median
+
+
+class MedianRuntimeTracker:
+    """
+    DeepInfer Sliding-Window Median Runtime Estimator (borrowed from csrc/engine/mtp_varlen.hpp).
+    Uses stdlib deque(maxlen) + statistics.median (Ponytail Tier 3 Stdlib) to compute a spike-resistant
+    RPC latency baseline without offline Handwired ReLU pollution.
+    """
+    def __init__(self, window_size: int = 9, min_samples: int = 5) -> None:
+        self._samples: deque[float] = deque(maxlen=max(1, window_size))
+        self._min_samples = max(1, min(min_samples, self._samples.maxlen or 1))
+
+    def update(self, value_ms: float) -> None:
+        self._samples.append(max(0.0, float(value_ms)))
+
+    def get(self) -> Optional[float]:
+        return round(float(median(self._samples)), 2) if len(self._samples) >= self._min_samples else None
+
+    def adaptive_timeout_sec(self, default_sec: float = TIMEOUT_SEC) -> float:
+        med = self.get()
+        return default_sec if med is None else min(default_sec, max(0.25, (med * 3.0) / 1000.0))
+
+
+_RUNTIME_TRACKER = MedianRuntimeTracker()
+
+
 def _is_local_endpoint_alive(api_url: str) -> bool:
     """50ms 本地 Loopback TCP 快速探活，消除 Windows 離線 2000ms SYN 重試延遲"""
     try:
@@ -613,7 +641,8 @@ def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
             data=data,
             headers=headers
         )
-        with urllib.request.urlopen(req, timeout=TIMEOUT_SEC) as resp:
+        t_req = time.perf_counter()
+        with urllib.request.urlopen(req, timeout=_RUNTIME_TRACKER.adaptive_timeout_sec(TIMEOUT_SEC)) as resp:
             if resp.status == 200:
                 res_body = json.loads(resp.read().decode("utf-8"))
                 provider_tag = "System 1"
@@ -621,6 +650,7 @@ def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
                     provider_tag = "Ollaya"
                 elif "jev" in DECISION_API_URL.lower() or api_key:
                     provider_tag = "Jev Cloud"
+                _RUNTIME_TRACKER.update((time.perf_counter() - t_req) * 1000.0)
                 return res_body.get("answers", {}), f"{provider_tag} ({DECISION_MODEL})"
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="replace")

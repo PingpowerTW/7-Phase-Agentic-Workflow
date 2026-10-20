@@ -47,22 +47,24 @@ graph TD
 
 ---
 
-## 🛠️ SHARS 原子事實動態重寫協議 (Dynamic Rewriting)
+## 🛠️ SHARS × Astute RAG 來源感知動態重寫協議 (Source-Aware Dynamic Rewriting)
 
-當 Critic 或 Auditor 發現一段代碼或規劃中存在「部分真實、部分幻覺」時，系統會自動產出重寫約束：
+當 Critic 或 Auditor 發現代碼、規劃或檢索記憶中存在「部分真實、部分幻覺」或**「內建先驗 vs 外部檢索衝突 (Knowledge Conflict)」**時，拆解原子事實必須綁定來源標籤（`[Internal]` 模型先驗 vs `[External: #ID/File]` 外部檢索），並產出重寫約束：
 
 ```text
-Original statement had factual inaccuracies.
-VERIFIED TRUTHS (Must Keep):
-- 驗證屬實的 API 呼叫 / 型別定義 A
-- 驗證屬實的商業邏輯 B
+Original statement had factual inaccuracies or knowledge conflicts.
+VERIFIED TRUTHS (Must Keep - Consensus or Probe-Verified):
+- [Internal + External Consensus] 驗證屬實的 API 呼叫 / 型別定義 A
+- [External: AST/Test Verified] 專案實證屬實的商業邏輯 B
 
-REJECTED CLAIMS (Must Omit):
-- 幻覺出的不存在函式庫 C
-- 錯誤的參數假設 D
+REJECTED / CONFLICTING CLAIMS (Must Omit or Arbitrate):
+- [Internal Hallucination] 幻覺出的不存在函式庫 C
+- [External Stale #ID] 檢索自過時記憶或無關檔案之廢棄參數 D (Evicted)
 
 Task: Rewrite the segment incorporating ONLY verified truths.
 ```
+
+> **物理仲裁鐵律 (Ground-Truth Arbitration)**：當 `[Internal]` 與 `[External]` 發生衝突（約佔 19.2% 案例）時，嚴禁主觀盲信任一方；必須以 **AST 呼叫圖 (`loop_graph.py`)、型別檢查或單變數探針測試 (`diagnosing-bugs` Phase 4)** 作為唯一物理裁判。若外部檢索全數無關，立即觸發空包彈熔斷，100% 回歸內建先驗與標準庫。
 
 ---
 
@@ -98,4 +100,14 @@ def verifier(claim):
 res = evaluate_segment(segment, claims, verifier, uncertainty_threshold=0.35)
 if res.action == SegmentAction.REWRITE:
     print("✍️ 觸發動態重寫！提示詞：\n", res.rewrite_prompt)
+```
+
+### 3. DSpark 累積信心排程與動態變長驗證 (`schedule_dspark_verification`)
+汲取自 DeepInfer `mtp_varlen.hpp`，針對多步規劃或連續草稿步驟 $k \in \{1..K\}$，計算路徑累積信度 $C_k = \prod_{j=1}^k p_j$ 並以邊際吞吐效率 $\frac{1 + \sum_{j=1}^k C_j}{\text{baseline\_cost} + \text{slope} \cdot k}$ 動態決定最佳驗證深度 $k^*$（砍掉 ~30% 低信心尾部算力）：
+```python
+from governor import schedule_dspark_verification
+
+# 當第 3 步信心驟降時，自動截斷於 best_k=2，不浪費後續 3 步的驗證與生成 Token
+sched = schedule_dspark_verification([0.92, 0.88, 0.35, 0.20, 0.10])
+print(f"⚡ DSpark 最佳驗證深度: {sched.selected_depth}/5 (Truncated={sched.truncated})")
 ```

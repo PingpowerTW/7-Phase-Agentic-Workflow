@@ -1,7 +1,10 @@
 ---
-# promptscript-generated: 2026-10-03T12:03:42.557Z | source: .promptscript/7phase.prs | target: factory
 name: trust-governor
-description: BTC Thermodynamic Trust Governor & Oxford SHARS Hallucination Rejection Sampling
+description: >
+  基於 BTC 熱力學信度校準與 SHARS (ICML 2026) 逐段拒絕採樣的雙軌防幻覺治理技能。
+  宏觀透過閉式熱力學公式 T = PPV * exp(-σ_calib * T_comp) 評估候選解並在 T < 0.65 時主動棄權；
+  微觀透過原子事實拆解 (Atomic Claims) 與動態重寫 (Dynamic Rewriting)，在步驟級即時阻斷幻覺滾雪球 (Hallucination Snowballing)。
+  觸發詞：/trust, trust-governor, 防幻覺, 信度校準, btc, shars, rejection-sampling, 困惑即停.
 ---
 
 # 🧠 Trust Governor — 熱力學行為信任與 SHARS 逐段防雪崩治理層
@@ -44,22 +47,24 @@ graph TD
 
 ---
 
-## 🛠️ SHARS 原子事實動態重寫協議 (Dynamic Rewriting)
+## 🛠️ SHARS × Astute RAG 來源感知動態重寫協議 (Source-Aware Dynamic Rewriting)
 
-當 Critic 或 Auditor 發現一段代碼或規劃中存在「部分真實、部分幻覺」時，系統會自動產出重寫約束：
+當 Critic 或 Auditor 發現代碼、規劃或檢索記憶中存在「部分真實、部分幻覺」或**「內建先驗 vs 外部檢索衝突 (Knowledge Conflict)」**時，拆解原子事實必須綁定來源標籤（`[Internal]` 模型先驗 vs `[External: #ID/File]` 外部檢索），並產出重寫約束：
 
 ```text
-Original statement had factual inaccuracies.
-VERIFIED TRUTHS (Must Keep):
-- 驗證屬實的 API 呼叫 / 型別定義 A
-- 驗證屬實的商業邏輯 B
+Original statement had factual inaccuracies or knowledge conflicts.
+VERIFIED TRUTHS (Must Keep - Consensus or Probe-Verified):
+- [Internal + External Consensus] 驗證屬實的 API 呼叫 / 型別定義 A
+- [External: AST/Test Verified] 專案實證屬實的商業邏輯 B
 
-REJECTED CLAIMS (Must Omit):
-- 幻覺出的不存在函式庫 C
-- 錯誤的參數假設 D
+REJECTED / CONFLICTING CLAIMS (Must Omit or Arbitrate):
+- [Internal Hallucination] 幻覺出的不存在函式庫 C
+- [External Stale #ID] 檢索自過時記憶或無關檔案之廢棄參數 D (Evicted)
 
 Task: Rewrite the segment incorporating ONLY verified truths.
 ```
+
+> **物理仲裁鐵律 (Ground-Truth Arbitration)**：當 `[Internal]` 與 `[External]` 發生衝突（約佔 19.2% 案例）時，嚴禁主觀盲信任一方；必須以 **AST 呼叫圖 (`loop_graph.py`)、型別檢查或單變數探針測試 (`diagnosing-bugs` Phase 4)** 作為唯一物理裁判。若外部檢索全數無關，立即觸發空包彈熔斷，100% 回歸內建先驗與標準庫。
 
 ---
 
