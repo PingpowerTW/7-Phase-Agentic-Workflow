@@ -288,6 +288,39 @@ denylist:
         for _ in range(6):
             run_guard("x = 1\n", label="Offline No-Pollute")
         self.assertIsNone(_RUNTIME_TRACKER.get())
+        # Verify online HTTP 200 endpoint updates _RUNTIME_TRACKER while offline does not
+        import http.server
+        import threading
+        import local_guard
+
+        class _MockSystemOneHandler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):
+                body = b'{"has_test_seam":{"noul":0.01},"ponytail_ladder":{"choice":"7_mvp","confidence":0.9},"overengineering_score":{"score":1.2}}'
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+            def log_message(self, format, *args):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), _MockSystemOneHandler)
+        port = server.server_address[1]
+        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t.start()
+        orig_url = local_guard.DECISION_API_URL
+        try:
+            local_guard.DECISION_API_URL = f"http://127.0.0.1:{port}/v1/systemone"
+            _RUNTIME_TRACKER._samples.clear()
+            for _ in range(5):
+                res, mode = local_guard.query_system_one("x = 1\n")
+                self.assertIsNotNone(res)
+            self.assertEqual(len(_RUNTIME_TRACKER._samples), 5)
+            self.assertIsNotNone(_RUNTIME_TRACKER.get())
+        finally:
+            local_guard.DECISION_API_URL = orig_url
+            server.shutdown()
+            server.server_close()
 
 
 if __name__ == "__main__":
