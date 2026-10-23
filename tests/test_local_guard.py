@@ -346,6 +346,19 @@ denylist:
             server.shutdown()
             server.server_close()
 
+    def test_guard_prints_anti_hallucination_receipt(self):
+        """驗證 run_guard 輸出真實 [GUARD-RECEIPT] 防偽簽章 (INV_VERIFY_07)"""
+        import io
+        from contextlib import redirect_stdout
+
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            rc = run_guard("def add(a, b):\n    return a + b\n", "Receipt Test", ["scripts/local_guard.py"])
+        out = buf.getvalue()
+        self.assertEqual(rc, 0)
+        self.assertIn("🧾 [GUARD-RECEIPT] HEAD=", out)
+        self.assertIn("| Dirty=1 | Gate=PASS | Latency=", out)
+
 
 if __name__ == "__main__":
     unittest.main()

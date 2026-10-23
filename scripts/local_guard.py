@@ -791,14 +791,25 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     print("└─────────────────────────────────────────────────────────────┘")
 
     if is_blocked:
+        print(f"🧾 [GUARD-RECEIPT] HEAD={get_git_head_short()} | Dirty={len(changed_files or [])} | Gate=BLOCK | Latency={elapsed_ms:.1f}ms")
         print(f"\n{RED}{BOLD}🚨 攔截原因：{RESET}")
         for r in block_reasons:
             print(f"  {RED}✖ {r}{RESET}")
         print(f"\n{YELLOW}💡 建議：請依照 Ponytail 7 階梯重構或拔除生產測試接縫後重試。{RESET}\n")
         return 1
     else:
-        print(f"{GREEN}✨ 代碼符合邊界規範與 Ponytail 階梯，允許提交/合併。{RESET}\n")
+        print(f"{GREEN}✨ 代碼符合邊界規範與 Ponytail 階梯，允許提交/合併。{RESET}")
+        print(f"🧾 [GUARD-RECEIPT] HEAD={get_git_head_short()} | Dirty={len(changed_files or [])} | Gate=PASS | Latency={elapsed_ms:.1f}ms\n")
         return 0
+
+
+def get_git_head_short() -> str:
+    """取得當前 Git HEAD 7 碼短雜湊作為防偽收據錨點 (INV_VERIFY_07)"""
+    try:
+        res = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True)
+        return res.stdout.strip() if res.returncode == 0 and res.stdout.strip() else "NO-GIT"
+    except Exception:
+        return "NO-GIT"
 
 
 def format_prob(p: float) -> str:

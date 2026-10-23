@@ -106,3 +106,9 @@ invariants:
       description: "Strike 1 失敗後必須生成三段式口語反思 (錯誤假設/根因定位/修正策略) 始可進行第 2 次嘗試；兩振回滾時經 --reflexion 寫入 eval_incidents.jsonl 與 SNAPSHOT.jsonl；STATE.md Watch List 需手動補記"
       severity: "HIGH"
       category: "circuit_breaker"
+
+    - id: INV_VERIFY_07
+      name: "Proof-of-Execution & Zero Fabrication Receipt"
+      description: "宣稱實作或測試完成時必須附上 local_guard.py 產出之真實 [GUARD-RECEIPT] 簽章；遇到 RTK 壓縮輸出 ok 時嚴禁腦補假 Commit Hash 或假測試數據；未經 read_file 嚴禁捏造檔案行號"
+      severity: "CRITICAL"
+      category: "anti_hallucination"

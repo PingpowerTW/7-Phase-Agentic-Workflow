@@ -23,9 +23,14 @@
   - Checker (loop-verifier) 預設以 REJECT 立場接手跑真實測試、確認 scope、掃描 15 種垃圾模式，並檢驗 Bug 修復之「先紅後綠 (Fail-Before-Pass)」，零容忍假測試與佔位符。
 - **零非必要生產接縫 (Zero Production Seams)**：
   - 嚴禁為了寫單元測試而在生產代碼開洞（如 export private、加 optional mock 參數、wrapper）。測試必須位於真實邊界。
-- **本機 System 1 決策門禁自動化 (System 1 Decision Gate)**：
-  - 代碼實作完成後，Checker 優先執行本機 System 1 決策門禁審查 (`python scripts/local_guard.py --git`)。
+- **本機 System 1 決策門禁自動化與防偽執行收據 (System 1 Decision Gate & Execution Receipt, INV_VERIFY_07)**：
+  - 代碼實作完成後，優先執行本機 System 1 決策門禁審查 (`python scripts/local_guard.py --git`)。
   - 0 Token 秒級檢驗「零生產接縫」、「硬編碼憑證」與「Ponytail 階梯定位」；支援插拔式後端（相容 TypeSafe/Ollaya 規範，當前預設模型為 Laya，未啟動時自動降級至靜態規則）；若回傳 BLOCK 嚴禁結案並立即重構。
+  - **防偽收據與零腦補鐵律（專治 Flash 虛假回報，INV_VERIFY_07）**：
+    1. **結案必貼真實收據**：凡宣稱「已完成修改 / 測試通過 / 門禁合規」，回覆結尾**必須原封不動貼上** `local_guard.py --git` 實際輸出的 `🧾 [GUARD-RECEIPT] HEAD=... | Dirty=... | Gate=PASS | Latency=...` 簽章與真實測試結果行；未執行指令或偽造收據視為嚴重違規。
+    2. **RTK `ok` 零腦補原則**：當指令被 RTK 壓縮為 `ok`（如 `git commit`、`git push`）時，**必須如實回報 `ok`**，或執行 `git log -n 1 --oneline` / `rtk proxy <cmd>` 查驗真實輸出；**嚴禁在看到 `ok` 後自行編造假 Commit Hash、假差異行數或假測試統計**。
+    3. **先讀後標 (Read-Before-Claim)**：凡在回覆中標註 `[檔案](file:///...#L行號)` 或引用函數名，該回合或本會話內**必須有實際 `read_file` / `grep` 紀錄**，嚴禁憑印象盲猜行號或捏造不存在之 API。
+    4. **Flash 認知半徑限制**：使用 Flash 模型執行實作時，單回合最多修改 `≤ 3` 個檔案，且每次 `edit_file` / `write_file` 後必須緊接 `run_command` 驗證。
 - **Git Worktree 實體隔離**：
   - 涉及架構調整或跨檔案重構任務，優先於獨立 Git Worktree 進行。
 
