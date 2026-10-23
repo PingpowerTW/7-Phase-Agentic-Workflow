@@ -693,6 +693,7 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
     """執行完整審查並以簡潔表格輸出結果，回傳退出碼 (0: 通過, 1: 攔截)"""
     if not code_content.strip() and not changed_files:
         print(f"{CYAN}ℹ️  [System 1 Guard] 內容為空，無變更需審查。{RESET}")
+        print(f"🧾 [GUARD-RECEIPT] HEAD={get_git_head_short()} | Dirty=0 | Gate=PASS | Latency=0.0ms")
         return 0
 
     print(f"\n{BOLD}🛡️  [System 1 Guard] 啟動高速決策門禁審查 ({label})...{RESET}")
