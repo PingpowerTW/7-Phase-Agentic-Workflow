@@ -23,6 +23,12 @@ invariants:
       severity: "CRITICAL"
       category: "security"
 
+    - id: INV_SAFE_04
+      name: "Git Baseline Safety Net"
+      description: "任何代碼生成或修改前，工作區必須受 Git 版本控制保護且具備乾淨存檔基準點；無 Git 倉庫嚴禁動手改代碼"
+      severity: "CRITICAL"
+      category: "safety_net"
+
   # 2. 狀態不變量 (State Invariants) - 確保持久化記憶與工作流狀態具備單調性與完整性
   state:
     - id: INV_STATE_01
@@ -51,6 +57,12 @@ invariants:
       severity: "HIGH"
       category: "verification"
 
+    - id: INV_SCOPE_03
+      name: "Complexity Monotonicity & Diff Bound"
+      description: "Bug 修復之有效 Diff 必須符合 Ponytail 收斂原則，單次修復禁止行數暴增（>20行或>2檔案）或引入非必要包裝層"
+      severity: "HIGH"
+      category: "blast_radius"
+
   # 4. 驗證協議不變量 (Verification Protocol Invariants) - 確保 Maker / Checker 嚴格制衡
   verification:
     - id: INV_VERIFY_01
@@ -58,6 +70,12 @@ invariants:
       description: "實作者 (Maker) 不得自行宣稱測試通過；必須由驗證者 (Checker) 獨立複檢"
       severity: "HIGH"
       category: "governance"
+
+    - id: INV_ARCH_01
+      name: "Verifiable Layer Boundaries"
+      description: "代碼依賴應符合 layers.json 單向分層宣告，避免向上依賴或環狀侵入；關鍵模組建議配備 AGENTS.md。宣告式規範，目前無自動檢查器"
+      severity: "ADVISORY"
+      category: "architecture"
 
     - id: INV_VERIFY_02
       name: "Zero Junk Test Patterns"
@@ -76,3 +94,15 @@ invariants:
       description: "Bug 修復測試必須在修復前源碼上明確失敗，修復後通過；未曾失敗過之測試判定為無效，嚴禁偽造回歸證明"
       severity: "HIGH"
       category: "verification"
+
+    - id: INV_VERIFY_05
+      name: "Two-Strike Circuit Breaker & Hard Rollback"
+      description: "同一問題若連續兩次修復未收斂，嚴禁第 3 次向前修補，必須在 0.05 秒內執行物理回滾 (git restore .) 並向人類 Escalation"
+      severity: "CRITICAL"
+      category: "circuit_breaker"
+
+    - id: INV_VERIFY_06
+      name: "Reflexion Verbal Memory Protocol"
+      description: "Strike 1 失敗後必須生成三段式口語反思 (錯誤假設/根因定位/修正策略) 始可進行第 2 次嘗試；兩振回滾時經 --reflexion 寫入 eval_incidents.jsonl 與 SNAPSHOT.jsonl；STATE.md Watch List 需手動補記"
+      severity: "HIGH"
+      category: "circuit_breaker"

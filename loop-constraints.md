@@ -13,7 +13,7 @@
 - **先紅後綠自證 (Fail-Before-Pass)**：Bug 修復測試必須在修復前代碼上明確失敗，修復後通過；未曾失敗過的測試證明的只是 Mock，禁止合併。
 - **嚴禁 15 種垃圾測試與佔位符**：不允許空斷言、`assert true`、Mock 自身被測行為、自我比較、純字串 grep、受測者自算期望值、空函式、TODO 或省略號 (`...`)。
 - **外科手術式修改 (Surgical Changes)**：嚴禁順手修改不相關代碼；單一任務單一職責。
-- 單一問題最多嘗試修復 3 次，若無法通過測試即刻向人類 Escalation，嚴禁陷入無效重試迴圈。
+- **兩振硬熔斷 (`INV_VERIFY_05` / `INV_VERIFY_06`)**：Strike 1 失敗必須輸出 `[Reflexion]` 三段式口語反思；連續 2 次失敗（`max_attempts: 2`）立即執行 `python scripts/local_guard.py --rollback --reflexion "<反思>"` 物理回滾並向人類 Escalation，嚴禁第 3 次盲目重試。
 
 ## 3. 預算與中斷控制 (Budget & Kill-switch)
 - 若當日 Token 消耗達 80% 警戒線，自動降級為 Report-only 模式。

@@ -6,11 +6,16 @@
 - **`gate.yaml` 物理阻斷**：
   - 嚴禁自動修改 `denylist` 路徑（`.env*`, `credentials/**`, `secrets/**`, `auth/**`, `billing/**`, `migrations/**`）。
   - 單次修改超過 8 個檔案強制向人類 Escalation。
+- **分層宣告與模組級 AGENTS.md (INV_ARCH_01，建議級)**：
+  - `layers.json` 宣告單向階層（L0 治理 → L1 核心腳本 → L2 技能與記憶 → L3 應用），修改時應避免向上與環狀依賴；**目前無自動檢查器**，由 Reviewer 人工核對。
+  - 核心子目錄建議配備模組級 `AGENTS.md`（現有：`scripts/AGENTS.md`）。
 - **Git 時光機安全地基 (INV_SAFE_04)**：
   - 任何寫入操作前，工作區必須受 Git 版本控制保護且具備安全 baseline commit；未受 Git 保護時嚴禁動手改代碼。
-- **兩振出局與秒級物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05)**：
-  - 任何修復或除錯任務，同一問題若連續兩次修復未收斂，**嚴禁第 3 次向前修補**。
-  - 必須在 0.05 秒內執行物理回滾 (`python scripts/local_guard.py --rollback` 或 `git restore . && git clean -fd`)，徹底抹除失敗代碼與毒化上下文，並立即向人類 Escalation。
+- **兩振出局與秒級物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05) 與 Reflexion 口語反思閉環**：
+  - **Strike 1 (初次未收斂)**：嚴禁未分析即盲目向前修補。必須套用 `LAST_ATTEMPT_AND_REFLEXION` 策略，輸出三段式結構化口語反思：`[Reflexion] 錯誤假設: <原因> | 根因定位: <機制> | 修正策略: <Ponytail最小收斂路徑>`，帶著口語反思進入第 2 次嘗試。
+  - **Strike 2 (兩振出局)**：若連續兩次修復未收斂，**嚴禁第 3 次向前修補**。
+  - 必須在 0.05 秒內執行物理回滾 (`python scripts/local_guard.py --rollback` 或 `git restore . && git clean -fd`)，徹底抹除失敗代碼與毒化上下文。
+  - 回滾時以 `python scripts/local_guard.py --rollback --reflexion "<反思>"` 傳入反思，腳本會寫入 `.agent/eval_incidents.jsonl` 與 `.agent/SNAPSHOT.jsonl` (type: `failure_reflection`)；`STATE.md` Watch List 需**手動**補記，隨後立即向人類 Escalation。
 - **複雜度單調性防線 (Complexity Monotonicity, INV_SCOPE_03)**：
   - 單次 Bug 修復之有效 Diff 必須符合 Ponytail 收斂原則；禁止單次修復代碼暴增（>20行或>2檔案）或新增非必要包裝層。
 - **Maker / Checker 角色硬分離**：
@@ -39,7 +44,10 @@
 - **極簡輸出規範**：代碼優先，說明至多三行（格式：`[代碼] → 省略了: [X], 當 [Y] 時再考慮擴充`）。若未明確要求，嚴禁產出架構巡禮或長篇論述；若說明比代碼長，刪除說明。
 - **刻意捷徑標記 (Debt Tracking)**：若為精簡而暫採有上限的解法（如全局鎖、O(n²) 掃描），註記 `ponytail: <極限門檻>, <升級重構路徑>`，便於納入 `STATE.md` 追蹤。
 - **不可妥協之安全底線**：信任邊界輸入驗證、防資料遺失錯誤處理、系統安全性與無障礙基礎絕對不省；非平凡邏輯必須留下一段最小 runnable assert 檢驗。
-- **代碼探索前導**：探索不熟悉的程式碼前，先執行 `python scripts/loop_graph.py --map --focus <目標檔案>`，依地圖決定要讀哪些檔案，避免整檔盲讀。
+- **代碼探索前導與 Token 止血紀律**：
+  - 探索不熟悉的程式碼前，先執行 `python scripts/loop_graph.py --map --focus <目標檔案>`，依地圖決定要讀哪些檔案，避免整檔盲讀。
+  - **強制平行工具呼叫 (Parallel Tool Calls)**：同階段可併發的讀檔、搜尋或驗證，必須在**單一回合內同時呼叫**，嚴禁分多步串行呼叫（消除推理模型每步 2k~4k Thinking 轉入下一步 Input 之雙重複利稅）。
+  - **精準讀檔邊界**：讀原始碼應指定 `StartLine`/`EndLine`（單次 ≤200 行）；**嚴禁對 `.jsonl` / `.log` / 巨型 dump 檔使用 `view_file`**（避免單次頂滿 46KB 塞爆上下文）；在 Windows PowerShell 避免使用複雜巢狀引號之單行 `python -c`。
 
 ## 3. 開源專案、新工具與 Skill 引入殘酷審查門禁 (Open-Source & Skill Pre-Flight Gate)
 凡使用者提供外部 GitHub 連結、套件、新工具或 **Skill / Plugin / Rule 規則集** 要求「分析、整合、改寫或引入」時，**嚴禁直接進入 clone、安裝或寫入 `~/.gemini/config/skills/` 獨立全域技能階段**。必須優先於第 1 個回合出具《前置殘酷審查報告》，在獲得使用者明確批准前，物理阻斷任何實作動手行為：

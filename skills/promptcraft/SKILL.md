@@ -65,6 +65,13 @@ graph TD
 3. 輸出改進後的高資訊密度提示詞，並保持 Token 體積最小化。
 ```
 
+### 4. 文字梯度自動微分優化 (Textual Gradient Descent, Inspired by AdalFlow & TextGrad)
+仿造 PyTorch autograd 計算圖，將提示詞當作可微參數 `Variable(prompt, requires_grad=True)` 進行反向調優：
+- **前向傳播 (Forward)**: $Y = \text{LLM}(X; \text{Prompt})$ 生成初步解答。
+- **損失評估 (Loss)**: $\mathcal{L} = \text{Evaluate}(Y, Y^*)$，計算輸出與 Rubric/測試案例之落差與失敗特徵。
+- **反向傳播 (Backward Textual Gradient)**: 驅動評估模型生成結構化「文字梯度」$\nabla_{\text{Prompt}} \mathcal{L}$，指出導致失敗的語義語句與權重偏誤。
+- **參數更新 (Optimizer Step)**: 依據文字梯度精準改寫 System Prompt，取代人工隨機猜測試錯，實現提示詞的自動工程收斂。
+
 ---
 
 ## 📐 標準 `.prompt.md` 模板結構

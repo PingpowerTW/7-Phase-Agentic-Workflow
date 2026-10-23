@@ -9,12 +9,14 @@ description: >
 
 > **核心理念**：單次讀取變更檔案，一次完成「正確性、防禦性邊界、OWASP 資安與密鑰、架構狀態契約、Ponytail 精簡度、前端 Anti-Slop」六維度審查。
 > **Confidence Gate**：僅報告 **>80% 確信** 的真實問題；跳過未修改區域的風格偏好；同類問題強制合併報告。
+> **Evidence Contract**（吸收自 REA）：每則發現必附 `evidence:`（`檔案#L行` 或指令輸出）；無法證實的推測寫入 `unknowns:`，嚴禁混入結論。
 > **Incremental & Anti-Loop Gate**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪即強制收斂）；對已標註刻意捷徑（`ponytail:`）或已附理由豁免（Wontfix）之項目，嚴禁重複報警。
 
 ## 📚 深度參考庫 (`./references/` 按需讀取)
 - [`references/defensive-coding.md`](references/defensive-coding.md)：JS/TS/Python 空值、非同步與邊界修復範本
 - [`references/security-owasp.md`](references/security-owasp.md)：OWASP Top 10 與 ggshield 密鑰正則細節
 - [`references/architecture-checklist.md`](references/architecture-checklist.md)：認證、狀態同步、CRUD 與快取設計清單
+- [`references/shipped-artifact-audit.md`](references/shipped-artifact-audit.md)：發佈前產物稽核（bundle 密鑰、source map、SBOM、APK、部署偏移）
 
 ---
 
@@ -70,4 +72,7 @@ description: >
 
 ### ✂️ Ponytail 精簡清單（過度工程獵殺）
 - `[檔案:行號]`: `<delete|stdlib|native|yagni|shrink>` 欲砍除內容 ➔ 替換方案（預計淨減 `-N` 行）
+
+### ❓ Unknowns（未證實、需人工確認）
+- 推測內容 ➔ 驗證方式
 ```

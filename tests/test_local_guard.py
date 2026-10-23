@@ -253,7 +253,8 @@ denylist:
 
             # Rollback #2: enterprise factory bloat (must preserve Rollback #1 in .agent/eval_incidents.jsonl!)
             prod_file.write_text("class AbstractProxyFactoryBean:\n    pass\nclass SingletonServiceManager:\n    pass\n", encoding="utf-8")
-            self.assertEqual(execute_rollback(), 0)
+            reflexion_note = "[Reflexion] 錯誤假設: 需工廠封裝 | 根因定位: 違反YAGNI | 修正策略: 直接函式"
+            self.assertEqual(execute_rollback(reflexion=reflexion_note), 0)
 
             inc_file = self.test_dir / ".agent" / "eval_incidents.jsonl"
             self.assertTrue(inc_file.is_file())
@@ -261,6 +262,18 @@ denylist:
             self.assertEqual(len(lines), 2)
             self.assertGreater(json.loads(lines[0])["features"][0], 0.0)
             self.assertGreater(json.loads(lines[1])["features"][1], 0.0)
+            self.assertEqual(json.loads(lines[1])["reflexion"], reflexion_note)
+
+            # Verify SNAPSHOT.jsonl schema compatibility with auto-snapshot (requires 'ts' and 'project')
+            snap_file = self.test_dir / ".agent" / "SNAPSHOT.jsonl"
+            self.assertTrue(snap_file.is_file())
+            snap_lines = [json.loads(ln) for ln in snap_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+            self.assertEqual(len(snap_lines), 2)
+            self.assertIn("ts", snap_lines[1])
+            self.assertNotIn("timestamp", snap_lines[1])
+            self.assertEqual(snap_lines[1]["project"], self.test_dir.name)
+            self.assertEqual(snap_lines[1]["type"], "failure_reflection")
+            self.assertEqual(snap_lines[1]["reflexion"], reflexion_note)
 
             # Append corrupt JSON line to verify defensive parsing in evaluate_incidents()
             with inc_file.open("a", encoding="utf-8") as f:
@@ -293,9 +306,14 @@ denylist:
         import threading
         import local_guard
 
+        mock_payload = [b'```json\n{"has_test_seam":{"noul":0.01},"ponytail_ladder":{"choice":"7_mvp","confidence":0.9},"overengineering_score":{"score":1.2}}\n```']
+
         class _MockSystemOneHandler(http.server.BaseHTTPRequestHandler):
             def do_POST(self):
-                body = b'{"has_test_seam":{"noul":0.01},"ponytail_ladder":{"choice":"7_mvp","confidence":0.9},"overengineering_score":{"score":1.2}}'
+                cl = int(self.headers.get("Content-Length", 0))
+                if cl > 0:
+                    self.rfile.read(cl)
+                body = mock_payload[0]
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json")
                 self.send_header("Content-Length", str(len(body)))
@@ -314,9 +332,15 @@ denylist:
             _RUNTIME_TRACKER._samples.clear()
             for _ in range(5):
                 res, mode = local_guard.query_system_one("x = 1\n")
-                self.assertIsNotNone(res)
+                self.assertEqual(res.get("ponytail_ladder", {}).get("choice"), "7_mvp")
             self.assertEqual(len(_RUNTIME_TRACKER._samples), 5)
             self.assertIsNotNone(_RUNTIME_TRACKER.get())
+            # Error JSON payload must Fail-Closed to Handwired ReLU and NOT pollute _RUNTIME_TRACKER
+            mock_payload[0] = b'{"error": "rate limit exceeded"}'
+            err_res, err_mode = local_guard.query_system_one("def set_mock_for_test(x): return x\n")
+            self.assertEqual(err_mode, "Handwired ReLU (0-Token)")
+            self.assertGreater(err_res["has_test_seam"]["noul"], 0.5)
+            self.assertEqual(len(_RUNTIME_TRACKER._samples), 5)
         finally:
             local_guard.DECISION_API_URL = orig_url
             server.shutdown()

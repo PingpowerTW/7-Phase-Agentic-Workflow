@@ -23,13 +23,15 @@ This file documents the autonomous and assisted loop operations for the AI optim
 - Checker Falsification Discipline: Verifier must probe at least 1 adversarial boundary counter-example; reject on any invariant breach.
 - Default auto-merge: Disabled (requires human review)
 
-## Stall Detection & Circuit Breaker (防卡死斷路器)
-- **Stall Condition**: 若同一任務或子步驟連續報錯/失敗達 3 次（`max_attempts: 3`），判定為陷入思維死循環。
+## Stall Detection & Circuit Breaker (兩振硬熔斷與口語反思閉環)
+- **Two-Strike Condition (`INV_VERIFY_05` & `INV_VERIFY_06`)**:
+  - **Strike 1 (初次未收斂)**：禁止盲目重試，必須先產出三段式口語反思 (`[Reflexion] 錯誤假設 | 根因定位 | 修正策略`) 始可進入第 2 次嘗試。
+  - **Strike 2 (兩振出局，`max_attempts: 2`)**：若連續 2 次修復未收斂，嚴禁第 3 次向前修補。
 - **Circuit Breaker Action**:
-  1. 立即中斷（Halt）自治迴圈，禁止反覆重試。
+  1. 立即於 0.05 秒內執行物理回滾 (`python scripts/local_guard.py --rollback --reflexion "<反思>"`)，抹除失敗代碼與毒化上下文，並沉澱至 `.agent/eval_incidents.jsonl` 與 `.agent/SNAPSHOT.jsonl`。
   2. 激活 `loop-budget.md` 之緊急停止標記 (`loop-pause-all: true`)。
-  3. 強制落實 N1 阻斷：禁止封裝快照或執行記憶蒸餾，防止錯誤經驗污染長期知識庫。
-  4. 產出失敗根因報告並向人類操作員請求協助（Escalate to Human）。
+  3. 強制落實 N1 阻斷：禁止封裝長期里程碑快照或執行記憶蒸餾，防止錯誤經驗污染長期知識庫。
+  4. 手動更新 `STATE.md` Watch List 並向人類操作員請求協助（Escalate to Human）。
 
 ## Governance & Architecture
 - **Architecture Knowledge Graph (`scripts/loop_graph.py`)**:

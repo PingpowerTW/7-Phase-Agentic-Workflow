@@ -580,6 +580,30 @@ def tune_handwired_weights(
     return w
 
 
+_DECISION_KEYS = ("has_test_seam", "ponytail_ladder", "overengineering_score")
+
+
+def _extract_constrained_json(raw_text: str) -> Optional[Dict[str, Any]]:
+    """事後 JSON 擷取：剝除 Markdown 圍欄並擷取 System 1 裁決字典（Fail-Closed）。
+    候選字典（parsed["answers"] 或裸 parsed）必須含至少一個有效決策鍵才回傳，
+    否則回傳 None 以觸發 Handwired ReLU 降級，避免錯誤回應造成門禁繞過或污染延遲統計。
+    """
+    if not raw_text or not raw_text.strip():
+        return None
+    cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip(), flags=re.IGNORECASE)
+    start, end = cleaned.find("{"), cleaned.rfind("}")
+    if start != -1 and end > start:
+        cleaned = cleaned[start:end + 1]
+    try:
+        parsed = json.loads(cleaned)
+        if isinstance(parsed, dict):
+            cand = parsed["answers"] if isinstance(parsed.get("answers"), dict) else parsed
+            if any(k in cand for k in _DECISION_KEYS):
+                return cand
+    except Exception:
+        pass
+    return None
+
 def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
     """
     向 System 1 決策端點 (相容 TypeSafe Jev / Ollaya 等開放 /v1/systemone 協議) 發送結構化裁決請求
@@ -644,14 +668,16 @@ def query_system_one(state_text: str) -> Tuple[Optional[Dict[str, Any]], str]:
         t_req = time.perf_counter()
         with urllib.request.urlopen(req, timeout=_RUNTIME_TRACKER.adaptive_timeout_sec(TIMEOUT_SEC)) as resp:
             if resp.status == 200:
-                res_body = json.loads(resp.read().decode("utf-8"))
-                provider_tag = "System 1"
-                if "11435" in DECISION_API_URL or "ollaya" in DECISION_API_URL.lower():
-                    provider_tag = "Ollaya"
-                elif "jev" in DECISION_API_URL.lower() or api_key:
-                    provider_tag = "Jev Cloud"
-                _RUNTIME_TRACKER.update((time.perf_counter() - t_req) * 1000.0)
-                return res_body.get("answers", {}), f"{provider_tag} ({DECISION_MODEL})"
+                raw_text = resp.read().decode("utf-8")
+                answers = _extract_constrained_json(raw_text)
+                if answers is not None:
+                    provider_tag = "System 1"
+                    if "11435" in DECISION_API_URL or "ollaya" in DECISION_API_URL.lower():
+                        provider_tag = "Ollaya"
+                    elif "jev" in DECISION_API_URL.lower() or api_key:
+                        provider_tag = "Jev Cloud"
+                    _RUNTIME_TRACKER.update((time.perf_counter() - t_req) * 1000.0)
+                    return answers, f"{provider_tag} ({DECISION_MODEL})"
     except urllib.error.HTTPError as e:
         err_body = e.read().decode("utf-8", errors="replace")
         print(f"{YELLOW}⚠️  決策端點回傳 HTTP {e.code}: {err_body}{RESET}", file=sys.stderr)
@@ -806,9 +832,11 @@ def is_git_repo() -> bool:
         return False
 
 
-def _capture_rollback_incident(diff: str, changed_files: List[str]) -> Optional[Path]:
-    """將觸發兩振回滾之失敗 Diff 沉澱至 .agent/eval_incidents.jsonl 並微調 ReLU 權重 (Anthropic Incident-to-Eval)"""
-    if not diff.strip():
+def _capture_rollback_incident(diff: str, changed_files: List[str], reflexion: str = "") -> Optional[Path]:
+    """將觸發兩振回滾之失敗 Diff 沉澱至 .agent/eval_incidents.jsonl 並微調 ReLU 權重 (Anthropic Incident-to-Eval)
+    同步將 Reflexion 口語反思閉環紀錄至 .agent/SNAPSHOT.jsonl (INV_VERIFY_06)
+    """
+    if not diff.strip() and not reflexion.strip():
         return None
     x = _extract_handwired_features(diff)
     if sum(x[:4]) > 0:
@@ -820,10 +848,24 @@ def _capture_rollback_incident(diff: str, changed_files: List[str]) -> Optional[
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "files": changed_files,
         "features": x,
+        "reflexion": reflexion,
         "diff_snippet": diff[:1000],
     }
     with inc_file.open("a", encoding="utf-8") as f:
         f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+    snap_file = target_dir / "SNAPSHOT.jsonl"
+    snap_record = {
+        "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "type": "failure_reflection",
+        "project": Path.cwd().name or "root",
+        "summary": f"兩振熔斷回滾: {reflexion}" if reflexion else "兩振熔斷物理回滾",
+        "tags": ["circuit_breaker", "reflexion"],
+        "files": changed_files,
+        "reflexion": reflexion
+    }
+    with snap_file.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(snap_record, ensure_ascii=False) + "\n")
     return inc_file
 
 
@@ -845,8 +887,8 @@ def evaluate_incidents() -> int:
     return 0 if caught == len(records) else 1
 
 
-def execute_rollback() -> int:
-    """執行 0.05 秒物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05)"""
+def execute_rollback(reflexion: str = "") -> int:
+    """執行 0.05 秒物理回滾 (Two-Strike Circuit Breaker, INV_VERIFY_05) 並記錄 Reflexion 反思 (INV_VERIFY_06)"""
     if not is_git_repo():
         print(f"{RED}❌ [INV_SAFE_04 違規] 未檢測到 Git 倉庫，無法執行物理回滾。{RESET}")
         return 1
@@ -857,7 +899,7 @@ def execute_rollback() -> int:
         diff, changed = get_git_info()
         subprocess.run(["git", "restore", "."], check=True, capture_output=True)
         subprocess.run(["git", "clean", "-fd", "-e", ".agent", "-e", ".agents"], check=True, capture_output=True)
-        _capture_rollback_incident(diff, changed)
+        _capture_rollback_incident(diff, changed, reflexion=reflexion)
         elapsed_ms = (time.perf_counter() - start) * 1000
         print(f"{GREEN}✅ [秒級硬熔斷成功] 工作區已乾淨復原至安全 Commit 基準點！耗時: {elapsed_ms:.1f} ms{RESET}")
         print(f"{CYAN}💡 上下文毒化已阻斷，失敗特徵已沉澱至 .agent/eval_incidents.jsonl。{RESET}\n")
@@ -937,6 +979,7 @@ if __name__ == "__main__":
     parser.add_argument("--git", action="store_true", help="自動審查當前 git diff 與檔案變更")
     parser.add_argument("--check-git", action="store_true", help="檢驗 Git 時光機地基狀態 (INV_SAFE_04)")
     parser.add_argument("--rollback", action="store_true", help="觸發兩振硬熔斷 0.05 秒物理回滾 (INV_VERIFY_05)")
+    parser.add_argument("--reflexion", type=str, default="", help="兩振回滾或失敗時之結構化口語反思 (INV_VERIFY_06)")
     parser.add_argument("--eval-incidents", action="store_true", help="回放 .agent/eval_incidents.jsonl 驗證歷史事故攔截率")
     parser.add_argument("--code", type=str, help="直接傳入要審查的代碼字串")
     parser.add_argument("--file", type=str, help="指定要審查的檔案路徑")
@@ -948,7 +991,7 @@ if __name__ == "__main__":
     if args.check_git:
         sys.exit(check_git_status())
     elif args.rollback:
-        sys.exit(execute_rollback())
+        sys.exit(execute_rollback(reflexion=args.reflexion))
     elif args.eval_incidents:
         sys.exit(evaluate_incidents())
 

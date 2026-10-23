@@ -1,0 +1,62 @@
+{
+  "version": "1.0.0",
+  "description": "系統架構階層與單向依賴宣告 (Inspired by promptfoo layers.json)",
+  "enforcement": "advisory: no automated checker yet; reviewed manually (INV_ARCH_01)",
+  "layers": {
+    "l0_governance": {
+      "level": 0,
+      "name": "治理門禁與不變量 (Governance)",
+      "patterns": [
+        "gate.yaml",
+        "invariants.yaml",
+        "layers.json",
+        "AGENTS.md",
+        "GEMINI.md",
+        ".agents/AGENTS.md"
+      ],
+      "allowedDependencies": []
+    },
+    "l1_scripts_core": {
+      "level": 1,
+      "name": "核心執行腳本與安全閘門 (Core Scripts)",
+      "patterns": [
+        "scripts/**"
+      ],
+      "allowedDependencies": [
+        "l0_governance"
+      ]
+    },
+    "l2_skills_runtime": {
+      "level": 2,
+      "name": "AI 技能與記憶引擎 (Skills & Memory)",
+      "patterns": [
+        ".agents/skills/**",
+        "auto-snapshot/**",
+        "skills/**"
+      ],
+      "allowedDependencies": [
+        "l0_governance",
+        "l1_scripts_core"
+      ]
+    },
+    "l3_applications": {
+      "level": 3,
+      "name": "上層業務應用與工作流 (Applications & Workflows)",
+      "patterns": [
+        "7-Phase-Agentic-Workflow/**",
+        "stock-autoresearch/**",
+        "eduspark-hub/**"
+      ],
+      "allowedDependencies": [
+        "l0_governance",
+        "l1_scripts_core",
+        "l2_skills_runtime"
+      ]
+    }
+  },
+  "constraints": {
+    "maxStronglyConnectedComponentSize": 1,
+    "enforceUpwardDependencyBlock": true,
+    "allowSameLayerImports": true
+  }
+}
