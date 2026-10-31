@@ -305,18 +305,21 @@ class UserService {}
         self.assertNotIn("main", dead_labels)             # Entry point
 
     def test_markdown_repeated_heading_parent_qualification(self):
-        """驗證 Markdown 重複子標題以父標題路徑限定，避免同名節點覆蓋 (PR #2613)"""
+        """驗證 Markdown 重複子標題以父標題路徑限定，避免同名節點覆蓋、支援巢狀圍欄與精準 Section Seeding (PR #2613)"""
         md_file = self.test_dir / "AGENTS.md"
         md_file.write_text(
             "# Service A\n"
             "## Implementation\n"
             "Enforces INV_SAFE_04.\n"
             "# Service B\n"
-            "## Implementation\n"
+            "## Implementation ##\n"
             "Enforces INV_VERIFY_05.\n"
-            "```markdown\n"
+            "````markdown\n"
+            "```sql\n"
             "## Implementation\n"
-            "```\n",
+            "```\n"
+            "# Fake Heading Inside Outer Fence\n"
+            "````\n",
             encoding="utf-8",
         )
         scanner = CodeAstScanner(self.test_dir, self.graph)
@@ -328,10 +331,16 @@ class UserService {}
         self.assertIn("sec:AGENTS.md::Service-A.Implementation", self.graph.nodes)
         self.assertIn("sec:AGENTS.md::Service-B.Implementation", self.graph.nodes)
         self.assertNotIn("sec:AGENTS.md::Implementation", self.graph.nodes)
+        self.assertNotIn("sec:AGENTS.md::Fake-Heading-Inside-Outer-Fence", self.graph.nodes)
 
         # Both sections preserve their own distinct invariant reference edges without overwriting
         self.assertIn("policy:INV_SAFE_04", self.graph.adj_out["sec:AGENTS.md::Service-A.Implementation"])
         self.assertIn("policy:INV_VERIFY_05", self.graph.adj_out["sec:AGENTS.md::Service-B.Implementation"])
+
+        # Section-level diff seeding and containment-edge isolation (no mod:AGENTS.md leak)
+        self.assertEqual(self.graph.seeds_for_file("AGENTS.md", [(3, 3)]), ["sec:AGENTS.md::Service-A.Implementation"])
+        bfs = self.graph._bfs_dependents(["sec:AGENTS.md::Service-A.Implementation"])
+        self.assertNotIn("mod:AGENTS.md", {d["id"] for d in bfs["dependents"]})
 
 
 if __name__ == "__main__":

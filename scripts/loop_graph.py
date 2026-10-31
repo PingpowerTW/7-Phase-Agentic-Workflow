@@ -248,9 +248,9 @@ class ArchitectureGraph:
                         incoming |= self.adj_in.get(f"fn:{lbl.split('.')[-1]}", set())
 
             for parent in incoming:
-                # Do not walk backwards along `mod -> fn/cls` ('defines' containment edges),
-                # otherwise editing one method leaks into its module node and flags every importer.
-                if curr.startswith(("fn:", "cls:")) and parent.startswith("mod:"):
+                # Do not walk backwards along `mod -> fn/cls/sec` ('defines' containment edges),
+                # otherwise editing one method/section leaks into its module node and flags every importer.
+                if curr.startswith(("fn:", "cls:", "sec:")) and parent.startswith("mod:"):
                     for pol in self.adj_in.get(parent, set()):
                         if pol.startswith("policy:") and pol not in visited:
                             visited.add(pol)
@@ -325,7 +325,7 @@ class ArchitectureGraph:
         symbols = [
             data for data in self.nodes.values()
             if data.get("file") == norm_file
-            and data.get("type") in ("function", "class", "test")
+            and data.get("type") in ("function", "class", "test", "section")
             and isinstance(data.get("start_line"), int)
             and isinstance(data.get("end_line"), int)
         ]
@@ -816,19 +816,23 @@ class CodeAstScanner:
         self.graph.add_node(mod_id, label=Path(rel_path).name, node_type="module", file_path=rel_path)
 
         lines = text.splitlines()
-        in_fence = False
+        fence_marker: Optional[Tuple[str, int]] = None
         raw_sections: List[Tuple[int, str, List[str], int]] = []  # (level, slug, ancestor_slugs, line_no)
         stack: List[Tuple[int, str]] = []
         slug_counts: Dict[str, int] = collections.Counter()
 
         for idx, line in enumerate(lines, 1):
             stripped = line.strip()
-            if stripped.startswith("```") or stripped.startswith("~~~"):
-                in_fence = not in_fence
+            if fence_marker is None:
+                m_fence = re.match(r"^(`{3,}|~{3,})", stripped)
+                if m_fence:
+                    fence_marker = (m_fence.group(1)[0], len(m_fence.group(1)))
+                    continue
+            else:
+                if re.match(rf"^{fence_marker[0]}{{{fence_marker[1]},}}\s*$", stripped):
+                    fence_marker = None
                 continue
-            if in_fence:
-                continue
-            m = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+            m = re.match(r"^(#{1,6})\s+(.+?)(?:\s+#+\s*)?$", line)
             if not m:
                 continue
             level = len(m.group(1))
