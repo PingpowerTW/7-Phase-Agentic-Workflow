@@ -498,6 +498,8 @@ class CodeAstScanner:
                     self.parse_python_file(full_path, rel_path)
                 elif fname.endswith((".js", ".ts", ".mjs")):
                     js_files.append((full_path, rel_path))
+                elif fname in ("AGENTS.md", "STATE.md", "LOOP.md", "GEMINI.md", "README.md"):
+                    self.parse_markdown_file(full_path, rel_path)
 
         if js_files:
             self.parse_js_files_batch(js_files)
@@ -802,6 +804,60 @@ class CodeAstScanner:
             self.graph.add_node("policy:GATE_KEEPER", label="gate.yaml (Physical Denylist)", node_type="policy", file_path="gate.yaml")
             self.graph.add_edge("policy:GATE_KEEPER", "mod:scripts/loop_gate.py", relation="protects")
             self.graph.add_edge("policy:GATE_KEEPER", "mod:scripts/loop_drift.py", relation="protects")
+
+    def parse_markdown_file(self, full_path: Path, rel_path: str):
+        """Parse Markdown sections with parent-heading qualification for repeated headings (PR #2613)."""
+        try:
+            text = full_path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return
+
+        mod_id = f"mod:{rel_path}"
+        self.graph.add_node(mod_id, label=Path(rel_path).name, node_type="module", file_path=rel_path)
+
+        lines = text.splitlines()
+        in_fence = False
+        raw_sections: List[Tuple[int, str, List[str], int]] = []  # (level, slug, ancestor_slugs, line_no)
+        stack: List[Tuple[int, str]] = []
+        slug_counts: Dict[str, int] = collections.Counter()
+
+        for idx, line in enumerate(lines, 1):
+            stripped = line.strip()
+            if stripped.startswith("```") or stripped.startswith("~~~"):
+                in_fence = not in_fence
+                continue
+            if in_fence:
+                continue
+            m = re.match(r"^(#{1,6})\s+(.+?)\s*$", line)
+            if not m:
+                continue
+            level = len(m.group(1))
+            slug = re.sub(r"[^\w\u4e00-\u9fff-]+", "-", m.group(2).strip()).strip("-")
+            if not slug:
+                continue
+            while stack and stack[-1][0] >= level:
+                stack.pop()
+            ancestors = [s for _, s in stack]
+            stack.append((level, slug))
+            slug_counts[slug] += 1
+            raw_sections.append((level, slug, ancestors, idx))
+
+        for idx, (_level, slug, ancestors, start_line) in enumerate(raw_sections):
+            end_line = (raw_sections[idx + 1][3] - 1) if idx + 1 < len(raw_sections) else len(lines)
+            qname = ".".join(ancestors + [slug]) if (slug_counts[slug] > 1 and ancestors) else slug
+            sec_id = f"sec:{rel_path}::{qname}"
+            self.graph.add_node(
+                sec_id,
+                label=qname,
+                node_type="section",
+                file_path=rel_path,
+                start_line=start_line,
+                end_line=max(start_line, end_line),
+            )
+            self.graph.add_edge(mod_id, sec_id, relation="defines")
+            body = "\n".join(lines[start_line - 1 : end_line])
+            for inv_id in set(re.findall(r"\b(INV_[A-Z0-9_]+)\b", body)):
+                self.graph.add_edge(sec_id, f"policy:{inv_id}", relation="documents")
 
 
 class GraphVisualizer:

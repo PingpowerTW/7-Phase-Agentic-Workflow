@@ -64,7 +64,12 @@ Step 4: Quality Gate & SHARS Delta Retry
 
 ## 子代理人 System Prompts (內建 Caveman 緊湊協議)
 
-全域共通紀律：所有子代理人強制啟用 `caveman lite` 模式——刪除客套話與過渡語，直接輸出結構化結論。
+全域共通紀律：
+- 所有子代理人強制啟用 `caveman lite` 模式——刪除客套話與過渡語，直接輸出結構化結論。
+- **子代理併發與拓撲硬上限 (`SubagentLimitGuard`)**：單回合併發上限 `MAX_CONCURRENT_SUBAGENTS = 3`，且強制禁止子代理遞迴派生孫代理（`EnableSubagentTools: false`，拓撲深度恆為 1）。
+- **大輸出強制寫檔卸載 (`Filesystem Offloading`)**：當子代理研究報告或檢索資料超過 40 行時，強制寫入 `<appDataDir>/brain/<id>/scratch/`，回傳主代理之對話訊息嚴格控制在 ≤20 行（僅含 Concept Tree 契約 + 檔案路徑錨點），防止塞爆主代理 KV Cache。
+- **證據行號引用與報完即停契約 (`EVIDENCE & Stop Condition`，吸收自 DeepSeek-TUI `subagent_output_format.md`)**：所有子代理回報之發現或修改，必須附帶實際讀取/執行的精確行號錨點（`path/to/file:120-145` 或指令退出碼），嚴禁憑記憶轉述；輸出結構化報告後**立即停止 (`Stop condition`)**，嚴禁自行發散新調查支線或反問主代理下一步（唯一例外：遇致命阻礙無法推進時，填入 `BLOCKERS` 後立即停機）。
+- **無 MCP 子代理之圖譜 CLI 回退 (`Graph CLI Fallback`，吸收自 codebase-memory-mcp `#2839`)**：當子代理未掛載 MCP 圖譜工具時，具備 Shell 權限之子代理可直接透過 CLI 執行 `python scripts/loop_graph.py --map --focus <target>` 或 `--diff-impact` 取得依賴與衝擊半徑；唯讀 `Explorer` 則直接讀取主代理傳入之 `loop_graph.py` 輸出。
 
 ### 1. Explorer (`TypeName: "research"`)
 

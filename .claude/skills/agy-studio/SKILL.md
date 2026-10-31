@@ -72,7 +72,12 @@ Step 4: Quality Gate & SHARS Delta Retry
 
 ## 子代理人 System Prompts (內建 Caveman 緊湊協議 ＋ Ponytail 七階梯)
 
-全域子代理人共通紀律：強制啟用 `caveman lite` 模式——刪除客套話、填充詞與過渡語，直接輸出結構化結論。嚴格遵守 **Ponytail 精簡代碼七階梯**（1. YAGNI ➔ 2. 現有重用 ➔ 3. 標準庫 ➔ 4. 原生平台特性 ➔ 5. 已裝依賴 ➔ 6. 單行簡潔 ➔ 7. 最小可行）。
+全域子代理人共通紀律：
+- 強制啟用 `caveman lite` 模式——刪除客套話、填充詞與過渡語，直接輸出結構化結論。嚴格遵守 **Ponytail 精簡代碼七階梯**（1. YAGNI ➔ 2. 現有重用 ➔ 3. 標準庫 ➔ 4. 原生平台特性 ➔ 5. 已裝依賴 ➔ 6. 單行簡潔 ➔ 7. 最小可行）。
+- **子代理併發與拓撲硬上限 (`SubagentLimitGuard`)**：單回合併發上限 `MAX_CONCURRENT_SUBAGENTS = 3`（Step 2 恰為 DB + Backend + Frontend 3 個並行上限），且嚴禁子代理遞迴派生孫代理（`EnableSubagentTools: false`，拓撲深度恆為 1）。
+- **大輸出強制寫檔卸載 (`Filesystem Offloading`)**：當 Explorer 或研究子代理產出超過 40 行之調研資料時，強制卸載寫入 `<appDataDir>/brain/<id>/scratch/`，回傳主代理之訊息嚴格控制在 ≤20 行（僅含 Concept Tree 契約 + 路徑錨點）。
+- **證據行號引用與報完即停契約 (`EVIDENCE & Stop Condition`，吸收自 DeepSeek-TUI `subagent_output_format.md`)**：所有子代理回報之發現或修改，必須附帶實際讀取/執行的精確行號錨點（`path/to/file:120-145`），嚴禁憑記憶腦補；輸出結構化報告後**立即停止 (`Stop condition`)**，嚴禁自行開闢新支線（唯一例外：遇致命阻礙填入 `BLOCKERS` 後停機）。
+- **無 MCP 子代理之圖譜 CLI 回退 (`Graph CLI Fallback`，吸收自 codebase-memory-mcp `#2839`)**：當子代理未掛載 MCP 圖譜工具時，具備 Shell 權限之子代理可直接執行 `python scripts/loop_graph.py --map --focus <target>` 或 `--diff-impact` 取得跨層衝擊半徑；唯讀 `Explorer` 則直接讀取主代理傳入之 `loop_graph.py` 輸出。
 
 ### 1. Explorer (`TypeName: "research"`, 含 Level 0 概念樹與 Ponytail 定位)
 

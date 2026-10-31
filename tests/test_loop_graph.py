@@ -304,6 +304,35 @@ class UserService {}
         self.assertNotIn("callback_sorter", dead_labels)  # Passed as CALL_REFERENCE (key=callback_sorter)
         self.assertNotIn("main", dead_labels)             # Entry point
 
+    def test_markdown_repeated_heading_parent_qualification(self):
+        """驗證 Markdown 重複子標題以父標題路徑限定，避免同名節點覆蓋 (PR #2613)"""
+        md_file = self.test_dir / "AGENTS.md"
+        md_file.write_text(
+            "# Service A\n"
+            "## Implementation\n"
+            "Enforces INV_SAFE_04.\n"
+            "# Service B\n"
+            "## Implementation\n"
+            "Enforces INV_VERIFY_05.\n"
+            "```markdown\n"
+            "## Implementation\n"
+            "```\n",
+            encoding="utf-8",
+        )
+        scanner = CodeAstScanner(self.test_dir, self.graph)
+        scanner.parse_markdown_file(md_file, "AGENTS.md")
+
+        # Unique headings keep short name; repeated headings are qualified by parent headings
+        self.assertIn("sec:AGENTS.md::Service-A", self.graph.nodes)
+        self.assertIn("sec:AGENTS.md::Service-B", self.graph.nodes)
+        self.assertIn("sec:AGENTS.md::Service-A.Implementation", self.graph.nodes)
+        self.assertIn("sec:AGENTS.md::Service-B.Implementation", self.graph.nodes)
+        self.assertNotIn("sec:AGENTS.md::Implementation", self.graph.nodes)
+
+        # Both sections preserve their own distinct invariant reference edges without overwriting
+        self.assertIn("policy:INV_SAFE_04", self.graph.adj_out["sec:AGENTS.md::Service-A.Implementation"])
+        self.assertIn("policy:INV_VERIFY_05", self.graph.adj_out["sec:AGENTS.md::Service-B.Implementation"])
+
 
 if __name__ == "__main__":
     unittest.main()
