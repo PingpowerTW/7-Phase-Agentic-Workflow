@@ -71,16 +71,18 @@ description: 使用者體驗審查，評估人性化操作、介面流暢度、�
 
 ---
 
-### 5. 表單與無障礙 (A11y & Form Standards)
+### 5. 表單、彈性排版與無障礙 (WCAG 2.2 AA & Resilient Text Standards)
 
 ```markdown
 檢查清單：
-- [ ] 所有 input 均有關聯的 `<label>`（或 `aria-label`）
+- [ ] 所有 input 均有關聯的 `<label>`（或 `aria-label`），多欄位報錯時頂部提供可聚焦的 Error Summary 錨點
 - [ ] 必填標示清晰，錯誤提示於失焦 (Blur) 後即時顯示
-- [ ] 支援瀏覽器原生自動完成 (`autocomplete="email"` 等)
-- [ ] 色彩對比度符合 WCAG 2.1 AA (一般文字 ≥ 4.5:1, 大文字 ≥ 3:1)
-- [ ] 支援 `prefers-reduced-motion` 降級
-- [ ] Tab 鍵焦點順序與視覺閱讀順序一致
+- [ ] 無障礙認證 (Accessible Auth)：支援瀏覽器原生自動完成 (`autocomplete="email"` 等)，密碼與驗證碼欄位嚴禁阻擋 `paste` 貼上
+- [ ] 焦點防遮擋 (Focus Not Obscured)：Sticky 導覽列/底欄必須配置 `scroll-padding-top/bottom`，確保鍵盤 `Tab` 焦點不被固定列遮擋
+- [ ] 拖曳與圖示語義：拖曳排序/滑桿提供鍵盤或點擊替代方案；裝飾圖示加 `aria-hidden="true"`，語義圖示按鈕具 `aria-label` 且圖示對比度 ≥ 3:1
+- [ ] 彈性文字防破版 (Resilient Text)：標題設 `text-wrap: balance`，Flex/Grid 子項設 `min-w-0` + `overflow-wrap: anywhere`，Chip/Badge 在 320px 下可換行或省略號截斷
+- [ ] 色彩對比度符合 WCAG 2.2 AA (一般文字 ≥ 4.5:1, 大文字/語義圖示 ≥ 3:1)
+- [ ] 支援 `prefers-reduced-motion` 降級，且 Tab 鍵焦點順序與視覺閱讀順序一致
 ```
 
 ---

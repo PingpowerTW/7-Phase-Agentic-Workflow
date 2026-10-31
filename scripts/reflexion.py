@@ -181,11 +181,31 @@ def assert_no_grader_leakage(text: str) -> None:
         raise ValueError("GRADER_VERDICT_LEAKAGE: Harness edit contains forbidden grader verdict or bypass.")
 
 
-def record_experience(domain: str, cue: str, lesson: str, evidence: str) -> Path:
-    """Append an evidence-backed lesson to .agent/library/<domain>/EXPERIENCE.md without bloating base H0."""
+VALID_NOTE_TYPES = ("LESSON", "DEAD_END", "VERIFIED_FACT", "CLAIM")
+
+
+def _normalize_note_type(note_type: object, allow_empty: bool = False) -> str:
+    if note_type is None or (allow_empty and note_type == ""):
+        return "" if allow_empty else "LESSON"
+    if not isinstance(note_type, str):
+        raise ValueError(f"Invalid note_type '{note_type}': must be one of {VALID_NOTE_TYPES}.")
+    tag = re.sub(r"[\s-]+", "_", note_type.strip().upper()) or ("LESSON" if not allow_empty else "")
+    if tag and tag not in VALID_NOTE_TYPES:
+        raise ValueError(f"Invalid note_type '{note_type}': must be one of {VALID_NOTE_TYPES}.")
+    return tag
+
+
+def _block_type(block: str) -> str:
+    m = re.search(r"^- \*\*Type\*\*:\s*`([A-Z_]+)`", block, flags=re.M)
+    return m.group(1) if m else "LESSON"
+
+
+def record_experience(domain: str, cue: str, lesson: str, evidence: str, note_type: str = "LESSON") -> Path:
+    """Append an evidence-backed lesson or Agensh Typed Note to .agent/library/<domain>/EXPERIENCE.md without bloating base H0."""
     exp = {k: " ".join(v.split()) for k, v in (("cue", cue), ("lesson", lesson), ("evidence", evidence))}
     if not has_experience(exp):
         raise ValueError("Invalid experience: 'cue', 'lesson', and 'evidence' must all be non-empty strings.")
+    tag = _normalize_note_type(note_type)
     assert_no_grader_leakage(f"{exp['cue']}\n{exp['lesson']}\n{exp['evidence']}")
 
     lib_root = REPO_ROOT / ".agent" / "library"
@@ -193,7 +213,8 @@ def record_experience(domain: str, cue: str, lesson: str, evidence: str) -> Path
     exp_file = lib_root / dom_slug / "EXPERIENCE.md"
     exp_file.parent.mkdir(parents=True, exist_ok=True)
 
-    entry_block = f"### Cue: {exp['cue']}\n- **Lesson**: {exp['lesson']}\n- **Evidence**: {exp['evidence']}\n\n"
+    type_line = f"- **Type**: `{tag}`\n" if tag != "LESSON" else ""
+    entry_block = f"### Cue: {exp['cue']}\n{type_line}- **Lesson**: {exp['lesson']}\n- **Evidence**: {exp['evidence']}\n\n"
     existing = exp_file.read_text(encoding="utf-8", errors="replace") if exp_file.is_file() else "# Domain Experience Library\n\n"
     if f"### Cue: {exp['cue']}\n" not in existing:
         exp_file.write_text(existing + entry_block, encoding="utf-8")
@@ -207,13 +228,19 @@ def record_experience(domain: str, cue: str, lesson: str, evidence: str) -> Path
     return exp_file
 
 
-def compose_domain_harness(domain: str, query: str = "") -> str:
+def compose_domain_harness(domain: str, query: str = "", note_type: str = "") -> str:
     """Dynamically compose evolved lessons for a domain/query while keeping base H0 untouched."""
     dom_slug = domain_dir(domain)
     exp_file = REPO_ROOT / ".agent" / "library" / dom_slug / "EXPERIENCE.md"
     if not exp_file.is_file():
         return ""
+    target_type = _normalize_note_type(note_type, allow_empty=True)
+    q_norm = re.sub(r"[\s-]+", "_", (query or "").strip().upper())
+    if not target_type and q_norm in VALID_NOTE_TYPES:
+        target_type, query = q_norm, ""
     blocks = [b.strip() for b in re.split(r"^### Cue:\s*", exp_file.read_text(encoding="utf-8", errors="replace"), flags=re.M)[1:] if b.strip()]
+    if target_type:
+        blocks = [b for b in blocks if _block_type(b) == target_type]
     q_tokens = [t.lower() for t in re.split(r"\W+", query) if len(t) >= 2]
     matched = ["### Cue: " + b for b in blocks if not q_tokens or any(tok in b.lower() for tok in q_tokens)]
     return f"## 🧬 Harness² Composed Experience (`{dom_slug}`)\n\n" + "\n\n".join(matched[-5:]) if matched else ""
@@ -359,6 +386,37 @@ def run_self_tests():
             assert "Always re-open generated .xlsx deliverables" in composed
             assert compose_domain_harness("office/reconcile", query="unrelated_xyz_token") == ""
 
+            # Agensh Typed Notes (DEAD_END / VERIFIED_FACT / CLAIM) support & validation
+            record_experience(
+                "backend/api",
+                cue="Normal endpoint tip",
+                lesson="Always validate pagination cursor on frontend and backend.",
+                evidence="Prevented 500 on empty cursor.",
+                note_type="LESSON",
+            )
+            record_experience(
+                "backend/api",
+                cue="Legacy v1 token endpoint",
+                lesson="Do not call /api/v1/token; endpoint deprecated and returns 410 Gone.",
+                evidence="Verified 410 response in integration probe.",
+                note_type="dead-end",
+            )
+            composed_dead_end = compose_domain_harness("backend/api", query="dead-end")
+            assert "- **Type**: `DEAD_END`" in composed_dead_end
+            assert "Normal endpoint tip" not in composed_dead_end
+            composed_lesson_only = compose_domain_harness("backend/api", note_type="LESSON")
+            assert "Normal endpoint tip" in composed_lesson_only
+            assert "Legacy v1 token endpoint" not in composed_lesson_only
+            assert _normalize_note_type("dead-end") == "DEAD_END"
+            assert _normalize_note_type("", allow_empty=True) == ""
+            for bad_type in ("UNKNOWN_TYPE", 123):
+                invalid_type_blocked = False
+                try:
+                    record_experience("code", "cue", "lesson", "evidence", note_type=bad_type)  # type: ignore[arg-type]
+                except ValueError:
+                    invalid_type_blocked = True
+                assert invalid_type_blocked is True
+
             # Anti-Grader-Leakage must block forged verdict injection
             leaked = False
             try:
@@ -387,6 +445,7 @@ def main():
     # Evolve subcommand (Harness² Level-2 Library writer)
     evolve_parser = subparsers.add_parser("evolve", help="Record Cue-Lesson-Evidence into domain EXPERIENCE.md")
     evolve_parser.add_argument("--domain", required=True, help="Target domain (e.g., frontend, testing, backend)")
+    evolve_parser.add_argument("--type", default="LESSON", type=_normalize_note_type, choices=list(VALID_NOTE_TYPES), help="Agensh Typed Note category")
     evolve_parser.add_argument("--cue", required=True, help="Trigger cue or failure signature")
     evolve_parser.add_argument("--lesson", required=True, help="Evolved workflow rule or tool guidance")
     evolve_parser.add_argument("--evidence", required=True, help="Behavioral contrast or verification evidence")
@@ -394,6 +453,7 @@ def main():
     # Compose subcommand (Harness² dynamic harness composer)
     compose_parser = subparsers.add_parser("compose", help="Compose evolved domain rules without mutating base H0")
     compose_parser.add_argument("--domain", required=True, help="Target domain")
+    compose_parser.add_argument("--type", default="", type=lambda s: _normalize_note_type(s, allow_empty=True), choices=["", *VALID_NOTE_TYPES], help="Optional Agensh Typed Note filter")
     compose_parser.add_argument("--query", default="", help="Optional filter query")
 
     # Test subcommand
@@ -413,12 +473,12 @@ def main():
         sys.exit(0)
 
     elif args.command == "evolve":
-        path = record_experience(args.domain, args.cue, args.lesson, args.evidence)
+        path = record_experience(args.domain, args.cue, args.lesson, args.evidence, note_type=args.type)
         print(f"[+] Evolved experience recorded to: {path}")
         sys.exit(0)
 
     elif args.command == "compose":
-        out = compose_domain_harness(args.domain, args.query)
+        out = compose_domain_harness(args.domain, args.query, note_type=args.type)
         if out:
             print(out)
         sys.exit(0)

@@ -40,9 +40,9 @@ Step 1: invoke Explorer (`TypeName: "research"`)
 Step 1.5: 🧠 [NCM] 概念樹錨定 (Concept Tree Anchor, CTA)
   ├─ 主代理人鎖定高維概念樹 (YAML: domain, invariants, entities, contracts)
   │
-Step 2: 外科手術式直接落盤 (Worker Direct Write — 零雙倍手抄稅)
+Step 2: 外科手術式直接落盤 (Worker Direct Write & Agensh Typed Notes — 零雙倍手抄稅)
   ├─ 若變更集中（≤4 檔案）：由主代理人直接依概念樹呼叫 `replace_file_content` / `write_to_file` 完成修改與測試
-  ├─ 若需獨立 Context：invoke Worker (`TypeName: "self"`) 直接呼叫寫檔工具落盤，僅回傳修改檔案清單與 5 行摘要
+  ├─ 若需獨立 Context：invoke Worker (`TypeName: "self"`) 直接呼叫寫檔工具落盤，僅回傳修改檔案清單與 ≤15 行結構化摘要（含 `[CLAIM]` / `[DEAD_END]` / `[VERIFIED_FACT]` 三元標籤）
   │
 Step 2.5: ⚡ 0-Token 確定性門禁快篩 (Pre-Review Sieve — 耗時 <0.5s, 0 Token)
   ├─ 主代理人檢查工作區腳本並執行存在的門禁（不存在的腳本直接跳過，嚴禁呼叫不存在的 `stage_runner.py`）：
@@ -98,7 +98,10 @@ concept_tree:
 職責：
 1. 嚴格對齊 Level 0 概念樹與 I/O 契約，直接使用 `replace_file_content` 或 `write_to_file` 修改檔案與撰寫測試。
 2. 嚴守 Karpathy 精準開刀原則與 Ponytail 7 階梯：只動目標範圍，不碰鄰近無關程式碼。
-3. **Token 節流鐵律**：代碼已直接寫入磁碟，回覆訊息中**嚴禁重複印出完整程式碼塊**！僅需回報變更的檔案路徑、行號範圍與單行修改摘要（總回覆控制在 15 行內）。
+3. **Token 節流與 Agensh Typed Notes 鐵律**：代碼已直接寫入磁碟，回覆訊息中**嚴禁重複印出完整程式碼塊**！僅需在 ≤15 行內回報以下三元筆記（吸收自 Microsoft Agensh / DeLM 去中心化防踩踏協議）：
+   - `[CLAIM: <files>]`：本 Worker 獨佔寫入之檔案與行號範圍（嚴禁越界修改未認領檔案，確保無鎖零衝突 Merge）。
+   - `[DEAD_END: <hypothesis> -> <reason>]`：實作中若證實某 API / 解法不可行，必須明確標記死路原因，阻斷主代理人或後續重試重蹈覆轍（無則填 `None`）。
+   - `[VERIFIED_FACT: <invariant>]`：已確認的跨層底層事實（如真實函數簽名、邊界條件），供 Step 3 審查官直接錨定免重查。
 
 嚴格禁止：
 - ❌ 偏離概念樹 contracts 或違反 invariants
@@ -115,8 +118,8 @@ concept_tree:
 
 請在單次讀取變更檔案後，同步完成以下三維度審查：
 
-【維度 A — Reviewer（契約與精簡度）】：
-- 檢查正確性、概念樹契約一致性、錯誤處理與 Ponytail 7 階梯（是否有重複造輪子或非必要包裝層）。僅報告 >80% 確信之問題。
+【維度 A — Reviewer（契約、Agensh 邊界與精簡度）】：
+- 檢查正確性、概念樹契約一致性、Worker `[CLAIM]` 檔案邊界是否越界、錨定 `[VERIFIED_FACT]` / `[DEAD_END]`，並檢驗 Ponytail 7 階梯（是否有重複造輪子或非必要包裝層）。僅報告 >80% 確信之問題。
 
 【維度 B — Critic（紅隊邊界與資安壓力測試）】：
 - 檢查空值/超大輸入/負數、非同步競態、注入/XSS/越權 (BOLA)、O(n²) 與 N+1 迴圈。

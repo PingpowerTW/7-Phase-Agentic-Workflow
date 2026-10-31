@@ -56,9 +56,9 @@ description: >
    - 凡 `MOTION_INTENSITY > 3` 必須支援 `prefers-reduced-motion`（以及 GSAP `useGSAP` / `useEffect` 卸載清理）。
 2. **Core Web Vitals 與完整狀態**：
    - LCP < 2.5s、INP < 200ms、CLS < 0.1；任何動態資料區塊必須具備 **Loading Skeleton、Empty 空狀態與 Error 狀態**。
-3. **舊站改版 (Redesign Protocol)**：
-   - 動手前先盤點現有 Brand Tokens、路由結構與 SEO Meta。
-   - **禁止靜默破壞**：未獲批准前，嚴禁更改 URL slug、主導覽列標籤、表單欄位 `name`（避免破壞既有 SEO 與分析埋點）。
+3. **舊站改版與階層式設計系統持久化 (Redesign & Hierarchical Persistence)**：
+   - 動手前先盤點現有 Brand Tokens、路由結構與 SEO Meta；未獲批准前，嚴禁更改 URL slug、主導覽列標籤、表單欄位 `name`。
+   - **階層式設計持久化 (`MASTER.md` + `pages/<page>.md`)**：多頁應用將全域設計 Token 寫入 `design-system/MASTER.md`，單頁特殊偏離值僅寫入 `design-system/pages/<page>.md`（實作時優先讀單頁覆寫再回退至 `MASTER.md`）。
 
 ---
 
@@ -71,7 +71,7 @@ description: >
 - [ ] **主題與色彩一致性鎖定**：全頁單一主題（無中途突兀反轉黑白）、單一主強調色 (Accent 每屏 ≤ 2 處)、統一圓角系統？
 - [ ] **對比度合規**：所有按鈕、文字與表單 Placeholder 符合 WCAG AA (4.5:1) 對比度，無白底白字或黑底暗字？
 - [ ] **Hero 符合首屏紀律**：使用 `min-h-[100dvh]`、主標題 ≤ 2 行、副標 ≤ 20 字、CTA 首屏無需滾動即可見、最多 4 個文字元素？
-- [ ] **版面節奏多樣化**：無連續 3 個區塊使用相同的左右圖文交替 (Zigzag) 版型；Bento Grid 格數與項目數精確吻合無空洞？
+- [ ] **版面節奏與彈性排版 (Resilient Text)**：無連續 3 個區塊使用相同的 Zigzag 版型；標題具 `text-wrap: balance`、窄容器具 `min-w-0` + `overflow-wrap: anywhere`、Chip/Badge 於 320px 不破版？
 - [ ] **真實 API 與圖片**：無寫死假陣列冒充 API、無純 `div` 假截圖、無壓在圖片上的無意義標籤膠囊？
-- [ ] **互動與無障礙完整**：點擊熱區 ≥ 44px、具備 Skeleton/Empty/Error 狀態、動畫支援 `prefers-reduced-motion` 與清理函式？
+- [ ] **互動與 WCAG 2.2 AA 完整**：點擊熱區 ≥ 44px、Sticky 列設定 `scroll-padding` 防遮擋鍵盤焦點 (`Focus Not Obscured`)、裝飾圖示加 `aria-hidden="true"`、密碼欄允許貼上、具備 Skeleton/Empty/Error 狀態、動畫支援 `prefers-reduced-motion`？
 - [ ] **單一组件 ≤ 200 行**，且互動邏輯已隔離於 `'use client'` 葉節點？

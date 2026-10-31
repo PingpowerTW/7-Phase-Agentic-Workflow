@@ -90,6 +90,34 @@ def check_regex_secrets(text: str) -> List[str]:
     return found
 
 
+OVERLAY_POISON_PATTERN = re.compile(
+    r"(?:^|\n|[{,])\s*[\"']?(?:base_url|api_base|mcp_config_path|mcpServers)[\"']?\s*[:=]\s*(?:[\"']?(?:https?://(?!(?:127\.0\.0\.1|localhost)\b)|/|\\|[A-Za-z]:\\)|\{)",
+    re.IGNORECASE,
+)
+
+
+def check_config_overlay_poisoning(code_content: str, changed_files: Optional[List[str]] = None) -> Tuple[bool, List[str]]:
+    """攔截工作區配置檔覆寫外部 base_url / mcp_config_path / mcpServers 之配置投毒 (Project Overlay Denylist)"""
+    if not code_content.strip():
+        return False, []
+    is_cfg = any(re.search(r"(?:config|settings|mcp)\.(?:toml|json|ya?ml)$", f, re.I) for f in (changed_files or []))
+    is_diff = any(ln.startswith(("@@ ", "+++ ")) for ln in code_content.splitlines())
+    if is_diff and changed_files:
+        blocks = [
+            blk for blk in re.split(r"(?=^diff --git )", code_content, flags=re.M)
+            if any(re.search(r"(?:config|settings|mcp)\.(?:toml|json|ya?ml)\b", ln, re.I) for ln in blk.splitlines()[:4])
+        ]
+        target_text = "\n".join(ln[1:] for blk in blocks for ln in blk.splitlines() if ln.startswith("+") and not ln.startswith("+++"))
+    elif is_cfg or not changed_files:
+        target_text = "\n".join(ln[1:] for ln in code_content.splitlines() if ln.startswith("+") and not ln.startswith("+++")) if is_diff else code_content
+    else:
+        return False, []
+    if OVERLAY_POISON_PATTERN.search(target_text):
+        return True, ["[INV_SAFE_05] 專案配置防投毒阻斷：禁止於工作區覆寫外部 base_url / mcp_config_path / mcpServers"]
+    return False, []
+
+
+
 def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tuple[bool, List[str]]:
     """調用 scripts/ast_guard.js 進行 Level 0.5 確定性 AST 語意審查 (零生產接縫 & 垃圾測試門禁)"""
     guard_js = Path(__file__).resolve().parent / "ast_guard.js"
@@ -714,12 +742,16 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
             is_blocked = True
             block_reasons.extend(gate_violations)
 
-    # 2. 物理阻斷：正則敏感金鑰檢查
+    # 2. 物理阻斷：正則敏感金鑰與專案配置防投毒檢查 (Project Overlay Denylist)
     regex_secrets = check_regex_secrets(code_content)
     if regex_secrets:
         is_blocked = True
         for s in regex_secrets:
             block_reasons.append(f"物理阻斷：偵測到硬編碼憑證 ({s})")
+    overlay_blocked, overlay_violations = check_config_overlay_poisoning(code_content, changed_files)
+    if overlay_blocked:
+        is_blocked = True
+        block_reasons.extend(overlay_violations)
 
     # 2.5 物理阻斷 (Level 0.5)：SWC 確定性 AST 門禁審查
     ast_blocked, ast_violations = check_ast_guard(code_content, changed_files)

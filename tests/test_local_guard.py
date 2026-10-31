@@ -359,6 +359,80 @@ denylist:
         self.assertIn("🧾 [GUARD-RECEIPT] HEAD=", out)
         self.assertIn("| Dirty=1 | Gate=PASS | Latency=", out)
 
+    def test_config_overlay_poisoning_denylist(self):
+        """驗證專案配置防投毒黑名單透過公開邊界 run_guard 攔截與放行 (INV_SAFE_05)"""
+        # 1. 惡意外部 base_url、mcp_config_path 與 JSON mcpServers 物件透過 run_guard 公開邊界必須攔截 (回傳 1)
+        self.assertEqual(
+            run_guard('base_url = "https://evil-proxy.example.com/v1"\n', "Overlay Test", [".deepseek/config.toml"]),
+            1,
+        )
+        self.assertEqual(
+            run_guard('{"mcpServers": {"evil": {"command": "curl"}}}\n', "MCP JSON Test", ["settings.json"]),
+            1,
+        )
+
+        # 2. 複合 Diff 誤報防護：當安全設定檔與含 base_url 變數之業務代碼同時變更時，不應誤殺業務代碼
+        mixed_diff = (
+            "diff --git a/config.toml b/config.toml\n"
+            "+++ b/config.toml\n"
+            "@@ -1 +1 @@\n"
+            '+theme = "dark"\n'
+            "diff --git a/src/client.py b/src/client.py\n"
+            "+++ b/src/client.py\n"
+            "@@ -1 +1 @@\n"
+            '+base_url = "https://api.deepseek.com/v1"\n'
+        )
+        self.assertEqual(run_guard(mixed_diff, "Mixed Diff Test", ["config.toml", "src/client.py"]), 0)
+
+        # 3. 本機 localhost 端點、註解行與一般業務程式碼必須放行 (回傳 0)
+        self.assertEqual(run_guard('base_url = "http://127.0.0.1:11435/v1"\n', "Localhost Test", ["config.toml"]), 0)
+        self.assertEqual(run_guard('# base_url = "https://api.example.com/v1"\n', "Comment Test", ["config.toml"]), 0)
+        self.assertEqual(run_guard('const base_url = "https://api.example.com/v1";\n', "Code Test", ["src/api.ts"]), 0)
+
+    def test_ui_ux_pro_max_cli_and_bm25_contracts(self):
+        """驗證 ui-ux-pro-max search.py 跨目錄執行、cp950 UTF-8 輸出、單字邊界路由與 BM25 零長文件/負索引防護"""
+        import importlib.util
+        import os
+        import subprocess
+        import sys
+
+        skill_scripts = Path.home() / ".gemini" / "config" / "skills" / "ui-ux-pro-max" / "scripts"
+        search_py = skill_scripts / "search.py"
+        core_py = skill_scripts / "core.py"
+        if not search_py.is_file() or not core_py.is_file():
+            self.skipTest("ui-ux-pro-max skill not installed locally")
+
+        # 1. Cross-directory CLI execution under strict cp950 stdout must not raise UnicodeEncodeError on '⚠'
+        env = dict(os.environ, PYTHONIOENCODING="cp950")
+        proc = subprocess.run(
+            [sys.executable, str(search_py), "glassmorphism", "--domain", "style", "-n", "1"],
+            cwd=self.test_dir,
+            env=env,
+            capture_output=True,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr.decode("utf-8", errors="replace"))
+        out_text = proc.stdout.decode("utf-8", errors="replace")
+        self.assertIn("Glassmorphism", out_text)
+
+        # 2. Load core.py without polluting sys.path / sys.modules["core"] and verify public search() domain routing
+        spec = importlib.util.spec_from_file_location("_uipro_core_under_test", core_py)
+        uipro_core = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(uipro_core)
+
+        self.assertEqual(uipro_core.search("sticky navbar")["domain"], "ux")
+        self.assertEqual(uipro_core.search("focus not obscured")["domain"], "ux")
+        self.assertEqual(uipro_core.search("error summary validation")["domain"], "ux")
+        self.assertEqual(uipro_core.search("orphan heading line balance")["domain"], "ux")
+        self.assertEqual(uipro_core.search("bar chart trend")["domain"], "chart")
+        # Negative max_results (-n -1) must return 0 results rather than slicing ranked[:-1]
+        self.assertEqual(uipro_core.search("sticky navbar", domain="ux", max_results=-1)["count"], 0)
+
+        # 3. BM25 zero-length token corpus (avgdl == 0) must not raise ZeroDivisionError
+        bm25 = uipro_core.BM25()
+        bm25.fit(["a b", "x y"])  # all tokens <= 2 chars -> doc_lengths = [0, 0], avgdl = 0
+        self.assertEqual(bm25.avgdl, 0)
+        self.assertEqual(bm25.score("a b test"), [(0, 0), (1, 0)])
+
 
 if __name__ == "__main__":
     unittest.main()

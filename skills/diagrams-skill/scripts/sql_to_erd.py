@@ -14,6 +14,19 @@ if os.name == 'nt' and not shutil.which('dot'):
 from diagrams import Diagram, Edge
 from diagrams.onprem.database import PostgreSQL
 
+EDITORIAL_GRAPH_ATTR = {
+    "fontname": "Microsoft JhengHei",
+    "fontsize": "13",
+    "splines": "ortho",
+    "nodesep": "0.60",
+    "ranksep": "0.75",
+    "pad": "0.4",
+    "bgcolor": "#f5f5f5",
+}
+EDITORIAL_NODE_ATTR = {"fontname": "Microsoft JhengHei", "fontsize": "12"}
+EDITORIAL_EDGE_ATTR = {"fontname": "Microsoft JhengHei", "fontsize": "11", "color": "#5c6378"}
+
+
 def parse_sql_and_generate_erd(sql_path, output_name):
     if not os.path.exists(sql_path):
         print(f"Error: File not found {sql_path}")
@@ -23,21 +36,16 @@ def parse_sql_and_generate_erd(sql_path, output_name):
         sql_content = f.read()
 
     # NOTE: Lightweight zero-dependency regex parser for rapid ERD prototyping.
-    # Advanced schema alterations or dialect-specific constraints can be
-    # supplemented with external parsers if required.
     tables = []
     fks = []
-    
+
     table_pattern = re.compile(r'CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[\w`"]*\.?[\'"`]?(\w+)[\'"`]?', re.IGNORECASE)
     for match in table_pattern.finditer(sql_content):
         tables.append(match.group(1))
 
-    # Basic FK matching: FOREIGN KEY (col) REFERENCES table (col)
     fk_pattern = re.compile(r'FOREIGN\s+KEY\s*\([^)]+\)\s*REFERENCES\s+[\'"`]?(\w+)[\'"`]?', re.IGNORECASE)
-    # This just links whatever table is currently being parsed to the referenced table
-    # We split by CREATE TABLE to know which table owns the FK
     statements = re.split(r'CREATE\s+TABLE', sql_content, flags=re.IGNORECASE)[1:]
-    for i, stmt in enumerate(statements):
+    for stmt in statements:
         match_table = re.search(r'(?:IF\s+NOT\s+EXISTS\s+)?[\w`"]*\.?[\'"`]?(\w+)[\'"`]?', stmt, re.IGNORECASE)
         if match_table:
             table_name = match_table.group(1)
@@ -50,16 +58,21 @@ def parse_sql_and_generate_erd(sql_path, output_name):
 
     print(f"Found {len(tables)} tables and {len(fks)} relationships.")
 
-    with Diagram(output_name, show=False, direction="LR"):
-        node_map = {}
-        for t in tables:
-            node_map[t] = PostgreSQL(t)
-        
+    with Diagram(
+        output_name,
+        show=False,
+        direction="LR",
+        graph_attr=EDITORIAL_GRAPH_ATTR,
+        node_attr=EDITORIAL_NODE_ATTR,
+        edge_attr=EDITORIAL_EDGE_ATTR,
+    ):
+        node_map = {t: PostgreSQL(t) for t in tables}
         for source, target in fks:
             if source in node_map and target in node_map:
                 node_map[source] >> Edge(label="FK") >> node_map[target]
 
     print(f"Successfully generated {output_name}.png")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:

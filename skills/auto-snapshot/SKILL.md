@@ -53,9 +53,9 @@ description: >
 
 1. **自動閉環進化 (Auto-Evolve on Recovery)**：
    - 透過 `python scripts/reflexion.py run "<cmd>"` 執行測試或任務時，若指令「先失敗、後修復通過 (Exit 0)」，系統自動將剛才的診斷提煉為 `<cue, lesson, evidence>` 三元組，寫入 `.agent/library/<domain>/EXPERIENCE.md` 並更新 `.agent/library/INDEX.md`。
-2. **主動提煉工作流進化法則 (`evolve`)**：
-   - 當發現某領域的新工具技巧、對帳驗收護欄或踩坑法則時，執行：
-     `python scripts/reflexion.py evolve --domain <frontend|testing|backend|...> --cue "觸發情境或錯誤特徵" --lesson "下次工作流應自動採取的防呆步驟/工具指引" --evidence "實證改善結果 (禁止塞入假評分通過字眼)"`
+2. **主動提煉工作流進化法則與 Agensh Typed Notes (`evolve`)**：
+   - 當發現某領域的新工具技巧、對帳驗收護欄，或平行子代理人探明死胡同 (`DEAD_END`) / 底層事實 (`VERIFIED_FACT`) 時，執行：
+     `python scripts/reflexion.py evolve --domain <frontend|testing|backend|...> --type <LESSON|DEAD_END|VERIFIED_FACT|CLAIM> --cue "觸發情境或錯誤特徵" --lesson "下次工作流應自動採取的防呆步驟/死路阻斷指引" --evidence "實證改善結果 (禁止塞入假評分通過字眼)"`
 3. **跨任務動態掛載 (`compose`)**：
-   - 進入新任務或攔截錯誤時，執行 `python scripts/reflexion.py compose --domain <domain> --query "<關鍵字>"`，按需載入該領域過去進化出的至多 5 條精煉法則，實現 **0 權重更新、0 全域提示詞膨脹** 的持續自我進化。
+   - 進入新任務或攔截錯誤時，執行 `python scripts/reflexion.py compose --domain <domain> [--type <DEAD_END|VERIFIED_FACT|CLAIM|LESSON>] [--query "<關鍵字>"]`，按需載入該領域過去進化出的至多 5 條精煉法則（含 `[DEAD_END]` 死路防踩踏筆記），實現 **0 權重更新、0 全域提示詞膨脹** 的持續自我進化。
 

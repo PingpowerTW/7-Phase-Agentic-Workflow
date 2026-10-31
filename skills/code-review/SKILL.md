@@ -10,7 +10,8 @@ description: >
 > **核心理念**：單次讀取變更檔案，一次完成「正確性、防禦性邊界、OWASP 資安與密鑰、架構狀態契約、Ponytail 精簡度、前端 Anti-Slop」六維度審查。
 > **Confidence Gate**：僅報告 **>80% 確信** 的真實問題；跳過未修改區域的風格偏好；同類問題強制合併報告。
 > **Evidence Contract**（吸收自 REA）：每則發現必附 `evidence:`（`檔案#L行` 或指令輸出）；無法證實的推測寫入 `unknowns:`，嚴禁混入結論。
-> **Incremental & Anti-Loop Gate**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪即強制收斂）；對已標註刻意捷徑（`ponytail:`）或已附理由豁免（Wontfix）之項目，嚴禁重複報警。
+> **Incremental & Anti-Loop Gate**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪即強制收斂）；對已標註刻意捷徑（`shortcut:` 或 `ponytail:`）且未超出預期負載上限、或已附理由豁免（Wontfix）之項目，嚴禁重複報警。
+> **Cross-Group Numbering & Load Posture（吸收自 Ponytail 5 `#523`, `#1061`）**：報告開頭必須宣告「預期負載假設（單人工具 vs 多人高併發）」，且所有發現跨嚴重度群組採用**全局連續編號 (`1., 2., 3.`)**，方便開發者直接下令「修 2 和 4」。
 
 ## 📚 深度參考庫 (`./references/` 按需讀取)
 - [`references/defensive-coding.md`](references/defensive-coding.md)：JS/TS/Python 空值、非同步與邊界修復範本
@@ -40,12 +41,15 @@ description: >
 - [ ] **資料庫與查詢效能**：消除迴圈內查詢 (N+1 Query，強制 Eager Loading / Batch)；高頻查詢欄位具備複合索引；列表查詢強制分頁 (`limit/offset` 或 cursor)。
 - [ ] **演算法與結構**：避免熱路徑上不必要的 $O(n^2)$ 巢狀迴圈（改用 `Map` / `Set` $O(1)$ 查找）；快取具備明確 TTL 與失效更新策略。
 
-## 4. Ponytail 過度工程獵殺 (Simplicity & Anti-Bloat — MEDIUM)
+## 4. Ponytail 5 過度工程獵殺 (Simplicity & Anti-Bloat — MEDIUM)
 
 掃描 Diff 中的非必要複雜度，能用更少代碼解決者直接標記：
 - `delete:` 死代碼、未使用的彈性參數、投機性預留配置。
-- `stdlib:` / `native:` 自造輪子但語言標準庫或平台原生（如 HTML/CSS/DB Constraint）已內建。
+- `reuse:` 專案內已有相同功能的 helper 或元件（須點名既有檔案路徑）。
+- `stdlib:` / `native:` 自造輪子但語言標準庫或平台原生（如 HTML/CSS/DB Constraint）已內建（若專案已有 House Component 則優先重用專案元件）。
 - `yagni:` 僅有單一實作的 Interface/Factory、僅轉發一行的無意義 Wrapper。
+- `merge:` 必須同步修改的近似複製貼上邏輯。
+- `split:` 單一函式混雜多件無關職責（**僅按「職責」拆分，嚴禁只因行數長而拆出單次呼叫的碎裂短 helper**）。
 - `shrink:` 可用標準內建語法（如 `Object.fromEntries`、列表推導式）單行精簡的冗長手寫迴圈。
 
 ## 5. 測試與前端品質 (Testing & UI/UX — MEDIUM)
@@ -60,18 +64,19 @@ description: >
 ```markdown
 ## 🔍 Phase 5 全維度程式碼審查報告
 
-### 摘要
+### 摘要與負載假設
 - **審查檔案**：[檔案列表]
+- **預期負載假設**：[單人本地工具 / 多租戶高併發服務]
 - **發現統計**：🔴 嚴重 (Must Fix) X | 🟡 警告 (Should Fix) X | ✂️ Ponytail 可精簡 -N 行
 
 ### 🔴 嚴重問題（資安漏洞 / 崩潰風險 / 契約破壞）
-- `[檔案:行號]` **[類別]**：問題描述與觸發條件 ➔ **修復建議**
+1. `[檔案:行號]` **[類別]**：問題描述與觸發條件 (`evidence`) ➔ **最小修復建議**
 
 ### 🟡 警告（防禦性邊界 / 效能 N+1 / 錯誤處理缺失）
-- `[檔案:行號]` **[類別]**：問題描述 ➔ **修復建議**
+2. `[檔案:行號]` **[類別]**：問題描述 (`evidence`) ➔ **最小修復建議**
 
-### ✂️ Ponytail 精簡清單（過度工程獵殺）
-- `[檔案:行號]`: `<delete|stdlib|native|yagni|shrink>` 欲砍除內容 ➔ 替換方案（預計淨減 `-N` 行）
+### ✂️ Ponytail 5 精簡清單（過度工程獵殺，延續全局編號）
+3. `[檔案:行號]`: `<delete|reuse|stdlib|native|yagni|merge|split|shrink>` 欲砍除內容 ➔ 替換方案（預計淨減 `-N` 行）
 
 ### ❓ Unknowns（未證實、需人工確認）
 - 推測內容 ➔ 驗證方式
