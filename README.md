@@ -1,8 +1,8 @@
 # 🚀 7-Phase Agentic Workflow (7 階段代理人協作與 Token 經濟學架構)
 
-> **版本**：v3.3.5 (DeepInfer 4-Pillar Absorption, YOCO SWA Bounded Replay, DSpark Verification Scheduling, Engram Fingerprinting & Handwired ReLU Edition)  
+> **版本**：v3.3.5+ (DeepInfer 4-Pillar Absorption, Ponytail 5, DeepSeek-TUI Overlay Guard, UI/UX Pro Max v2.15+, RTK-OSS v1.1.0 & codebase-memory-mcp PR #2613/#2839)  
 > **適用環境**：Google Antigravity, Claude Code, Cursor, Windsurf, GitHub Copilot, Gemini CLI, Factory, OpenCode 等 49+ 款主流 AI 開發環境  
-> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust)、長任務自適應熱蒸餾 (SelfCompact)、Harness² 雙層遞迴自進化 (Recursive Experience Library)、Anthropic 事故回滾評測集 (Incident-to-Eval Pipeline) 以及 DeepInfer 四大核心演算法 (SWA Bounded Replay, DSpark Scheduling, Engram Fingerprinting, Median Runtime Tracker)。
+> **核心理念**：Token 經濟學優先 (Token-First)、零非必要生產接縫 (Zero Production Seams)、消除雙倍手抄稅 (Direct Surgical Write)、三審合一對抗審查 (Unified 3-in-1 Adversarial Audit)、本機 0-Token 物理阻斷 (Handwired ReLU Guard)、熱力學防幻覺 (BTC Trust)、長任務自適應熱蒸餾 (SelfCompact)、Harness² 雙層遞迴自進化 (Recursive Experience Library)、Anthropic 事故回滾評測集 (Incident-to-Eval Pipeline)、DeepInfer 四大核心演算法 (SWA Bounded Replay, DSpark Scheduling, Engram Fingerprinting, Median Runtime Tracker)、專案配置防投毒 (INV_SAFE_05) 與最內層符號爆炸半徑分析。
 
 ---
 
