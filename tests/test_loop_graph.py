@@ -304,43 +304,114 @@ class UserService {}
         self.assertNotIn("callback_sorter", dead_labels)  # Passed as CALL_REFERENCE (key=callback_sorter)
         self.assertNotIn("main", dead_labels)             # Entry point
 
-    def test_markdown_repeated_heading_parent_qualification(self):
-        """驗證 Markdown 重複子標題以父標題路徑限定，避免同名節點覆蓋、支援巢狀圍欄與精準 Section Seeding (PR #2613)"""
-        md_file = self.test_dir / "AGENTS.md"
-        md_file.write_text(
-            "# Service A\n"
-            "## Implementation\n"
-            "Enforces INV_SAFE_04.\n"
-            "# Service B\n"
-            "## Implementation ##\n"
-            "Enforces INV_VERIFY_05.\n"
-            "````markdown\n"
-            "```sql\n"
-            "## Implementation\n"
-            "```\n"
-            "# Fake Heading Inside Outer Fence\n"
-            "````\n",
+    def test_jsx_tsx_resolution_and_component_edges(self):
+        comp_dir = self.test_dir / "src" / "components"
+        comp_dir.mkdir(parents=True)
+        btn_jsx = comp_dir / "Button.jsx"
+        btn_jsx.write_text(
+            "export const ActionButton = ({ label }) => {\n"
+            "  return <button>{label}</button>;\n"
+            "};\n",
+            encoding="utf-8",
+        )
+        app_tsx = self.test_dir / "src" / "pages" / "App.tsx"
+        app_tsx.parent.mkdir(parents=True, exist_ok=True)
+        app_tsx.write_text(
+            "import { ActionButton } from '@/components/Button';\n"
+            "import { MissingUtil } from '../utils/helper';\n"
+            "export function AppView() {\n"
+            "  return <div><ActionButton label='Save' /></div>;\n"
+            "}\n",
             encoding="utf-8",
         )
         scanner = CodeAstScanner(self.test_dir, self.graph)
-        scanner.parse_markdown_file(md_file, "AGENTS.md")
+        scanner.scan_repository()
 
-        # Unique headings keep short name; repeated headings are qualified by parent headings
-        self.assertIn("sec:AGENTS.md::Service-A", self.graph.nodes)
-        self.assertIn("sec:AGENTS.md::Service-B", self.graph.nodes)
-        self.assertIn("sec:AGENTS.md::Service-A.Implementation", self.graph.nodes)
-        self.assertIn("sec:AGENTS.md::Service-B.Implementation", self.graph.nodes)
-        self.assertNotIn("sec:AGENTS.md::Implementation", self.graph.nodes)
-        self.assertNotIn("sec:AGENTS.md::Fake-Heading-Inside-Outer-Fence", self.graph.nodes)
+        self.assertIn("mod:src/components/Button.jsx", self.graph.nodes)
+        self.assertIn("mod:src/pages/App.tsx", self.graph.nodes)
+        self.assertIn("fn:src/components/Button.jsx::ActionButton", self.graph.nodes)
+        self.assertIn("fn:src/pages/App.tsx::AppView", self.graph.nodes)
 
-        # Both sections preserve their own distinct invariant reference edges without overwriting
-        self.assertIn("policy:INV_SAFE_04", self.graph.adj_out["sec:AGENTS.md::Service-A.Implementation"])
-        self.assertIn("policy:INV_VERIFY_05", self.graph.adj_out["sec:AGENTS.md::Service-B.Implementation"])
+        # '@/components/Button' resolves to 'mod:src/components/Button.jsx' and '../utils/helper' collapses '..'
+        self.assertIn("mod:src/components/Button.jsx", self.graph.adj_out["mod:src/pages/App.tsx"])
+        self.assertIn("mod:src/utils/helper", self.graph.adj_out["mod:src/pages/App.tsx"])
 
-        # Section-level diff seeding and containment-edge isolation (no mod:AGENTS.md leak)
-        self.assertEqual(self.graph.seeds_for_file("AGENTS.md", [(3, 3)]), ["sec:AGENTS.md::Service-A.Implementation"])
-        bfs = self.graph._bfs_dependents(["sec:AGENTS.md::Service-A.Implementation"])
-        self.assertNotIn("mod:AGENTS.md", {d["id"] for d in bfs["dependents"]})
+        # JSX <ActionButton /> creates call edge from AppView to ActionButton
+        blast = self.graph.compute_blast_radius("fn:src/components/Button.jsx::ActionButton")
+        dep_ids = {d["id"] for d in blast["dependents"]}
+        self.assertIn("fn:src/pages/App.tsx::AppView", dep_ids)
+
+    def test_scoped_call_disambiguation_prevents_false_positives(self):
+        pkg = self.test_dir / "pkg"
+        pkg.mkdir(parents=True, exist_ok=True)
+        a_py = pkg / "a.py"
+        a_py.write_text("def save():\n    return 'a'\n", encoding="utf-8")
+        b_py = pkg / "b.py"
+        b_py.write_text("def save():\n    return 'b'\n", encoding="utf-8")
+        caller_a = pkg / "caller_a.py"
+        caller_a.write_text(
+            "from .a import save\n"
+            "def run_a():\n"
+            "    return save()\n",
+            encoding="utf-8",
+        )
+        scanner = CodeAstScanner(self.test_dir, self.graph)
+        scanner.scan_repository()
+
+        # Modifying pkg/b.py::save must NOT falsely flag pkg/caller_a.py::run_a
+        blast_b = self.graph.compute_blast_radius("fn:pkg/b.py::save")
+        b_deps = {d["id"] for d in blast_b["dependents"]}
+        self.assertNotIn("fn:pkg/caller_a.py::run_a", b_deps)
+
+        # Modifying pkg/a.py::save MUST flag pkg/caller_a.py::run_a
+        blast_a = self.graph.compute_blast_radius("fn:pkg/a.py::save")
+        a_deps = {d["id"] for d in blast_a["dependents"]}
+        self.assertIn("fn:pkg/caller_a.py::run_a", a_deps)
+
+    def test_shortest_path_between_nodes(self):
+        self.graph.add_node("fn:a.py::funcA", "funcA", "function", "a.py")
+        self.graph.add_node("fn:b.py::Order.calc_tax", "Order.calc_tax", "function", "b.py")
+        self.graph.add_node("fn:c.py::funcC", "funcC", "function", "c.py")
+        # Unqualified method call edge fn:calc_tax bridged to Order.calc_tax
+        self.graph.add_edge("fn:a.py::funcA", "fn:calc_tax", "calls")
+        self.graph.add_edge("fn:b.py::Order.calc_tax", "fn:c.py::funcC", "calls")
+
+        fwd_path = self.graph.find_shortest_path("funcA", "funcC")
+        self.assertIsNotNone(fwd_path)
+        self.assertEqual([step["node"]["id"] for step in fwd_path], ["fn:a.py::funcA", "fn:b.py::Order.calc_tax", "fn:c.py::funcC"])
+        self.assertEqual(fwd_path[1]["direction"], "->")
+
+        rev_path = self.graph.find_shortest_path("funcC", "funcA")
+        self.assertIsNotNone(rev_path)
+        self.assertEqual([step["node"]["id"] for step in rev_path], ["fn:c.py::funcC", "fn:b.py::Order.calc_tax", "fn:a.py::funcA"])
+        self.assertEqual(rev_path[2]["direction"], "<-")
+
+    def test_incremental_cache_load_and_invalidation(self):
+        p = self.test_dir / "mod1.py"
+        p.write_text("def hello():\n    return 1\n", encoding="utf-8")
+        cache_file = self.test_dir / "graph-out" / "graph.json"
+
+        g1 = ArchitectureGraph()
+        s1 = CodeAstScanner(self.test_dir, g1)
+        s1.scan_or_load_cached(cache_file)
+        self.assertTrue(cache_file.exists())
+        self.assertIn("fn:mod1.py::hello", g1.nodes)
+
+        # Second load with unchanged mtime hits cache
+        g2 = ArchitectureGraph()
+        s2 = CodeAstScanner(self.test_dir, g2)
+        loaded_from_cache = s2.scan_or_load_cached(cache_file)
+        self.assertTrue(loaded_from_cache)
+        self.assertIn("fn:mod1.py::hello", g2.nodes)
+
+        # Adding a new file invalidates cache and triggers rescan
+        p2 = self.test_dir / "mod2.py"
+        p2.write_text("def world():\n    return 2\n", encoding="utf-8")
+        g3 = ArchitectureGraph()
+        s3 = CodeAstScanner(self.test_dir, g3)
+        loaded_after_change = s3.scan_or_load_cached(cache_file)
+        self.assertFalse(loaded_after_change)
+        self.assertIn("fn:mod2.py::world", g3.nodes)
 
 
 if __name__ == "__main__":

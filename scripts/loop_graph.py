@@ -20,6 +20,7 @@ import re
 import ast
 import json
 import math
+import posixpath
 import collections
 import subprocess
 from pathlib import Path
@@ -34,6 +35,7 @@ if sys.platform == "win32":
         pass
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+GRAPH_SCHEMA_VERSION = "2.0"
 
 # Directories to ignore during scanning
 IGNORED_DIRS = {
@@ -424,6 +426,95 @@ class ArchitectureGraph:
                 })
         return sorted(candidates, key=lambda c: (c["file"], c["start_line"], c["label"]))
 
+    def _match_query_nodes(self, query: str) -> List[str]:
+        norm_q = normalize_path(query).lower()
+        exact = [
+            nid for nid, data in self.nodes.items()
+            if nid.lower() == norm_q or data["label"].lower() == norm_q or data.get("file", "").lower() == norm_q
+        ]
+        if exact:
+            return exact
+        return [
+            nid for nid, data in self.nodes.items()
+            if norm_q in nid.lower() or norm_q in data.get("file", "").lower() or norm_q in data["label"].lower()
+        ]
+
+    def find_shortest_path(self, source_query: str, target_query: str) -> Optional[List[Dict[str, Any]]]:
+        """
+        Compute shortest topological path between two nodes/queries (Graphify shortest_path equivalent).
+        Prefers directed path (source -> ... -> target), falling back to undirected traversal if needed.
+        """
+        src_ids = self._match_query_nodes(source_query)
+        dst_ids = set(self._match_query_nodes(target_query))
+        if not src_ids or not dst_ids:
+            return None
+
+        # Map unqualified fn:<label> virtual targets to real nodes sharing that label
+        label_to_nids: Dict[str, List[str]] = collections.defaultdict(list)
+        for nid, data in self.nodes.items():
+            lbl = data.get("label", "")
+            if lbl:
+                label_to_nids[f"fn:{lbl}"].append(nid)
+                if "." in lbl:
+                    label_to_nids[f"fn:{lbl.split('.')[-1]}"].append(nid)
+
+        edge_lookup: Dict[Tuple[str, str], str] = {}
+        for e in self.edges:
+            s, t, rel = e["source"], e["target"], e["relation"]
+            edge_lookup[(s, t)] = rel
+            if t not in self.nodes and t in label_to_nids:
+                for real_t in label_to_nids[t]:
+                    edge_lookup[(s, real_t)] = rel
+
+        def run_bfs(allow_reverse: bool) -> Optional[List[Dict[str, Any]]]:
+            queue = collections.deque([sid for sid in src_ids if sid in self.nodes])
+            visited = set(queue)
+            parent_map: Dict[str, Tuple[str, str, str]] = {}  # child -> (prev, relation, direction)
+
+            while queue:
+                curr = queue.popleft()
+                if curr in dst_ids:
+                    path: List[Dict[str, Any]] = []
+                    step = curr
+                    while step in parent_map:
+                        prev, rel, direction = parent_map[step]
+                        path.append({"node": self.nodes[step], "relation": rel, "direction": direction})
+                        step = prev
+                    path.append({"node": self.nodes[step], "relation": None, "direction": "start"})
+                    path.reverse()
+                    return path
+
+                # Forward neighbors
+                out_targets = set(self.adj_out.get(curr, set()))
+                expanded_out: Set[str] = set()
+                for t in out_targets:
+                    if t in self.nodes:
+                        expanded_out.add(t)
+                    elif t in label_to_nids:
+                        expanded_out.update(label_to_nids[t])
+
+                for nxt in sorted(expanded_out):
+                    if nxt not in visited:
+                        visited.add(nxt)
+                        parent_map[nxt] = (curr, edge_lookup.get((curr, nxt), "calls"), "->")
+                        queue.append(nxt)
+
+                if allow_reverse:
+                    in_sources = set(self.adj_in.get(curr, set()))
+                    lbl = self.nodes[curr].get("label", "")
+                    if lbl:
+                        in_sources |= self.adj_in.get(f"fn:{lbl}", set())
+                        if "." in lbl:
+                            in_sources |= self.adj_in.get(f"fn:{lbl.split('.')[-1]}", set())
+                    for prv in sorted(in_sources):
+                        if prv in self.nodes and prv not in visited:
+                            visited.add(prv)
+                            parent_map[prv] = (curr, edge_lookup.get((prv, curr), "calls"), "<-")
+                            queue.append(prv)
+            return None
+
+        return run_bfs(allow_reverse=False) or run_bfs(allow_reverse=True)
+
 
 def _normalize_route(raw_path: str) -> str:
     """Normalize dynamic route placeholders (:id, {id}, <int:id>, ${id}, /123) to '{}' for cross-service matching."""
@@ -479,32 +570,103 @@ def parse_diff_ranges(diff_text: str) -> Dict[str, List[Tuple[int, int]]]:
 class CodeAstScanner:
     """Deterministic AST & Lexical scanner for Python and JavaScript/TypeScript."""
 
+    JS_EXTS = (".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs")
+    DOC_NAMES = ("AGENTS.md", "STATE.md", "LOOP.md", "GEMINI.md", "README.md")
+
     def __init__(self, root_dir: Path, graph: ArchitectureGraph):
         self.root = root_dir
         self.graph = graph
 
-    def scan_repository(self):
-        """Walk repo and parse code files, policies, and tests."""
-        js_files: List[Tuple[Path, str]] = []
+    def _iter_repo_files(self):
+        """Yield (full_path, rel_path, fname) across repository excluding IGNORED_DIRS."""
         for dirpath, dirnames, filenames in os.walk(self.root):
-            # Filter out ignored directories
             dirnames[:] = [d for d in dirnames if d not in IGNORED_DIRS and not d.startswith(".")]
-
             for fname in filenames:
                 full_path = Path(dirpath) / fname
                 rel_path = normalize_path(str(full_path.relative_to(self.root)))
+                yield full_path, rel_path, fname
 
-                if fname.endswith(".py"):
-                    self.parse_python_file(full_path, rel_path)
-                elif fname.endswith((".js", ".ts", ".mjs")):
-                    js_files.append((full_path, rel_path))
-                elif fname in ("AGENTS.md", "STATE.md", "LOOP.md", "GEMINI.md", "README.md"):
-                    self.parse_markdown_file(full_path, rel_path)
+    def _collect_repo_mtimes(self) -> Dict[str, int]:
+        mtimes: Dict[str, int] = {}
+        for full_path, rel_path, fname in self._iter_repo_files():
+            if fname.endswith(".py") or fname.endswith(self.JS_EXTS) or fname in self.DOC_NAMES or fname in ("invariants.yaml", "gate.yaml"):
+                try:
+                    mtimes[rel_path] = full_path.stat().st_mtime_ns
+                except OSError:
+                    pass
+        return mtimes
+
+    def scan_or_load_cached(self, cache_file: Path) -> bool:
+        """
+        Load graph from cache_file if schema_version and all tracked file mtimes match.
+        Otherwise scan repository and persist updated cache_file. Returns True on cache hit.
+        """
+        current_mtimes = self._collect_repo_mtimes()
+        if cache_file.exists():
+            try:
+                raw = json.loads(cache_file.read_text(encoding="utf-8"))
+                if (
+                    isinstance(raw, dict)
+                    and raw.get("schema_version") == GRAPH_SCHEMA_VERSION
+                    and raw.get("file_mtimes") == current_mtimes
+                ):
+                    for n in raw.get("nodes", []):
+                        nid = n.get("id")
+                        if nid:
+                            self.graph.nodes[nid] = n
+                    for e in raw.get("edges", []):
+                        self.graph.add_edge(e["source"], e["target"], e["relation"], e.get("confidence", "EXTRACTED"))
+                    return True
+            except Exception:
+                pass
+
+        self.scan_repository()
+        try:
+            cache_file.parent.mkdir(parents=True, exist_ok=True)
+            payload = {
+                "schema_version": GRAPH_SCHEMA_VERSION,
+                "file_mtimes": current_mtimes,
+                "nodes": list(self.graph.nodes.values()),
+                "edges": self.graph.edges,
+            }
+            cache_file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
+        except OSError:
+            pass
+        return False
+
+    def _resolve_js_import(self, rel_path: str, target: str) -> str:
+        """Resolve relative (./, ../) or alias (@/, ~/) JS/TS/JSX/TSX import specifier to repo path."""
+        if target.startswith(("@/", "~/")):
+            base_rel = Path("src") / target[2:]
+        elif target.startswith("."):
+            base_rel = Path(rel_path).parent / target
+        else:
+            return target
+        candidates = [base_rel] + [Path(str(base_rel) + ext) for ext in self.JS_EXTS] + [base_rel / f"index{ext}" for ext in self.JS_EXTS]
+        root_resolved = self.root.resolve()
+        for cand in candidates:
+            full_cand = (self.root / cand).resolve()
+            try:
+                if full_cand.is_file():
+                    return normalize_path(str(full_cand.relative_to(root_resolved)))
+            except ValueError:
+                pass
+        return normalize_path(posixpath.normpath(base_rel.as_posix()))
+
+    def scan_repository(self):
+        """Walk repo and parse code files, policies, and tests."""
+        js_files: List[Tuple[Path, str]] = []
+        for full_path, rel_path, fname in self._iter_repo_files():
+            if fname.endswith(".py"):
+                self.parse_python_file(full_path, rel_path)
+            elif fname.endswith(self.JS_EXTS):
+                js_files.append((full_path, rel_path))
+            elif fname in self.DOC_NAMES:
+                self.parse_markdown_file(full_path, rel_path)
 
         if js_files:
             self.parse_js_files_batch(js_files)
 
-        # Parse system policies
         self.parse_system_policies()
 
     def parse_js_files_batch(self, js_files: List[Tuple[Path, str]]):
@@ -578,6 +740,18 @@ class CodeAstScanner:
             self.graph.add_node(rid, label=norm_r, node_type="route", file_path=rel_path)
             self.graph.add_edge(owner_id, rid, relation="http_calls")
 
+    def _resolve_call_target(self, sym: str, rel_path: str, import_map: Dict[str, str], local_defs: Set[str]) -> str:
+        """Resolve a callee symbol to a file-scoped fn:<file>::<sym> when unambiguously imported or locally defined."""
+        if sym in import_map and "::" in import_map[sym]:
+            return f"fn:{import_map[sym]}"
+        if sym in local_defs:
+            return f"fn:{rel_path}::{sym}"
+        if "." in sym:
+            prefix, attr = sym.split(".", 1)
+            if prefix in import_map and "::" not in import_map[prefix]:
+                return f"fn:{import_map[prefix]}::{attr}"
+        return f"fn:{sym}"
+
     def parse_python_file(self, full_path: Path, rel_path: str):
         """Use Python's built-in AST parser to extract symbols and dependencies."""
         try:
@@ -593,18 +767,43 @@ class CodeAstScanner:
         mod_id = f"mod:{rel_path}"
         self.graph.add_node(mod_id, label=Path(rel_path).name, node_type=mod_type, file_path=rel_path)
 
-        for node in ast.walk(tree):
-            # 1. Imports
-            if isinstance(node, ast.Import):
-                for alias in node.names:
-                    target_mod = f"mod:{alias.name.replace('.', '/')}.py"
-                    self.graph.add_edge(mod_id, target_mod, relation="imports")
-            elif isinstance(node, ast.ImportFrom) and node.module:
-                target_mod = f"mod:{node.module.replace('.', '/')}.py"
-                self.graph.add_edge(mod_id, target_mod, relation="imports")
+        import_map: Dict[str, str] = {}
+        local_defs: Set[str] = set()
+        all_nodes = list(ast.walk(tree))
 
+        for node in all_nodes:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+                local_defs.add(node.name)
+            elif isinstance(node, ast.Import):
+                for alias in node.names:
+                    rel_mod = f"{alias.name.replace('.', '/')}.py"
+                    self.graph.add_edge(mod_id, f"mod:{rel_mod}", relation="imports")
+                    import_map[alias.asname or alias.name.split(".")[0]] = rel_mod
+            elif isinstance(node, ast.ImportFrom):
+                base_dir = Path(rel_path).parent
+                for _ in range(max(0, (node.level or 0) - 1)):
+                    base_dir = base_dir.parent
+                mod_part = node.module.replace(".", "/") if node.module else ""
+                if (node.level or 0) > 0:
+                    prefix = posixpath.normpath((base_dir / mod_part).as_posix()) if mod_part else base_dir.as_posix()
+                    rel_mod = f"{prefix.lstrip('./')}.py" if mod_part else ""
+                else:
+                    rel_mod = f"{mod_part}.py" if mod_part else ""
+                if rel_mod:
+                    self.graph.add_edge(mod_id, f"mod:{rel_mod}", relation="imports")
+                for alias in node.names:
+                    if alias.name != "*":
+                        local_alias = alias.asname or alias.name
+                        if rel_mod:
+                            import_map[local_alias] = f"{rel_mod}::{alias.name}"
+                        elif (node.level or 0) > 0:
+                            sub_mod = normalize_path(posixpath.normpath((base_dir / f"{alias.name}.py").as_posix()))
+                            self.graph.add_edge(mod_id, f"mod:{sub_mod}", relation="imports")
+                            import_map[local_alias] = sub_mod
+
+        for node in all_nodes:
             # 2. Classes
-            elif isinstance(node, ast.ClassDef):
+            if isinstance(node, ast.ClassDef):
                 cls_id = f"cls:{rel_path}::{node.name}"
                 self.graph.add_node(
                     cls_id,
@@ -639,12 +838,18 @@ class CodeAstScanner:
                 for child in ast.walk(node):
                     if isinstance(child, ast.Call):
                         if isinstance(child.func, ast.Name):
-                            self.graph.add_edge(func_id, f"fn:{child.func.id}", relation="calls")
+                            target_fn = self._resolve_call_target(child.func.id, rel_path, import_map, local_defs)
+                            self.graph.add_edge(func_id, target_fn, relation="calls")
                         elif isinstance(child.func, ast.Attribute):
-                            self.graph.add_edge(func_id, f"fn:{child.func.attr}", relation="calls")
+                            if isinstance(child.func.value, ast.Name) and child.func.value.id in import_map:
+                                target_fn = self._resolve_call_target(f"{child.func.value.id}.{child.func.attr}", rel_path, import_map, local_defs)
+                                self.graph.add_edge(func_id, target_fn, relation="calls")
+                            else:
+                                self.graph.add_edge(func_id, f"fn:{child.func.attr}", relation="calls")
                         for arg in list(child.args) + [kw.value for kw in child.keywords]:
                             if isinstance(arg, ast.Name):
-                                self.graph.add_edge(func_id, f"fn:{arg.id}", relation="calls")
+                                target_fn = self._resolve_call_target(arg.id, rel_path, import_map, local_defs)
+                                self.graph.add_edge(func_id, target_fn, relation="calls")
 
         top_src = "\n".join(line for idx, line in enumerate(source_lines, 1) if idx not in covered_lines)
         if top_src:
@@ -688,15 +893,17 @@ class CodeAstScanner:
         full_path = self.root / rel_path
         source_lines = full_path.read_text(encoding="utf-8", errors="replace").splitlines() if full_path.exists() else []
         covered_lines: Set[int] = set()
+        import_map: Dict[str, str] = {}
+        local_defs: Set[str] = {d.get("name", "") for d in data.get("definitions", []) if d.get("name")}
 
         for imp in data.get("imports", []):
             target = imp.get("source", "")
-            if target.startswith("."):
-                resolved = (Path(rel_path).parent / target).as_posix()
-                target_id = f"mod:{normalize_path(resolved)}"
-            else:
-                target_id = f"mod:{target}"
+            resolved_mod = self._resolve_js_import(rel_path, target)
+            target_id = f"mod:{resolved_mod}"
             self.graph.add_edge(mod_id, target_id, relation="imports")
+            for spec in imp.get("specifiers", []):
+                if isinstance(spec, str) and not spec.startswith("* as "):
+                    import_map[spec] = f"{resolved_mod}::{spec}"
 
         for d in data.get("definitions", []):
             name = d.get("name")
@@ -714,7 +921,11 @@ class CodeAstScanner:
                 self.graph.add_edge(mod_id, fid, relation="defines")
                 if isinstance(s_line, int) and isinstance(e_line, int) and source_lines:
                     covered_lines.update(range(s_line, e_line + 1))
-                    self._extract_cross_layer_edges("\n".join(source_lines[max(0, s_line - 1) : e_line]), rel_path, fid)
+                    fn_chunk = "\n".join(source_lines[max(0, s_line - 1) : e_line])
+                    self._extract_cross_layer_edges(fn_chunk, rel_path, fid)
+                    for jsx_tag in re.findall(r"<([A-Z][A-Za-z0-9_.]*)\b", fn_chunk):
+                        callee_id = self._resolve_call_target(jsx_tag, rel_path, import_map, local_defs)
+                        self.graph.add_edge(fid, callee_id, relation="calls")
 
         if source_lines:
             top_src = "\n".join(line for idx, line in enumerate(source_lines, 1) if idx not in covered_lines)
@@ -726,11 +937,11 @@ class CodeAstScanner:
             callee = c.get("callee")
             if caller and callee and caller != "(top-level)":
                 caller_id = f"fn:{rel_path}::{caller}"
-                callee_id = f"fn:{callee}"
+                callee_id = self._resolve_call_target(callee, rel_path, import_map, local_defs)
                 self.graph.add_edge(caller_id, callee_id, relation="calls")
 
     def _parse_js_lexical_fallback(self, full_path: Path, rel_path: str):
-        """保留原有正則表達式掃描機制作為純標準庫穩定 Fallback"""
+        """保留原有正則表達式掃描機制作為純標準庫穩定 Fallback（支援 JSX/TSX 組件與箭頭函數）"""
         try:
             content = full_path.read_text(encoding="utf-8", errors="replace")
         except Exception:
@@ -741,24 +952,29 @@ class CodeAstScanner:
         mod_id = f"mod:{rel_path}"
         self.graph.add_node(mod_id, label=Path(rel_path).name, node_type=mod_type, file_path=rel_path)
 
-        import_matches = re.findall(r"""(?:import\s+.*?from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\))""", content)
-        for m in import_matches:
-            target = m[0] or m[1]
-            if target.startswith("."):
-                resolved = (Path(rel_path).parent / target).as_posix()
-                target_id = f"mod:{normalize_path(resolved)}"
-            else:
-                target_id = f"mod:{target}"
-            self.graph.add_edge(mod_id, target_id, relation="imports")
+        import_map: Dict[str, str] = {}
+        for m in re.finditer(r"""import\s+(.*?)\s+from\s+['"]([^'"]+)['"]|require\s*\(\s*['"]([^'"]+)['"]\)""", content):
+            clause, src1, src2 = m.group(1), m.group(2), m.group(3)
+            target = src1 or src2
+            resolved_mod = self._resolve_js_import(rel_path, target)
+            self.graph.add_edge(mod_id, f"mod:{resolved_mod}", relation="imports")
+            if clause:
+                for sym in re.findall(r"\b([A-Za-z_][A-Za-z0-9_]*)\b", clause):
+                    if sym not in ("as", "type", "from"):
+                        import_map[sym] = f"{resolved_mod}::{sym}"
 
-        decl_matches = list(re.finditer(r"""(?:function\s+([A-Za-z0-9_]+)|class\s+([A-Za-z0-9_]+))""", content))
+        decl_pattern = r"""(?:function\s+([A-Za-z0-9_]+)|class\s+([A-Za-z0-9_]+)|(?:const|let|var)\s+([A-Za-z0-9_]+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z0-9_]+)\s*=>)"""
+        decl_matches = list(re.finditer(decl_pattern, content))
+        local_defs = {m.group(1) or m.group(2) or m.group(3) for m in decl_matches if (m.group(1) or m.group(2) or m.group(3))}
+
         if not decl_matches:
             self._extract_cross_layer_edges(content, rel_path, mod_id)
             return
         if decl_matches[0].start() > 0:
             self._extract_cross_layer_edges(content[: decl_matches[0].start()], rel_path, mod_id)
         for idx, m in enumerate(decl_matches):
-            fn_name, cls_name = m.group(1), m.group(2)
+            fn_name = m.group(1) or m.group(3)
+            cls_name = m.group(2)
             end_pos = decl_matches[idx + 1].start() if idx + 1 < len(decl_matches) else len(content)
             chunk = content[m.start() : end_pos]
             if fn_name:
@@ -767,6 +983,9 @@ class CodeAstScanner:
                 self.graph.add_node(fid, label=fn_name, node_type=fn_type, file_path=rel_path)
                 self.graph.add_edge(mod_id, fid, relation="defines")
                 self._extract_cross_layer_edges(chunk, rel_path, fid)
+                for jsx_tag in re.findall(r"<([A-Z][A-Za-z0-9_.]*)\b", chunk):
+                    callee_id = self._resolve_call_target(jsx_tag, rel_path, import_map, local_defs)
+                    self.graph.add_edge(fid, callee_id, relation="calls")
             elif cls_name:
                 cid = f"cls:{rel_path}::{cls_name}"
                 self.graph.add_node(cid, label=cls_name, node_type="class", file_path=rel_path)
@@ -1315,6 +1534,7 @@ def main():
     parser = argparse.ArgumentParser(description="Loop Graph: Deterministic Architecture Knowledge Graph Engine")
     parser.add_argument("--scan", action="store_true", help="Scan repository and output graph artifacts")
     parser.add_argument("--impact", type=str, help="Calculate blast radius and impacted dependents for a file/function")
+    parser.add_argument("--path", nargs=2, metavar=("SOURCE", "TARGET"), help="Find shortest topological call/dependency path between two nodes")
     parser.add_argument("--diff-impact", action="store_true", help="Calculate innermost-symbol blast radius & TestSignal from git diff HEAD")
     parser.add_argument("--dead-code", action="store_true", help="Find unreferenced dead-code function candidates")
     parser.add_argument("--god-nodes", action="store_true", help="Display top God Nodes (central hubs)")
@@ -1327,11 +1547,33 @@ def main():
     args = parser.parse_args()
 
     root_dir = Path(args.root).resolve() if args.root else REPO_ROOT
+    out_dir = root_dir / args.out_dir
     graph = ArchitectureGraph()
     scanner = CodeAstScanner(root_dir=root_dir, graph=graph)
-    scanner.scan_repository()
 
-    out_dir = root_dir / args.out_dir
+    is_query_mode = bool(args.dead_code or args.diff_impact or args.impact or args.path or args.god_nodes or args.map)
+    if is_query_mode:
+        scanner.scan_or_load_cached(out_dir / "graph.json")
+    else:
+        scanner.scan_repository()
+
+    if args.path:
+        src_q, dst_q = args.path
+        path_steps = graph.find_shortest_path(src_q, dst_q)
+        if not path_steps:
+            print(f"❌ No path found between '{src_q}' and '{dst_q}'.")
+        else:
+            chain = []
+            for s in path_steps:
+                nd = s["node"]
+                tag = f"{nd['label']} ({nd['file']})"
+                if s["relation"]:
+                    arrow = "➔" if s["direction"] == "->" else "⬅"
+                    chain.append(f"{arrow} [{s['relation']}] {arrow} {tag}")
+                else:
+                    chain.append(tag)
+            print("🔗 SHORTEST PATH: " + " ".join(chain))
+        return
 
     if args.dead_code:
         dead = graph.find_dead_code_candidates()
@@ -1399,6 +1641,8 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
     # 1. graph.json
     graph_json_data = {
+        "schema_version": GRAPH_SCHEMA_VERSION,
+        "file_mtimes": scanner._collect_repo_mtimes(),
         "nodes": list(graph.nodes.values()),
         "edges": graph.edges
     }
