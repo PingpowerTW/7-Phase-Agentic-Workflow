@@ -19,14 +19,14 @@
 在修改特定功能時，先載入與該 Skill 關聯的歷史踩坑紀錄或技術限制：
 - 例如：開始修改 Firebase Security Rules 前，應執行 `auto-snapshot recover --skill firebase-rules` 獲取歷史決策與限制。
 
-## 3. 關鍵字指紋比對、CRAG 雙階段校正重排與 SWA 有界後綴重播 (CRAG & SWA Bounded Replay)
+## 3. 關鍵字指紋比對、LSA 三段式語意分桶與 SWA 有界後綴重播 (LSA 3-Segment Recall & SWA Bounded Replay)
 
-重開對話進行上下文恢復時，採用 **DeepInfer YOCO + SWA Bounded Replay** 與 **CRAG (Corrective RAG) 雙階段校正式重排**，決定是否需要發起遠端 Supabase 記憶庫查詢以節省 Token 消耗：
+重開對話進行上下文恢復時，採用 **DeepInfer YOCO + Prefrontal-AI LSA 三段式語意桶 (arXiv:2610.42147v2) + SWA Bounded Replay** 與 **CRAG 雙階段校正重排**，決定是否需要發起遠端 Supabase 記憶庫查詢以節省 Token 消耗：
 - **Global Block State（全域共享錨點）**：先讀取 `STATE.md` 掌握全局進行中任務（如同 YOCO Layer 20 全域 KV，跨 Session 持久複用）。
-- **SWA Bounded Replay（有界後綴重播，O(1) 成本）**：執行 `auto-snapshot recover --query "當前要問的問題關鍵字"`（預設 `--keep 7` = 最近活躍視窗 $W=5$ + 兩振回退緩衝 $K=2$，嚴禁盲讀整份歷史 JSONL）。
-- **CRAG 雙階段校正與重組 (Decompose-Then-Recompose)**：
-  - **Stage 1 (粗篩召回)**：自動執行 `NFKC -> NFD 去重音 -> Lowercase -> 空白折疊 -> 3-gram 特徵抽取` 比對本地快照之 `tags` 與 `summary`。
-  - **Stage 2 (校正補召回)**：最新 `--keep` 筆一律保留；更舊快照以關鍵字命中數評分，僅在分數**高於視窗內所有快照**時補入（最多 2 筆），輸出維持時間先後順序。降噪效果尚未量測。
+- **LSA 三段式快照檢索（`J_i = Sink ∪ Ward-Bucket-Top-k ∪ Window`）**：執行 `python scripts/capsule.py recover --query "當前要問的問題關鍵字"`（或 `auto-snapshot recover --query "..."`，嚴禁盲讀整份歷史 JSONL）：
+  - **Sink ($n_{\mathrm{sink}}=2$)**：固定保留最早的根基契約與初始架構決策；
+  - **Ward 階層語意桶 (`Long-Range Top-k`)**：將中段歷史快照透過 `NFKC -> NFD 去重音 -> Lowercase -> 3-gram 64 維 L2 歸一化投影`，以 **Ward 最小變異數聚類（Ward's Method, $n_b^{\max}=8$）** 壓縮為質心桶 `Bucket Cache`；查詢時僅計算質心內積 $s_b = c_b \cdot q^{(\mathrm{idx})}$ 並展開最佳桶的 Top-$k$ 遠程快照；
+  - **SWA Window ($n_w=5$)**：固定保留最新活躍視窗快照，輸出維持時間先後順序。
 - 若顯示 `✅ 本地記憶覆蓋查詢`，則跳過遠端 Supabase 檢索（省下 40%~50% 歷史重讀與檢索 Token）。
 - 若顯示 `⚠️ 本地記憶不足`，才向遠端知識庫發起長期記憶查詢。
 

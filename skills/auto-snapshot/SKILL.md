@@ -30,9 +30,13 @@ description: >
 
 當開啟新對話、使用者輸入 `/recover`、或說「繼續 / 繼續處理 / resume」時，依序執行以下 3 步：
 
-1. **瞬間載入本地記憶（YOCO + SWA Bounded Replay 免盲目探索）**：
+1. **瞬間載入本地記憶（YOCO + LSA 三段式語意桶 + SWA Bounded Replay 免盲目探索）**：
    - **Global Block State（全域共享錨點）**：先讀 `STATE.md` 掌握當前進行中任務與觀察清單（如 DeepInfer YOCO Layer 20 全域 KV，跨 Session 持久複用）。
-   - **SWA Bounded Replay（有界後綴重播，O(1) 成本）**：執行 Engram 正規化指紋檢索 `auto-snapshot recover --query "<當前任務關鍵字>"`（預設 `--keep 7` = 活躍視窗 `W=5` + 兩振回退緩衝 `K=2`，嚴禁全量重讀歷史 JSONL）。若顯示 `✅ 本地記憶覆蓋查詢`，直接採用本地記憶，跳過遠端檢索以節省 40%~50% Token。
+   - **LSA 三段式快照召回（`J_i = Sink ∪ Ward-Bucket-Top-k ∪ SWA-Window`，arXiv:2610.42147v2）**：執行 `python scripts/capsule.py recover --query "<當前任務關鍵字>"`（或 `auto-snapshot recover --query "<當前任務關鍵字>"`）：
+     1. **Sink ($n_{\mathrm{sink}}=2$)**：固定保留專案最初的根基架構與核心契約快照；
+     2. **Long-Range Ward 語意桶 ($\text{Top-}k=4$)**：將中段歷史快照經 Engram 64 維 L2 歸一化後，以 **Ward 最小變異數法（Ward's Method, $n_b^{\max}=8$）** 聚類成語意桶，僅對桶質心 $c_b$ 評分並展開最相關的遠程踩坑決策（次線性成本，嚴禁全量重讀歷史 JSONL）；
+     3. **SWA Window ($n_w=5$)**：固定保留最近活躍滑動視窗快照。
+     若顯示 `✅ 本地記憶覆蓋查詢`，直接採用本地記憶，跳過遠端檢索以節省 40%~50% Token。
 2. **工作恢復健康快檢 (Work Resume Health Check)**：
    - 在動手寫新代碼前，先確認 `git status --short` 工作區是否乾淨，並對受影響範圍跑一次輕量門禁（如 `python scripts/local_guard.py --git` 或既有單元測試），確認基準線為綠燈後再繼續未完成任務。
 3. **報到格式（控制在 8 行內）**：

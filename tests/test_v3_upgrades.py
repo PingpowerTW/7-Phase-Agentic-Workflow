@@ -19,6 +19,7 @@ SCRIPTS_DIR = REPO_ROOT / "scripts"
 if str(SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPTS_DIR))
 
+import capsule  # noqa: E402
 import local_guard  # noqa: E402
 import stage_runner  # noqa: E402
 
@@ -180,6 +181,50 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
         ok, staged, errs = stage_runner.extract_and_stage(traversal_md, clean=False)
         self.assertFalse(ok)
         self.assertEqual(len(staged), 0)
+
+    def test_lsa_ward_clustering_and_three_segment_recall(self):
+        """LSA 3-Segment Recall must enforce max_bucket_size and retrieve Sink + Long-Range Needle + SWA Window."""
+        entries = [
+            {"ts": "2026-01-01", "type": "decision", "summary": "Anchor 1: Zero external dependency contract"},
+            {"ts": "2026-01-02", "type": "milestone", "summary": "Anchor 2: Two-strike circuit breaker foundation"},
+        ]
+        for idx in range(24):
+            if idx == 9:
+                entries.append({
+                    "ts": f"2026-02-{idx+1:02d}",
+                    "type": "decision",
+                    "summary": "PostgreSQL connection pool exhaustion solved via pgbouncer transaction mode",
+                    "tags": ["database", "postgres", "pgbouncer"],
+                })
+            else:
+                entries.append({
+                    "ts": f"2026-02-{idx+1:02d}",
+                    "type": "periodic",
+                    "summary": f"Routine frontend icon padding tweak #{idx}",
+                    "tags": ["ui", "icons"],
+                })
+        for idx in range(4):
+            entries.append({
+                "ts": f"2026-03-0{idx+1}",
+                "type": "handoff",
+                "summary": f"SWA active window handoff step #{idx}",
+            })
+
+        recalled, stats = capsule.lsa_recover_snapshots(
+            entries,
+            query="pgbouncer PostgreSQL connection pool exhaustion",
+            n_sink=2,
+            top_k=2,
+            n_window=4,
+            max_bucket_size=6,
+        )
+        self.assertTrue(stats["covered"])
+        self.assertLess(stats["centroids_scored"], 24)
+        summaries = [item["summary"] for item in recalled]
+        self.assertEqual(summaries[0], "Anchor 1: Zero external dependency contract")
+        self.assertEqual(summaries[1], "Anchor 2: Two-strike circuit breaker foundation")
+        self.assertTrue(any("pgbouncer transaction mode" in s for s in summaries))
+        self.assertEqual(summaries[-1], "SWA active window handoff step #3")
 
 
 if __name__ == "__main__":

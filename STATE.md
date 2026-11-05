@@ -1,16 +1,17 @@
 # Loop State — AI 優化 Workspace
 
-Last run: 2026-10-17T20:06:00+08:00 (v3.3.1 Token Cache-Miss & Parallel Tool Call Guardrails: GEMINI.md New-Session Model Switch & AGENTS.md Parallel Call Discipline)
+Last run: 2026-11-05T19:28:00+08:00 (v3.3.7 Prefrontal-AI Latent Sparse Attention D-LSA Pattern Absorption: Ward Hierarchical Bucket Cache & 3-Segment Snapshot Recall)
 
 ## Level 0: Macro Concept Anchor (Current Active Goal)
 
-- **Active Goal**: 完成本機 Token 經濟與 7-Phase 工作流 v3.3 深度重構與 GitHub 開源發佈（GitHub 舊版本備份為 `backup/v3.2-legacy` 與 `v3.2-archive` 標籤、更新核心技能為精煉架構、重寫全新 v3.3 README.md、補齊平行工具呼叫與跨模型防破快取護欄，並已成功 push 至 GitHub `PingpowerTW/7-Phase-Agentic-Workflow`）。
+- **Active Goal**: 完成 Prefrontal-AI `latent-sparse-attention` (arXiv:2610.42147v2) Phase 0 前置殘酷審查與雙軌演算法吸收（拒絕安裝 26GB SGLang H200/B300 重型容器，以純 Python 標準庫實裝 D-LSA Training-Free 64 維正交投影、Ward 最小變異數階層語意分桶與 `Sink + Long-Range Bucket Top-k + Window` 三段式檢索至 `scripts/capsule.py`、`skills/auto-snapshot/SKILL.md` 與 `turboquant-rag/scripts/tq_vectorstore.py`）。
 - **Invariants Guard**: 保持 Git 時光機保護 (`INV_SAFE_04`)、兩振硬熔斷 (`INV_VERIFY_05`)、零生產接縫 (`INV_VERIFY_03`)、歷史決策防翻案 (`INV_DECISION_01`) 與零漂移狀態。
 
 ---
 
 ## High Priority (In-Flight Tasks / Waiting on Human)
 
+- [x] **Latent Sparse Attention (D-LSA, arXiv:2610.42147v2) Pattern Absorption (`capsule.py`, `auto-snapshot` & `turboquant-rag`)**: 通過 Phase 0 前置殘酷審查（拒絕安裝綁定 H200/B300 與 26GB SGLang Fork 之原 Repo），以純 Python 標準庫吸收兩大核心演算法：1. 升級 `turboquant-rag/scripts/tq_vectorstore.py` 實裝 `LSABucketIndex`（64 維正交降維 + $n_{\mathrm{pool}}=4$ 池化 + Ward 最小變異數階層聚類 $\Delta E = \frac{|A||B|}{|A|+|B|}\|\mu_A-\mu_B\|^2$ + Tree Beam Search $\mathcal{O}(\log N)$ 質心檢索）與純標準庫 3-bit 量化無縫降級；2. 於 `scripts/capsule.py` 實裝 `ward_cluster_snapshots()` 與 `lsa_recover_snapshots()` (`recover` CLI)，將 `auto-snapshot` 記憶恢復升級為 $J_i = \text{Sink} \cup \text{Ward-Bucket-Top-}k \cup \text{SWA-Window}$ 三段式召回。
 - [x] **v3.3 GitHub Publication & Full Documentation Overhaul**:
   1. 遠端 GitHub 舊狀態完整備份：建立遠端備份分支 `backup/v3.2-legacy` 與永久標籤 `v3.2-archive`；
   2. 技能整併同步：同步 15 大核心技能，清理冗餘獨立資料夾（移入 `frontend-taste-v2/references/` 與主技能），落實單檔 ≤15KB；
