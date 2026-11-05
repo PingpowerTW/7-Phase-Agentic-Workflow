@@ -11,6 +11,7 @@ description: >
 > **Confidence Gate**：僅報告 **>80% 確信** 的真實問題；跳過未修改區域的風格偏好；同類問題強制合併報告。
 > **Evidence Contract**（吸收自 REA）：每則發現必附 `evidence:`（`檔案#L行` 或指令輸出）；無法證實的推測寫入 `unknowns:`，嚴禁混入結論。
 > **Incremental & Anti-Loop Gate**：二輪複審僅針對新提交之 Incremental Diff 驗證（最多 2 輪即強制收斂）；對已標註刻意捷徑（`shortcut:` 或 `ponytail:`）且未超出預期負載上限、或已附理由豁免（Wontfix）之項目，嚴禁重複報警。
+> **Zero-Checkout Bare Diff & Three-Question Blind Audit（吸收自 `agent-autoloop`）**：審查外部或不可信來源 PR 時，嚴禁 checkout 分支或執行 PR 內代碼/hooks/測試，僅從裸 Git 物件 (`git log --remerge-diff --no-ext-diff --no-textconv head --not main`) 抽取純文字快照並錨定 `main` 分支之審查規範。審查核心變更時強制回答盲審三問：**① 被改動的函式還有誰在呼叫？ ② 外部接合處是否有真實執行紀錄？ ③ 同類問題在別處是否還存在？**
 > **Cross-Group Numbering & Load Posture（吸收自 Ponytail 5 `#523`, `#1061`）**：報告開頭必須宣告「預期負載假設（單人工具 vs 多人高併發）」，且所有發現跨嚴重度群組採用**全局連續編號 (`1., 2., 3.`)**，方便開發者直接下令「修 2 和 4」。
 
 ## 📚 深度參考庫 (`./references/` 按需讀取)

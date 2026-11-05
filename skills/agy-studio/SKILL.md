@@ -25,7 +25,7 @@ description: "7-Role Collaborative Fullstack Studio v3.3 (Manual Trigger Only, N
 | 4 | **Frontend Master** | `self`（直接寫檔） | `did:key:z6MkuFrontendMaster...` | 訂閱 `contracts.dto` 分支與 `shadcn/ui`，遵循 Ponytail 原生 HTML/CSS 優先原則，**直接用寫檔工具寫入 UI 組件**，禁止在對話吐出完整代碼 |
 | 5~7 | **Unified Adversarial Auditor**<br>*(Reviewer + Critic + Auditor 三審合一)* | `research` (唯讀子代理人) | `did:key:z6MkuUnifiedAuditor...` | **單一 Context 一次讀檔**，同步完成：【Reviewer】跨層契約與 Ponytail 精簡度、【Critic】BOLA/競態/N+1 紅隊壓力測試（附證據）、【Auditor】15 種垃圾測試獵殺 + BTC/SHARS/GEPA 審計（省 67% 審查 Token） |
 
-> **免雙倍 Token 稅與 Agensh Typed Notes 防踩踏鐵律**：領域專家（DB / Backend / Frontend）必須直接使用 `write_to_file` / `replace_file_content` 將變更寫入各自的目標檔案（互不重疊），回覆給 Orchestrator 的訊息**只能包含 ≤15 行結構化摘要與 Agensh 三元標籤（`[CLAIM]` 獨佔寫入邊界、`[DEAD_END]` 死路負向廣播、`[VERIFIED_FACT]` 已驗證底層事實），嚴禁在對話中印出完整程式碼**。若全端任務規模較小（總修改 ≤5 檔案），Orchestrator 可在鎖定契約後直接依序寫檔，免除啟動多個 Worker 的 Context 基底稅。
+> **免雙倍 Token 稅與 Agensh 防踩踏鐵律**：領域專家（DB / Backend / Frontend）必須直接用寫檔工具寫入目標檔案（互不重疊），回覆給 Orchestrator **僅限 ≤15 行摘要與四元標籤（`[CLAIM]` 獨佔邊界、`[DEAD_END]` 死路廣播、`[VERIFIED_FACT]` 驗證事實、`[ASK_OR_LATER: <None|ask|later>]` 阻塞時寫明 `about` 即刻退出禁輪詢），嚴禁印出完整代碼**。若總修改 ≤5 檔，Orchestrator 可鎖定契約後直接寫檔。
 
 ---
 

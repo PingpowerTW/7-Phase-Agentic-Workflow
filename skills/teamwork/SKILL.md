@@ -107,6 +107,7 @@ concept_tree:
    - `[CLAIM: <files>]`：本 Worker 獨佔寫入之檔案與行號範圍（嚴禁越界修改未認領檔案，確保無鎖零衝突 Merge）。
    - `[DEAD_END: <hypothesis> -> <reason>]`：實作中若證實某 API / 解法不可行，必須明確標記死路原因，阻斷主代理人或後續重試重蹈覆轍（無則填 `None`）。
    - `[VERIFIED_FACT: <invariant>]`：已確認的跨層底層事實（如真實函數簽名、邊界條件），供 Step 3 審查官直接錨定免重查。
+   - `[ASK_OR_LATER: <None | ask(options, about) | later(at, about)>]`（吸收自 `agent-autoloop` 掛起零消耗回執）：遇需人類授權/憑證恢復或需延後複查之阻塞時，嚴禁在子代理內無限輪詢消耗 Token；直接保留已完成進度、寫明 `about`（恢復後僅續做哪些剩餘步驟，不重做已完成業務）並立即結束該輪。
 
 嚴格禁止：
 - ❌ 偏離概念樹 contracts 或違反 invariants

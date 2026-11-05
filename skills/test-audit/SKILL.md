@@ -66,4 +66,8 @@ Authoring Gate 拒絕符合以下模式的新測試；Audit 模式則主動獵�
 
 - **必須保留**：獨立保護公開 API、網路協定、資料庫遷移、安全邊界或具備真實失敗場景的回歸測試。若既有測試失敗，優先視為**潛在產品真 Bug**。
 - **修剪目標**：刪除無效測試時，**同步拔除**生產代碼中僅為測試而開的接縫（test-only exports, wrappers, mock params），追求**生產代碼淨減少 (Net-negative production LOC)**。
+- **純函數核心與架構純度守衛 (`purity.test` & Replay Oracle，吸收自 `agent-autoloop`)**：
+  1. **Functional Core / Imperative Shell 靜態純度斷言**：核心決策層（如 `kernel/`、`decide`、純算法模組）應由一組輕量靜態純度測試守護，斷言其不直接呼叫時鐘 (`Date.now`/`time.time`)、亂數 (`Math.random`/`random`)、環境變數或外部網路/檔案 I/O，也不硬編碼外部供應商名稱；時間與環境一律由外殼 (Shell) 以參數傳入，使狀態機能以固定 Seed 執行高速確定性模擬測試 (Deterministic Simulation Testing)。
+  2. **獨立重播預言機 (Independent Replay Oracle)**：驗證持久化投影或快取狀態時，測試應使用不依賴生產查詢/寫入實作的極簡獨立 `replay(log)` 函式對齊，杜絕「拿受測模組自己的 getter 驗證寫入結果」的循環論證。
+  3. **突變測試防空包彈鐵律 (Mutation Gate)**：執行突變測試 (`CAMPAIGN.md` Step 6) 時，必須先斷言未突變基準線實際執行的測試數 $> N$ 且綠燈，且突變後必須通過語法檢查 (`--check` / `py_compile`)，**嚴禁將語法錯誤 (SyntaxError) 當作成功攔截的突變 (Killed Mutant)**。
 - **戰役模式 (Campaign Mode)**：針對大型子系統修剪時，遵循 [CAMPAIGN.md](CAMPAIGN.md) 的 8 步流水線（`Baseline → Lanes → Ledger(R/F/C/D) → Keepers → Cutover → Mutation Testing → Product Defects → Reconcile`）。

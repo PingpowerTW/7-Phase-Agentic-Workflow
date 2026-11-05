@@ -48,6 +48,7 @@
 ## 6. 突變測試驗收 (Preservation Review & Mutation Testing)
 - **缺口檢驗**：由獨立審查者比對刪除的覆蓋範圍與 Keepers，確認是否有任何業務契約失去了唯一的防護。
 - **突變驗證 (Mutation Test)**：
+  - **基線與語法防空包彈（吸收自 `agent-autoloop sim/mutate.ts`）**：突變執行前必須先斷言未突變基線實際執行的測試數 $> N$ 且狀態為 0；注入突變後必須先通過語法檢查（如 `node --check` / `python -m py_compile`），**嚴禁將語法錯誤 (SyntaxError) 誤判為被測試抓到的突變 (Killed Mutant)**。若同一守衛邏輯在代碼中出現多處，應使用 `replaceAll` 同時替換以測試邊界韌性。
   - 在生產代碼中**刻意注入一個邏輯錯誤（Mutation）**（例如倒轉判斷式、修改邊界條件數值）。
   - 執行 Keepers 測試，**確認測試必須噴出紅燈（Fail）**！
   - 測試噴紅後，將生產源碼逐字元精確還原。
