@@ -226,6 +226,12 @@ class TestV3WorkflowUpgrades(unittest.TestCase):
         self.assertTrue(any("pgbouncer transaction mode" in s for s in summaries))
         self.assertEqual(summaries[-1], "SWA active window handoff step #3")
 
+        # Verify empty snapshot list returns complete telemetry schema without KeyError
+        empty_recalled, empty_stats = capsule.lsa_recover_snapshots([], query="nonexistent")
+        self.assertEqual(empty_recalled, [])
+        for key in ("sink_count", "long_range_count", "window_count", "total_snapshots", "covered"):
+            self.assertIn(key, empty_stats)
+
 
 if __name__ == "__main__":
     unittest.main()

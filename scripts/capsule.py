@@ -268,6 +268,16 @@ def _snapshot_to_text(entry: Dict[str, Any]) -> str:
     return " ".join(p for p in parts if p)
 
 
+def _make_bucket(indices: List[int], sum_vec: List[float]) -> Dict[str, Any]:
+    b_len = len(indices)
+    return {
+        "indices": indices,
+        "sum_vec": sum_vec,
+        "mean_vec": [s / b_len for s in sum_vec],
+        "centroid": _l2_normalize(sum_vec),
+    }
+
+
 def ward_cluster_snapshots(
     vectors: List[List[float]],
     indices: List[int],
@@ -291,17 +301,8 @@ def ward_cluster_snapshots(
     for pos in range(0, count, n_pool):
         pool_slice = range(pos, min(count, pos + n_pool))
         b_indices = [indices[k] for k in pool_slice]
-        sum_vec = [0.0] * d_idx
-        for k in pool_slice:
-            for d in range(d_idx):
-                sum_vec[d] += vectors[k][d]
-        b_len = len(b_indices)
-        buckets.append({
-            "indices": b_indices,
-            "sum_vec": sum_vec,
-            "mean_vec": [s / b_len for s in sum_vec],
-            "centroid": _l2_normalize(sum_vec),
-        })
+        sum_vec = [sum(vectors[k][d] for k in pool_slice) for d in range(d_idx)]
+        buckets.append(_make_bucket(b_indices, sum_vec))
 
     target_m = max(1, math.ceil(count / avg_bucket_size))
     while len(buckets) > target_m:
@@ -322,15 +323,8 @@ def ward_cluster_snapshots(
             break
         i, j = best_pair
         bi, bj = buckets[i], buckets[j]
-        m_indices = bi["indices"] + bj["indices"]
         m_sum = [bi["sum_vec"][d] + bj["sum_vec"][d] for d in range(d_idx)]
-        m_len = len(m_indices)
-        buckets[i] = {
-            "indices": m_indices,
-            "sum_vec": m_sum,
-            "mean_vec": [s / m_len for s in m_sum],
-            "centroid": _l2_normalize(m_sum),
-        }
+        buckets[i] = _make_bucket(bi["indices"] + bj["indices"], m_sum)
         buckets.pop(j)
 
     return buckets
@@ -353,6 +347,9 @@ def lsa_recover_snapshots(
         return [], {
             "total_snapshots": 0,
             "selected_count": 0,
+            "sink_count": 0,
+            "long_range_count": 0,
+            "window_count": 0,
             "buckets_created": 0,
             "centroids_scored": 0,
             "max_score": 0.0,
