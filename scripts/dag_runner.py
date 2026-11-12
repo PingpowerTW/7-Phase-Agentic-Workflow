@@ -71,18 +71,20 @@ async def _terminate_process_tree(proc: asyncio.subprocess.Process):
     pid = proc.pid
     if sys.platform == "win32":
         try:
-            # Windows: 透過 taskkill /F /T 終止整棵程序樹
+            # Windows: 透過 taskkill /F /T 終止整棵程序樹，並附加 timeout 防止 WMI/Toolhelp 卡頓
             subprocess.run(
                 ["taskkill", "/F", "/T", "/PID", str(pid)],
                 check=False,
+                timeout=1.5,
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
         except Exception:
-            try:
-                proc.kill()
-            except Exception:
-                pass
+            pass
+        try:
+            proc.kill()
+        except Exception:
+            pass
     else:
         try:
             # POSIX: 若子程序擁有自己的 process group (start_new_session=True)，直接送 SIGKILL 至 pgid
@@ -96,7 +98,7 @@ async def _terminate_process_tree(proc: asyncio.subprocess.Process):
                 pass
 
     try:
-        await asyncio.wait_for(proc.wait(), timeout=3.0)
+        await asyncio.wait_for(proc.wait(), timeout=1.0)
     except Exception:
         pass
 

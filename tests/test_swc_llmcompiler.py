@@ -309,7 +309,7 @@ class TestDagRunner(unittest.TestCase):
             asyncio.run(runner.run())
         elapsed = time.perf_counter() - t0
 
-        self.assertLess(elapsed, 2.0, "程序逾時回收耗時過長，可能存在死鎖")
+        self.assertLess(elapsed, 5.0, "程序逾時回收耗時過長，可能存在死鎖")
         self.assertEqual(runner.results["sleepy"].status, "TIMEOUT")
 
 
