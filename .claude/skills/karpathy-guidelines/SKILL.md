@@ -1,63 +1,59 @@
 ---
-# promptscript-generated: 2026-10-03T12:03:42.557Z | source: .promptscript/7phase.prs | target: claude
-name: "karpathy-guidelines"
-description: "LLM Coding Behavioral Correction, Surgical Changes & Anti-Speculation Guardrails"
+name: karpathy-guidelines
+description: >
+  LLM coding 行為矯正與 Phase 0/3 規格反詰問守則（整合 karpathy-guidelines、grilling 壓力測試式需求追問與 project-planner 里程碑拆解）。
+  防止 AI 過度假設、過度工程化、動到不該動的 code。
+  觸發詞：/spec, /grill, grilling, project-planner, karpathy-guidelines, 精準開刀, 困惑即停, 壓力測試追問.
 ---
 
-# Karpathy Guidelines — LLM 行為矯正
+# 🧠 Karpathy Guidelines & Phase 0/3 Spec Grilling — LLM 行為矯正核心 (3-in-1 Edition)
 
-Behavioral guidelines to reduce common LLM coding mistakes, derived from
-[Andrej Karpathy's observations](https://x.com/karpathy/status/2015883857489522876).
+源自 [Andrej Karpathy 對 LLM Coding 陷阱的觀察](https://x.com/karpathy/status/2015883857489522876)，並融合 **Phase 0 Grilling 反詰問法** 與 **Phase 3 最小里程碑規劃**。
 
-**Tradeoff:** These guidelines bias toward caution over speed. For trivial tasks, use judgment.
-
-## ⚠️ 觸發條件
-
-Writing code, refactoring, or reviewing code. Auto-loaded for all coding tasks.
+**權衡宣告 (Tradeoff)**：本指南傾向「謹慎高於速度」。極微小瑣碎任務依工程常識合理裁量，避免官僚化。
 
 ---
 
 ## 1. 主動反駁 (Push Back)
 
-**When a simpler approach exists, you MUST say so.**
-
-- Don't go along with the user's complex approach if a simpler one exists — speak up.
-- If the requested feature can be solved with an existing API/library, recommend it instead of reimplementing.
-- **Quantitative check**: If you wrote 200 lines and it could be 50, **rewrite it**.
-- If multiple interpretations exist, present them — don't pick silently.
+**當存在更簡單的方案時，你必須直言反駁。**
+- 不要盲從使用者過度複雜的提案——若既有的 API、標準庫或原生特性就能解決，主動提出簡化方案。
+- **量化門檻**：若寫了 200 行但其實 50 行就能寫完，**強制重寫**。
+- **自省鏡 (The Senior Engineer Test)**：自問「資深工程師看到這段代碼會覺得過度複雜嗎？」如果是，立刻簡化。
 
 ## 2. 零投機 (No Speculation)
 
-**Minimum code that solves the problem. Nothing speculative.**
-
-- ❌ No abstractions for single-use code
-- ❌ No "flexibility" or "configurability" that wasn't requested
-- ❌ No error handling for impossible scenarios
-- ❌ No features beyond what was asked
-- ✅ Only write **the minimum functionality requested right now**
-
-Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
+**只寫解決當下問題的最少代碼，零預留投機。**
+- ❌ 禁止為單一用途代碼建立抽象層或 Factory
+- ❌ 禁止加入未被要求的「彈性配置」與「未來擴充性」
+- ❌ 禁止處理不可能發生的假想錯誤情境
 
 ## 3. 精準開刀 (Surgical Precision)
 
-**Touch only what you must. Clean up only your own mess.**
+**只動必須修改的區域，只清自己製造的垃圾。**
+- **禁盲改 (Never-Edit-Blind)**：未實際讀取目標區段與呼叫端上下文前嚴禁憑印象改碼；編輯時不順手美化鄰近格式、不重構沒壞的代碼、完全遵循原檔命名與風格。
+- 發現無關的既有死代碼時：**僅提報，不擅自刪除**（除非使用者明確啟動 `/refactor` 積極清理模式）。
+- **孤兒清理 (Orphan Cleanup)**：因本次變更而產生的無用 import、未引用變數或死函式，必須在同回合清理乾淨。
+- **溯源原則 (Traceability)**：每一行變更之 Diff 都必須能直接溯源至使用者的原始需求。
 
-When editing existing code:
-- Don't "improve" adjacent code, comments, or formatting
-- Don't refactor things that aren't broken
-- Match existing style, even if you'd do it differently
-- If you notice unrelated dead code, **mention it — don't delete it**
+## 4. 困惑即停與風險分級追問 (Stop When Confused & Risk-Based Clarification)
 
-When your changes create dead code, clean it up. When existing dead code is unrelated to your changes, leave it alone.
+**不盲猜、不掩飾困惑、依風險分級追問。**
+- **環境事實自己查 (`Facts via Tools`)**：凡是能透過讀檔、搜尋 codebase 或查環境得知的「客觀事實」，自己用工具查明，**嚴禁伸手問使用者**。
+- **低風險可逆選擇**：在請求範圍內且影響可逆時，說明合理假設並沿用專案現有慣例快速推進，不隨意中斷使用者。
+- **高風險決策逐一追問 (`Decisions to User`)**：當涉及不可逆行為、破壞性改動、資料隱私/安全、或需求產生實質重大分歧時：
+  1. 沿著決策樹的依賴分支逐一深挖，戳破模糊假設。
+  2. **一次只問 1~2 個最關鍵的決策問題**（附上你的 `(Recommended)` 推薦選項與理由；發起提問時強制遵守 `goto=END` 澄清尾端短路，立即結束回合等待拍板，嚴禁邊問邊改），禁止一次丟出十幾個問題轟炸。
+  3. **BTC 熱力學門禁**：面臨核心演算法或複雜邊界時，若信任評分 $T < 0.65$（或行為探針熵值 $\sigma_{\text{calib}} > 0.4$），**強制觸發主動棄權 (ABSTAIN)**，停下提問，絕不硬寫幻覺代碼。
+  4. **`/spec` 收斂邊界 (What/Why vs How)**：Phase 0 規格僅鎖定 **What、Why、明確排除項 (Non-Goals) 與驗收標準**，嚴禁在規格階段混入具體實作程式碼。
 
-**Exception**: When explicitly in `/refactor` mode or user says "clean this up", switch to active cleanup mode.
+## 5. 目標驅動執行與 Phase 3 最小里程碑 (Goal-Driven Execution & Milestones)
 
-## 4. 困惑即停 (Stop When Confused — Quantified via BTC)
-
-**Don't assume. Don't hide confusion. Surface tradeoffs.**
-
-- If uncertain, **ask** — don't guess
-- If something is unclear, **stop**, name what's confusing, and ask
-- If you spot contradictions in requirements, **point them out** — don't silently reconcile
-- State your assumptions explicitly before implementing
-- **BTC 量化門禁 (Thermodynamic Gate)**：在面臨核心演算法或複雜邊界邏輯時，依據 Behavioral Trust Clustering (BTC) 評估信度。若熱力學信任評分 $T < 0.65$（或行為探針熵值 $\sigma_{\text{calib}} > 0.4$），**強制觸發主動棄權 (ABSTAIN)**，停下並向使用者提出澄清問題，絕不盲目硬寫幻覺代碼。
+**定義可驗證目標，閉環迴圈直到驗證通過。**
+- **模糊任務轉化公式**：
+  - 「新增功能/驗證」➔ 先定義邊界/無效輸入測試，再實作使其通過。
+  - 「修復 Bug」➔ 先寫重現測試確認失敗（Fail-Before-Pass），再修復至綠燈。
+  - 「重構代碼」➔ 確保重構前後既有測試 100% 通過且外部行為不變。
+- **Phase 3 最小垂直里程碑 (`project-planner`)**：跨模組任務依「相依性拓撲 + 垂直可驗證切片」拆解為 **最多 3 個里程碑**，格式為 `1. [Step / 修改檔案] → verify: [一行可執行驗證指令]`。
+- **真實需求驗收 (Verify Beyond Passing Tests)**：優先使用專案既有工具鏈驗證，不殘留臨時測試檔；驗收必須直接對齊業務需求，嚴禁為求綠燈而弱化斷言或寫假測試。
+- 在使用者確認規格與計畫前，嚴禁直接跨入 Phase 4 動手改代碼。
