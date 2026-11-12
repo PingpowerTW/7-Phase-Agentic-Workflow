@@ -285,6 +285,39 @@ class PromptScriptValidator:
         print(f"[INFO] Hydrated {hydrated_count} compiled SKILL.md stub file(s) from canonical ./skills/.")
         return hydrated_count
 
+    def sync_mirrors(self, skill_filter: Optional[str] = None) -> int:
+        """One-command mirror sync: propagate canonical ./skills/<name>/SKILL.md across IDE folders and global config."""
+        target_roots = [
+            self.repo_root / ".agents" / "skills",
+            self.repo_root / ".claude" / "skills",
+            self.repo_root / ".factory" / "skills",
+            self.repo_root / ".github" / "skills",
+            Path.home() / ".gemini" / "config" / "skills",
+        ]
+        parent_ws = self.repo_root.parent
+        if parent_ws != self.repo_root and (parent_ws / ".agents" / "skills").exists():
+            target_roots.append(parent_ws / ".agents" / "skills")
+
+        synced = 0
+        for skill_src_dir in sorted(self.skills_dir.iterdir()):
+            if not skill_src_dir.is_dir():
+                continue
+            if skill_filter and skill_src_dir.name != skill_filter:
+                continue
+            src_md = skill_src_dir / "SKILL.md"
+            if not src_md.is_file():
+                continue
+            src_norm = src_md.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+            for t_root in target_roots:
+                dst_md = t_root / skill_src_dir.name / "SKILL.md"
+                if dst_md.is_file() and dst_md.resolve() != src_md.resolve():
+                    dst_norm = dst_md.read_text(encoding="utf-8", errors="replace").replace("\r\n", "\n")
+                    if dst_norm != src_norm:
+                        dst_md.write_text(src_norm, encoding="utf-8", newline="\n")
+                        synced += 1
+        print(f"[INFO] Synced {synced} mirror SKILL.md file(s) from canonical ./skills/.")
+        return synced
+
 
 if __name__ == "__main__":
     current_dir = Path(__file__).resolve().parent.parent
@@ -296,6 +329,10 @@ if __name__ == "__main__":
 
     if success and ("--hydrate" in sys.argv or "--compile" in sys.argv):
         validator.hydrate_skills()
+
+    if success and "--sync" in sys.argv:
+        sf = sys.argv[sys.argv.index("--skill") + 1] if "--skill" in sys.argv and sys.argv.index("--skill") + 1 < len(sys.argv) else None
+        validator.sync_mirrors(skill_filter=sf)
 
     sys.exit(0 if success else 1)
 

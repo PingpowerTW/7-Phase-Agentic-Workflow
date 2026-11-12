@@ -324,7 +324,7 @@ denylist:
 
         server = http.server.HTTPServer(("127.0.0.1", 0), _MockSystemOneHandler)
         port = server.server_address[1]
-        t = threading.Thread(target=server.serve_forever, daemon=True)
+        t = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True)
         t.start()
         orig_url = local_guard.DECISION_API_URL
         try:

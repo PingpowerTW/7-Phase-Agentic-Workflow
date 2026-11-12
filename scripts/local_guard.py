@@ -118,6 +118,12 @@ def check_config_overlay_poisoning(code_content: str, changed_files: Optional[Li
 
 
 
+_JS_SYNTAX_HINT = re.compile(
+    r"\b(?:export|function|const|let|var|import\s+.*from|test|it|describe|useEffect|useGSAP|gsap)\b|=>|:\s*any\b|\bas\s+any\b|<any>",
+    re.I,
+)
+
+
 def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tuple[bool, List[str]]:
     """調用 scripts/ast_guard.js 進行 Level 0.5 確定性 AST 語意審查 (零生產接縫 & 垃圾測試門禁)"""
     guard_js = Path(__file__).resolve().parent / "ast_guard.js"
@@ -125,13 +131,15 @@ def check_ast_guard(code_content: str, changed_files: Optional[List[str]]) -> Tu
         return False, []
 
     js_files = [f for f in (changed_files or []) if re.search(r"\.(js|jsx|ts|tsx|mjs|cjs)$", f, re.I)]
-    if not js_files and not code_content.strip():
+    if changed_files is not None and not js_files:
+        return False, []
+    if not js_files and (not code_content.strip() or not _JS_SYNTAX_HINT.search(code_content)):
         return False, []
 
     cmd = ["node", str(guard_js)]
     if js_files:
         cmd.extend(js_files)
-    elif code_content.strip():
+    else:
         cmd.extend(["--code", code_content])
 
     try:
@@ -836,13 +844,34 @@ def run_guard(code_content: str, label: str = "Diff/Snippet", changed_files: Opt
         return 0
 
 
+_GIT_META_CACHE: Dict[str, Tuple[float, bool, str]] = {}
+
+
+def _get_cached_git_meta(ttl: float = 2.0) -> Tuple[bool, str]:
+    cwd_key = str(Path.cwd())
+    now = time.monotonic()
+    cached = _GIT_META_CACHE.get(cwd_key)
+    if cached and (now - cached[0]) < ttl:
+        return cached[1], cached[2]
+    try:
+        res = subprocess.run(["git", "rev-parse", "--is-inside-work-tree", "--short=7", "HEAD"], capture_output=True, text=True)
+        if res.returncode == 0:
+            lines = [ln.strip() for ln in res.stdout.splitlines() if ln.strip()]
+            is_repo = len(lines) >= 1 and lines[0] == "true"
+            head_short = lines[1] if len(lines) >= 2 else "NO-GIT"
+            _GIT_META_CACHE[cwd_key] = (now, is_repo, head_short)
+            return is_repo, head_short
+        res_repo = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], capture_output=True, text=True)
+        is_repo = res_repo.returncode == 0
+    except Exception:
+        is_repo = False
+    _GIT_META_CACHE[cwd_key] = (now, is_repo, "NO-GIT")
+    return is_repo, "NO-GIT"
+
+
 def get_git_head_short() -> str:
     """取得當前 Git HEAD 7 碼短雜湊作為防偽收據錨點 (INV_VERIFY_07)"""
-    try:
-        res = subprocess.run(["git", "rev-parse", "--short=7", "HEAD"], capture_output=True, text=True)
-        return res.stdout.strip() if res.returncode == 0 and res.stdout.strip() else "NO-GIT"
-    except Exception:
-        return "NO-GIT"
+    return _get_cached_git_meta()[1]
 
 
 def format_prob(p: float) -> str:
@@ -869,11 +898,7 @@ def format_gate_status(is_clean: bool) -> str:
 
 def is_git_repo() -> bool:
     """檢查當前工作區是否受 Git 時光機保護 (INV_SAFE_04)"""
-    try:
-        res = subprocess.run(["git", "rev-parse", "--is-inside-work-tree"], capture_output=True, text=True)
-        return res.returncode == 0
-    except Exception:
-        return False
+    return _get_cached_git_meta()[0]
 
 
 def _capture_rollback_incident(diff: str, changed_files: List[str], reflexion: str = "") -> Optional[Path]:
