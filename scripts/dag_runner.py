@@ -69,33 +69,27 @@ async def _terminate_process_tree(proc: asyncio.subprocess.Process):
         return
 
     pid = proc.pid
-    if sys.platform == "win32":
-        try:
-            # Windows: 透過 taskkill /F /T 終止整棵程序樹，並附加 timeout 防止 WMI/Toolhelp 卡頓
-            subprocess.run(
+    try:
+        if sys.platform == "win32":
+            # Windows: 透過 to_thread 執行 taskkill /F /T 避免阻塞 Event Loop
+            await asyncio.to_thread(
+                subprocess.run,
                 ["taskkill", "/F", "/T", "/PID", str(pid)],
                 check=False,
                 timeout=1.5,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
             )
-        except Exception:
-            pass
-        try:
-            proc.kill()
-        except Exception:
-            pass
-    else:
-        try:
-            # POSIX: 若子程序擁有自己的 process group (start_new_session=True)，直接送 SIGKILL 至 pgid
+        else:
+            # POSIX: 直接送 SIGKILL 至 process group (start_new_session=True)
             os.killpg(pid, signal.SIGKILL)
-        except ProcessLookupError:
-            pass
-        except Exception:
-            try:
-                proc.kill()
-            except Exception:
-                pass
+    except Exception:
+        pass
+
+    try:
+        proc.kill()
+    except Exception:
+        pass
 
     try:
         await asyncio.wait_for(proc.wait(), timeout=1.0)
@@ -211,12 +205,13 @@ class DAGRunner:
                         timeout=task.timeout
                     )
                 except asyncio.TimeoutError:
-                    await _terminate_process_tree(proc)
                     res.status = "TIMEOUT"
                     res.error = f"Task timed out after {task.timeout}s"
                     return res
                 finally:
                     self._running_subprocesses.pop(task.id, None)
+                    if proc.returncode is None:
+                        await _terminate_process_tree(proc)
 
                 stdout_str = stdout_bytes.decode("utf-8", errors="replace").strip()
                 stderr_str = stderr_bytes.decode("utf-8", errors="replace").strip()
